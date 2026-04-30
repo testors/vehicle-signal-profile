@@ -1,0 +1,409 @@
+{
+  "schema": "vehicle_data_profile.v1",
+  "vehicle": {
+    "manufacturer": "BMW",
+    "model": "M4 GT4 SMC"
+  },
+  "applicability": {
+    "generation": null,
+    "platform": null,
+    "year_start": 2023,
+    "year_end": 2023,
+    "market": null,
+    "trim": null,
+    "powertrain": null
+  },
+  "buses": [
+    {
+      "id": "can0",
+      "type": "can",
+      "bitrate": 1000000
+    }
+  ],
+  "can_frames": [
+    {
+      "bus": "can0",
+      "frame_id": 1021,
+      "frame_id_hex": "0x3FD",
+      "id_format": "standard11",
+      "name": "MSG_3FD",
+      "dlc": 8,
+      "signals": [
+        {
+          "name": "Team_Gear",
+          "decode": {
+            "start_bit": 12,
+            "bit_length": 4,
+            "byte_order": "little_endian",
+            "signed": false,
+            "factor": 1.0,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 15.0,
+            "unit": "gear",
+            "mux": null
+          }
+        }
+      ]
+    },
+    {
+      "bus": "can0",
+      "frame_id": 1792,
+      "frame_id_hex": "0x700",
+      "id_format": "standard11",
+      "name": "MSG_700",
+      "dlc": 8,
+      "signals": [
+        {
+          "name": "Team_RPM",
+          "decode": {
+            "start_bit": 0,
+            "bit_length": 16,
+            "byte_order": "little_endian",
+            "signed": false,
+            "factor": 0.25,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 16383.75,
+            "unit": "rpm",
+            "mux": null
+          }
+        },
+        {
+          "name": "Team_Speed",
+          "decode": {
+            "start_bit": 16,
+            "bit_length": 16,
+            "byte_order": "little_endian",
+            "signed": false,
+            "factor": 0.1,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 6553.5,
+            "unit": "km/h",
+            "mux": null
+          }
+        }
+      ]
+    },
+    {
+      "bus": "can0",
+      "frame_id": 1794,
+      "frame_id_hex": "0x702",
+      "id_format": "standard11",
+      "name": "MSG_702",
+      "dlc": 8,
+      "signals": [
+        {
+          "name": "Team_Pbrake_F",
+          "decode": {
+            "start_bit": 8,
+            "bit_length": 12,
+            "byte_order": "little_endian",
+            "signed": false,
+            "factor": 0.04,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 163.8,
+            "unit": "bar",
+            "mux": null
+          }
+        },
+        {
+          "name": "Team_Pbrake_R",
+          "decode": {
+            "start_bit": 20,
+            "bit_length": 12,
+            "byte_order": "little_endian",
+            "signed": false,
+            "factor": 0.04,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 163.8,
+            "unit": "bar",
+            "mux": null
+          }
+        },
+        {
+          "name": "Team_Steering",
+          "decode": {
+            "start_bit": 40,
+            "bit_length": 16,
+            "byte_order": "little_endian",
+            "signed": false,
+            "factor": -0.1,
+            "offset": -2000.0,
+            "minimum": -8553.5,
+            "maximum": -2000.0,
+            "unit": "deg",
+            "mux": null
+          }
+        }
+      ]
+    },
+    {
+      "bus": "can0",
+      "frame_id": 1809,
+      "frame_id_hex": "0x711",
+      "id_format": "standard11",
+      "name": "MSG_711",
+      "dlc": 8,
+      "signals": [
+        {
+          "name": "Team_AnaPedal",
+          "decode": {
+            "start_bit": 0,
+            "bit_length": 12,
+            "byte_order": "little_endian",
+            "signed": false,
+            "factor": 0.025,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 102.375,
+            "unit": "%",
+            "mux": null
+          }
+        }
+      ]
+    }
+  ],
+  "diagnostic_queries": [],
+  "signals": [
+    {
+      "name": "Team_AnaPedal",
+      "decode": {
+        "start_bit": 0,
+        "bit_length": 12,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 0.025,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 102.375,
+        "unit": "%",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 5,
+        "canp_start_bit": 0,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1809,
+        "frame_id_hex": "0x711",
+        "frame_name": "MSG_711"
+      },
+      "canonical": {
+        "id": "accelerator.pedal.position",
+        "label": "Accelerator pedal position",
+        "quantity": "position",
+        "preferred_unit": "%",
+        "confidence": "heuristic",
+        "aliases": [
+          "Team_AnaPedal"
+        ]
+      }
+    },
+    {
+      "name": "Team_RPM",
+      "decode": {
+        "start_bit": 0,
+        "bit_length": 16,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 0.25,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 16383.75,
+        "unit": "rpm",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 5,
+        "canp_start_bit": 0,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1792,
+        "frame_id_hex": "0x700",
+        "frame_name": "MSG_700"
+      },
+      "canonical": {
+        "id": "engine.speed",
+        "label": "Engine speed",
+        "quantity": "rotational_speed",
+        "preferred_unit": "rpm",
+        "confidence": "heuristic",
+        "aliases": [
+          "Team_RPM"
+        ]
+      }
+    },
+    {
+      "name": "Team_Gear",
+      "decode": {
+        "start_bit": 12,
+        "bit_length": 4,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 15.0,
+        "unit": "gear",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 5,
+        "canp_start_bit": 12,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1021,
+        "frame_id_hex": "0x3FD",
+        "frame_name": "MSG_3FD"
+      },
+      "canonical": {
+        "id": "transmission.gear.selected",
+        "label": "Selected gear",
+        "quantity": "gear",
+        "preferred_unit": "gear",
+        "confidence": "heuristic",
+        "aliases": [
+          "Team_Gear"
+        ]
+      }
+    },
+    {
+      "name": "Team_Speed",
+      "decode": {
+        "start_bit": 16,
+        "bit_length": 16,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 0.1,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 6553.5,
+        "unit": "km/h",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 5,
+        "canp_start_bit": 16,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1792,
+        "frame_id_hex": "0x700",
+        "frame_name": "MSG_700"
+      },
+      "canonical": {
+        "id": "vehicle.speed",
+        "label": "Vehicle speed",
+        "quantity": "speed",
+        "preferred_unit": "km/h",
+        "confidence": "heuristic",
+        "aliases": [
+          "Team_Speed"
+        ]
+      }
+    },
+    {
+      "name": "Team_Pbrake_F",
+      "decode": {
+        "start_bit": 8,
+        "bit_length": 12,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 0.04,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 163.8,
+        "unit": "bar",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 5,
+        "canp_start_bit": 8,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1794,
+        "frame_id_hex": "0x702",
+        "frame_name": "MSG_702"
+      }
+    },
+    {
+      "name": "Team_Pbrake_R",
+      "decode": {
+        "start_bit": 20,
+        "bit_length": 12,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 0.04,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 163.8,
+        "unit": "bar",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 5,
+        "canp_start_bit": 20,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1794,
+        "frame_id_hex": "0x702",
+        "frame_name": "MSG_702"
+      }
+    },
+    {
+      "name": "Team_Steering",
+      "decode": {
+        "start_bit": 40,
+        "bit_length": 16,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": -0.1,
+        "offset": -2000.0,
+        "minimum": -8553.5,
+        "maximum": -2000.0,
+        "unit": "deg",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 5,
+        "canp_start_bit": 40,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1794,
+        "frame_id_hex": "0x702",
+        "frame_name": "MSG_702"
+      }
+    }
+  ]
+}

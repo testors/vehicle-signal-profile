@@ -1,0 +1,199 @@
+{
+  "schema": "vehicle_data_profile.v1",
+  "vehicle": {
+    "manufacturer": "Seat",
+    "model": "Leon Supercopa"
+  },
+  "applicability": {
+    "generation": null,
+    "platform": null,
+    "year_start": null,
+    "year_end": null,
+    "market": null,
+    "trim": null,
+    "powertrain": null
+  },
+  "buses": [
+    {
+      "id": "can0",
+      "type": "can",
+      "bitrate": 500000
+    }
+  ],
+  "can_frames": [
+    {
+      "bus": "can0",
+      "frame_id": 640,
+      "frame_id_hex": "0x280",
+      "id_format": "standard11",
+      "name": "MSG_280",
+      "dlc": 8,
+      "signals": [
+        {
+          "name": "Throttle_Position",
+          "decode": {
+            "start_bit": 16,
+            "bit_length": 8,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 0.4,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 102.0,
+            "unit": "%",
+            "mux": null
+          }
+        }
+      ]
+    },
+    {
+      "bus": "can0",
+      "frame_id": 648,
+      "frame_id_hex": "0x288",
+      "id_format": "standard11",
+      "name": "MSG_288",
+      "dlc": 8,
+      "signals": [
+        {
+          "name": "Brake_Position",
+          "decode": {
+            "start_bit": 40,
+            "bit_length": 2,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 1.0,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 3.0,
+            "unit": "on/off",
+            "mux": null
+          }
+        }
+      ]
+    },
+    {
+      "bus": "can0",
+      "frame_id": 1162,
+      "frame_id_hex": "0x48A",
+      "id_format": "standard11",
+      "name": "MSG_48A",
+      "dlc": 8,
+      "signals": [
+        {
+          "name": "Engine_Speed",
+          "decode": {
+            "start_bit": 48,
+            "bit_length": 16,
+            "byte_order": "little_endian",
+            "signed": false,
+            "factor": 10.0,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 10000.0,
+            "unit": "rpm",
+            "mux": null
+          }
+        }
+      ]
+    }
+  ],
+  "diagnostic_queries": [],
+  "signals": [
+    {
+      "name": "Brake_Position",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 648,
+        "frame_id_hex": "0x288",
+        "frame_name": "MSG_288"
+      },
+      "decode": {
+        "start_bit": 40,
+        "bit_length": 2,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 3.0,
+        "unit": "on/off",
+        "mux": null
+      },
+      "canonical": {
+        "id": "brake.pedal.position",
+        "label": "Brake pedal position",
+        "quantity": "position",
+        "preferred_unit": "%",
+        "confidence": "mapped",
+        "aliases": [
+          "Brake_Position"
+        ]
+      }
+    },
+    {
+      "name": "Engine_Speed",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1162,
+        "frame_id_hex": "0x48A",
+        "frame_name": "MSG_48A"
+      },
+      "decode": {
+        "start_bit": 48,
+        "bit_length": 16,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 10.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 10000.0,
+        "unit": "rpm",
+        "mux": null
+      },
+      "canonical": {
+        "id": "engine.speed",
+        "label": "Engine speed",
+        "quantity": "rotational_speed",
+        "preferred_unit": "rpm",
+        "confidence": "mapped",
+        "aliases": [
+          "Engine_Speed"
+        ]
+      }
+    },
+    {
+      "name": "Throttle_Position",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 640,
+        "frame_id_hex": "0x280",
+        "frame_name": "MSG_280"
+      },
+      "decode": {
+        "start_bit": 16,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.4,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 102.0,
+        "unit": "%",
+        "mux": null
+      },
+      "canonical": {
+        "id": "throttle.position",
+        "label": "Throttle position",
+        "quantity": "position",
+        "preferred_unit": "%",
+        "confidence": "mapped",
+        "aliases": [
+          "Throttle_Position"
+        ]
+      }
+    }
+  ]
+}

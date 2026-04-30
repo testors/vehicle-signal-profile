@@ -1,0 +1,500 @@
+{
+  "schema": "vehicle_data_profile.v1",
+  "vehicle": {
+    "manufacturer": "ARCTIC CAT",
+    "model": "ZR 6000"
+  },
+  "applicability": {
+    "generation": null,
+    "platform": null,
+    "year_start": null,
+    "year_end": null,
+    "market": null,
+    "trim": null,
+    "powertrain": null
+  },
+  "buses": [
+    {
+      "id": "can0",
+      "type": "can",
+      "bitrate": 500000
+    }
+  ],
+  "can_frames": [
+    {
+      "bus": "can0",
+      "frame_id": 384,
+      "frame_id_hex": "0x180",
+      "id_format": "standard11",
+      "name": "MSG_180",
+      "dlc": 8,
+      "signals": [
+        {
+          "name": "ECU_Voltage",
+          "decode": {
+            "start_bit": 15,
+            "bit_length": 8,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 100.0,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 25500.0,
+            "unit": "mV",
+            "mux": null
+          }
+        },
+        {
+          "name": "Engine_Hours",
+          "decode": {
+            "start_bit": 55,
+            "bit_length": 16,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 359999.712,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 23592581125.92,
+            "unit": "ms",
+            "mux": null
+          }
+        },
+        {
+          "name": "Intake_Temp",
+          "decode": {
+            "start_bit": 23,
+            "bit_length": 8,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 1.0,
+            "offset": -50.0,
+            "minimum": -50.0,
+            "maximum": 205.0,
+            "unit": "C",
+            "mux": null
+          }
+        },
+        {
+          "name": "Throttle_Deg",
+          "decode": {
+            "start_bit": 31,
+            "bit_length": 12,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 0.1,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 409.5,
+            "unit": "deg",
+            "mux": null
+          }
+        },
+        {
+          "name": "Track_Speed",
+          "decode": {
+            "start_bit": 35,
+            "bit_length": 12,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 0.1,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 409.5,
+            "unit": "km/h",
+            "mux": null
+          }
+        },
+        {
+          "name": "Water_Temp",
+          "decode": {
+            "start_bit": 7,
+            "bit_length": 8,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 1.0,
+            "offset": -50.0,
+            "minimum": -50.0,
+            "maximum": 205.0,
+            "unit": "C",
+            "mux": null
+          }
+        }
+      ]
+    },
+    {
+      "bus": "can0",
+      "frame_id": 385,
+      "frame_id_hex": "0x181",
+      "id_format": "standard11",
+      "name": "MSG_181",
+      "dlc": 8,
+      "signals": [
+        {
+          "name": "Engine_RPM",
+          "decode": {
+            "start_bit": 7,
+            "bit_length": 16,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 1.0,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 65535.0,
+            "unit": "rpm",
+            "mux": null
+          }
+        },
+        {
+          "name": "Exh_Valve_Pos",
+          "decode": {
+            "start_bit": 23,
+            "bit_length": 8,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 19.53,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 4980.150000000001,
+            "unit": "mV",
+            "mux": null
+          }
+        },
+        {
+          "name": "TPS_Percent",
+          "decode": {
+            "start_bit": 49,
+            "bit_length": 10,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 0.1486,
+            "offset": -32.761,
+            "minimum": -32.761,
+            "maximum": 119.25680000000003,
+            "unit": "%",
+            "mux": null
+          }
+        }
+      ]
+    },
+    {
+      "bus": "can0",
+      "frame_id": 386,
+      "frame_id_hex": "0x182",
+      "id_format": "standard11",
+      "name": "MSG_182",
+      "dlc": 8,
+      "signals": [
+        {
+          "name": "Pipe_Temp",
+          "decode": {
+            "start_bit": 7,
+            "bit_length": 16,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 1.0,
+            "offset": -50.0,
+            "minimum": -50.0,
+            "maximum": 65485.0,
+            "unit": "C",
+            "mux": null
+          }
+        }
+      ]
+    }
+  ],
+  "diagnostic_queries": [],
+  "signals": [
+    {
+      "name": "Water_Temp",
+      "decode": {
+        "start_bit": 7,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": -50.0,
+        "minimum": -50.0,
+        "maximum": 205.0,
+        "unit": "C",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 0,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 384,
+        "frame_id_hex": "0x180",
+        "frame_name": "MSG_180"
+      },
+      "canonical": {
+        "id": "engine.coolant.temperature",
+        "label": "Engine coolant temperature",
+        "quantity": "temperature",
+        "preferred_unit": "C",
+        "confidence": "mapped",
+        "aliases": [
+          "Water_Temp"
+        ]
+      }
+    },
+    {
+      "name": "Engine_RPM",
+      "decode": {
+        "start_bit": 7,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 65535.0,
+        "unit": "rpm",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 8,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 385,
+        "frame_id_hex": "0x181",
+        "frame_name": "MSG_181"
+      },
+      "canonical": {
+        "id": "engine.speed",
+        "label": "Engine speed",
+        "quantity": "rotational_speed",
+        "preferred_unit": "rpm",
+        "confidence": "mapped",
+        "aliases": [
+          "Engine_RPM"
+        ]
+      }
+    },
+    {
+      "name": "Intake_Temp",
+      "decode": {
+        "start_bit": 23,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": -50.0,
+        "minimum": -50.0,
+        "maximum": 205.0,
+        "unit": "C",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 16,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 384,
+        "frame_id_hex": "0x180",
+        "frame_name": "MSG_180"
+      },
+      "canonical": {
+        "id": "intake_air.temperature",
+        "label": "Intake air temperature",
+        "quantity": "temperature",
+        "preferred_unit": "C",
+        "confidence": "heuristic",
+        "aliases": [
+          "Intake_Temp"
+        ]
+      }
+    },
+    {
+      "name": "TPS_Percent",
+      "decode": {
+        "start_bit": 49,
+        "bit_length": 10,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.1486,
+        "offset": -32.761,
+        "minimum": -32.761,
+        "maximum": 119.25680000000003,
+        "unit": "%",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 56,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 385,
+        "frame_id_hex": "0x181",
+        "frame_name": "MSG_181"
+      },
+      "canonical": {
+        "id": "throttle.position",
+        "label": "Throttle position",
+        "quantity": "position",
+        "preferred_unit": "%",
+        "confidence": "mapped",
+        "aliases": [
+          "TPS_Percent"
+        ]
+      }
+    },
+    {
+      "name": "ECU_Voltage",
+      "decode": {
+        "start_bit": 15,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 100.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 25500.0,
+        "unit": "mV",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 8,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 384,
+        "frame_id_hex": "0x180",
+        "frame_name": "MSG_180"
+      }
+    },
+    {
+      "name": "Engine_Hours",
+      "decode": {
+        "start_bit": 55,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 359999.712,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 23592581125.92,
+        "unit": "ms",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 56,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 384,
+        "frame_id_hex": "0x180",
+        "frame_name": "MSG_180"
+      }
+    },
+    {
+      "name": "Exh_Valve_Pos",
+      "decode": {
+        "start_bit": 23,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 19.53,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 4980.150000000001,
+        "unit": "mV",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 16,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 385,
+        "frame_id_hex": "0x181",
+        "frame_name": "MSG_181"
+      }
+    },
+    {
+      "name": "Pipe_Temp",
+      "decode": {
+        "start_bit": 7,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": -50.0,
+        "minimum": -50.0,
+        "maximum": 65485.0,
+        "unit": "C",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 8,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 386,
+        "frame_id_hex": "0x182",
+        "frame_name": "MSG_182"
+      }
+    },
+    {
+      "name": "Track_Speed",
+      "decode": {
+        "start_bit": 35,
+        "bit_length": 12,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.1,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 409.5,
+        "unit": "km/h",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 40,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 384,
+        "frame_id_hex": "0x180",
+        "frame_name": "MSG_180"
+      }
+    }
+  ]
+}

@@ -1,0 +1,303 @@
+{
+  "schema": "vehicle_data_profile.v1",
+  "vehicle": {
+    "manufacturer": "Audi",
+    "model": "R8 GT3 LMS"
+  },
+  "applicability": {
+    "generation": null,
+    "platform": null,
+    "year_start": null,
+    "year_end": null,
+    "market": null,
+    "trim": null,
+    "powertrain": null
+  },
+  "buses": [
+    {
+      "id": "can0",
+      "type": "can",
+      "bitrate": 500000
+    }
+  ],
+  "can_frames": [
+    {
+      "bus": "can0",
+      "frame_id": 370,
+      "frame_id_hex": "0x172",
+      "id_format": "standard11",
+      "name": "MSG_172",
+      "dlc": 8,
+      "signals": [
+        {
+          "name": "Gear",
+          "decode": {
+            "start_bit": 16,
+            "bit_length": 8,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 1.0,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 9.0,
+            "unit": "",
+            "mux": null
+          }
+        }
+      ]
+    },
+    {
+      "bus": "can0",
+      "frame_id": 640,
+      "frame_id_hex": "0x280",
+      "id_format": "standard11",
+      "name": "MSG_280",
+      "dlc": 8,
+      "signals": [
+        {
+          "name": "Engine_Speed",
+          "decode": {
+            "start_bit": 16,
+            "bit_length": 16,
+            "byte_order": "little_endian",
+            "signed": false,
+            "factor": 0.250527,
+            "offset": -13.5515,
+            "minimum": 0.0,
+            "maximum": 10000.0,
+            "unit": "rpm",
+            "mux": null
+          }
+        },
+        {
+          "name": "Throttle_Position",
+          "decode": {
+            "start_bit": 16,
+            "bit_length": 8,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 0.4,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 102.0,
+            "unit": "%",
+            "mux": null
+          }
+        }
+      ]
+    },
+    {
+      "bus": "can0",
+      "frame_id": 1192,
+      "frame_id_hex": "0x4A8",
+      "id_format": "standard11",
+      "name": "MSG_4A8",
+      "dlc": 8,
+      "signals": [
+        {
+          "name": "Brake_Pressure",
+          "decode": {
+            "start_bit": 20,
+            "bit_length": 12,
+            "byte_order": "little_endian",
+            "signed": false,
+            "factor": 2.90323,
+            "offset": -743.226,
+            "minimum": -743.225806452,
+            "maximum": 11145.483871,
+            "unit": "bar",
+            "mux": null
+          }
+        }
+      ]
+    },
+    {
+      "bus": "can0",
+      "frame_id": 1478,
+      "frame_id_hex": "0x5C6",
+      "id_format": "standard11",
+      "name": "MSG_5C6",
+      "dlc": 8,
+      "signals": [
+        {
+          "name": "Steering_Angle",
+          "decode": {
+            "start_bit": 12,
+            "bit_length": 10,
+            "byte_order": "little_endian",
+            "signed": false,
+            "factor": -0.703125,
+            "offset": 0.0,
+            "minimum": -719.296875,
+            "maximum": 0.0,
+            "unit": "��",
+            "mux": null
+          }
+        }
+      ]
+    }
+  ],
+  "diagnostic_queries": [],
+  "signals": [
+    {
+      "name": "Brake_Pressure",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1192,
+        "frame_id_hex": "0x4A8",
+        "frame_name": "MSG_4A8"
+      },
+      "decode": {
+        "start_bit": 20,
+        "bit_length": 12,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 2.90323,
+        "offset": -743.226,
+        "minimum": -743.225806452,
+        "maximum": 11145.483871,
+        "unit": "bar",
+        "mux": null
+      },
+      "canonical": {
+        "id": "brake.pressure",
+        "label": "Brake pressure",
+        "quantity": "pressure",
+        "preferred_unit": "bar",
+        "confidence": "mapped",
+        "aliases": [
+          "Brake_Pressure"
+        ]
+      }
+    },
+    {
+      "name": "Engine_Speed",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 640,
+        "frame_id_hex": "0x280",
+        "frame_name": "MSG_280"
+      },
+      "decode": {
+        "start_bit": 16,
+        "bit_length": 16,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 0.250527,
+        "offset": -13.5515,
+        "minimum": 0.0,
+        "maximum": 10000.0,
+        "unit": "rpm",
+        "mux": null
+      },
+      "canonical": {
+        "id": "engine.speed",
+        "label": "Engine speed",
+        "quantity": "rotational_speed",
+        "preferred_unit": "rpm",
+        "confidence": "mapped",
+        "aliases": [
+          "Engine_Speed"
+        ]
+      }
+    },
+    {
+      "name": "Steering_Angle",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1478,
+        "frame_id_hex": "0x5C6",
+        "frame_name": "MSG_5C6"
+      },
+      "decode": {
+        "start_bit": 12,
+        "bit_length": 10,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": -0.703125,
+        "offset": 0.0,
+        "minimum": -719.296875,
+        "maximum": 0.0,
+        "unit": "��",
+        "mux": null
+      },
+      "canonical": {
+        "id": "steering.wheel.angle",
+        "label": "Steering wheel angle",
+        "quantity": "angle",
+        "preferred_unit": "deg",
+        "confidence": "mapped",
+        "aliases": [
+          "Steering_Angle"
+        ]
+      }
+    },
+    {
+      "name": "Throttle_Position",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 640,
+        "frame_id_hex": "0x280",
+        "frame_name": "MSG_280"
+      },
+      "decode": {
+        "start_bit": 16,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.4,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 102.0,
+        "unit": "%",
+        "mux": null
+      },
+      "canonical": {
+        "id": "throttle.position",
+        "label": "Throttle position",
+        "quantity": "position",
+        "preferred_unit": "%",
+        "confidence": "mapped",
+        "aliases": [
+          "Throttle_Position"
+        ]
+      }
+    },
+    {
+      "name": "Gear",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 370,
+        "frame_id_hex": "0x172",
+        "frame_name": "MSG_172"
+      },
+      "decode": {
+        "start_bit": 16,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 9.0,
+        "unit": "",
+        "mux": null
+      },
+      "canonical": {
+        "id": "transmission.gear.selected",
+        "label": "Selected gear",
+        "quantity": "gear",
+        "preferred_unit": "gear",
+        "confidence": "mapped",
+        "aliases": [
+          "Gear"
+        ]
+      }
+    }
+  ]
+}

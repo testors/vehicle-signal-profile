@@ -1,0 +1,214 @@
+{
+  "schema": "vehicle_data_profile.v1",
+  "vehicle": {
+    "manufacturer": "Volvo",
+    "model": "XC60"
+  },
+  "applicability": {
+    "generation": null,
+    "platform": null,
+    "year_start": 2008,
+    "year_end": 2017,
+    "market": null,
+    "trim": null,
+    "powertrain": null
+  },
+  "buses": [
+    {
+      "id": "can0",
+      "type": "can",
+      "bitrate": 500000
+    }
+  ],
+  "can_frames": [
+    {
+      "bus": "can0",
+      "frame_id": 245,
+      "frame_id_hex": "0xF5",
+      "id_format": "standard11",
+      "name": "MSG_0F5",
+      "dlc": 8,
+      "signals": [
+        {
+          "name": "Engine_Speed",
+          "decode": {
+            "start_bit": 0,
+            "bit_length": 13,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 1.0,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 8000.0,
+            "unit": "rpm",
+            "mux": null
+          }
+        }
+      ]
+    },
+    {
+      "bus": "can0",
+      "frame_id": 805,
+      "frame_id_hex": "0x325",
+      "id_format": "standard11",
+      "name": "MSG_325",
+      "dlc": 8,
+      "signals": [
+        {
+          "name": "Indicated_Vehicle_Speed_kph",
+          "decode": {
+            "start_bit": 16,
+            "bit_length": 15,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 0.010304,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 322.0,
+            "unit": "km/h",
+            "mux": null
+          }
+        },
+        {
+          "name": "Indicated_Vehicle_Speed_mph",
+          "decode": {
+            "start_bit": 16,
+            "bit_length": 15,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 0.0064,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 200.0,
+            "unit": "mph",
+            "mux": null
+          }
+        }
+      ]
+    },
+    {
+      "bus": "can0",
+      "frame_id": 928,
+      "frame_id_hex": "0x3A0",
+      "id_format": "standard11",
+      "name": "MSG_3A0",
+      "dlc": 8,
+      "signals": [
+        {
+          "name": "Handbrake",
+          "decode": {
+            "start_bit": 12,
+            "bit_length": 1,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 1.0,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 1.0,
+            "unit": "on/off",
+            "mux": null
+          }
+        }
+      ]
+    }
+  ],
+  "diagnostic_queries": [],
+  "signals": [
+    {
+      "name": "Engine_Speed",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 245,
+        "frame_id_hex": "0xF5",
+        "frame_name": "MSG_0F5"
+      },
+      "decode": {
+        "start_bit": 0,
+        "bit_length": 13,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 8000.0,
+        "unit": "rpm",
+        "mux": null
+      },
+      "canonical": {
+        "id": "engine.speed",
+        "label": "Engine speed",
+        "quantity": "rotational_speed",
+        "preferred_unit": "rpm",
+        "confidence": "mapped",
+        "aliases": [
+          "Engine_Speed"
+        ]
+      }
+    },
+    {
+      "name": "Handbrake",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 928,
+        "frame_id_hex": "0x3A0",
+        "frame_name": "MSG_3A0"
+      },
+      "decode": {
+        "start_bit": 12,
+        "bit_length": 1,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "unit": "on/off",
+        "mux": null
+      },
+      "canonical": {
+        "id": "parking_brake.switch",
+        "label": "Parking brake switch",
+        "quantity": "state",
+        "preferred_unit": "bool",
+        "confidence": "mapped",
+        "aliases": [
+          "Handbrake"
+        ]
+      }
+    },
+    {
+      "name": "Indicated_Vehicle_Speed_kph",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 805,
+        "frame_id_hex": "0x325",
+        "frame_name": "MSG_325"
+      },
+      "decode": {
+        "start_bit": 16,
+        "bit_length": 15,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.010304,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 322.0,
+        "unit": "km/h",
+        "mux": null
+      },
+      "canonical": {
+        "id": "vehicle.speed",
+        "label": "Vehicle speed",
+        "quantity": "speed",
+        "preferred_unit": "km/h",
+        "confidence": "heuristic",
+        "aliases": [
+          "Indicated_Vehicle_Speed_kph"
+        ]
+      }
+    }
+  ]
+}

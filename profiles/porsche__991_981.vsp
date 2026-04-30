@@ -1,0 +1,1182 @@
+{
+  "schema": "vehicle_data_profile.v1",
+  "vehicle": {
+    "manufacturer": "PORSCHE",
+    "model": "991 981"
+  },
+  "applicability": {
+    "generation": null,
+    "platform": null,
+    "year_start": null,
+    "year_end": null,
+    "market": null,
+    "trim": null,
+    "powertrain": null
+  },
+  "buses": [
+    {
+      "id": "can0",
+      "type": "can",
+      "bitrate": 500000
+    }
+  ],
+  "can_frames": [
+    {
+      "bus": "can0",
+      "frame_id": 1910,
+      "frame_id_hex": "0x776",
+      "id_format": "standard11",
+      "name": "MSG_776",
+      "dlc": 8,
+      "signals": [
+        {
+          "name": "STEER_ANGLE",
+          "decode": {
+            "start_bit": 47,
+            "bit_length": 16,
+            "byte_order": "big_endian",
+            "signed": true,
+            "factor": 0.1,
+            "offset": 0.0,
+            "minimum": -3276.8,
+            "maximum": 3276.7000000000003,
+            "unit": "deg",
+            "mux": {
+              "value": 16,
+              "start_bit": 0,
+              "bit_length": 8
+            }
+          }
+        }
+      ]
+    },
+    {
+      "bus": "can0",
+      "frame_id": 1928,
+      "frame_id_hex": "0x788",
+      "id_format": "standard11",
+      "name": "MSG_788",
+      "dlc": 8,
+      "signals": [
+        {
+          "name": "BRAKE_PRESS",
+          "decode": {
+            "start_bit": 47,
+            "bit_length": 16,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 0.3,
+            "offset": -30.0,
+            "minimum": -30.0,
+            "maximum": 19630.5,
+            "unit": "bar",
+            "mux": {
+              "value": 35,
+              "start_bit": 0,
+              "bit_length": 8
+            }
+          }
+        },
+        {
+          "name": "WHEEL_SP_FL",
+          "decode": {
+            "start_bit": 23,
+            "bit_length": 16,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 0.1,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 6553.5,
+            "unit": "km/h",
+            "mux": {
+              "value": 34,
+              "start_bit": 0,
+              "bit_length": 8
+            }
+          }
+        },
+        {
+          "name": "WHEEL_SP_FR",
+          "decode": {
+            "start_bit": 39,
+            "bit_length": 16,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 0.1,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 6553.5,
+            "unit": "km/h",
+            "mux": {
+              "value": 34,
+              "start_bit": 0,
+              "bit_length": 8
+            }
+          }
+        },
+        {
+          "name": "WHEEL_SP_RL",
+          "decode": {
+            "start_bit": 31,
+            "bit_length": 16,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 0.01,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 655.35,
+            "unit": "km/h",
+            "mux": {
+              "value": 35,
+              "start_bit": 0,
+              "bit_length": 8
+            }
+          }
+        },
+        {
+          "name": "WHEEL_SP_RR",
+          "decode": {
+            "start_bit": 15,
+            "bit_length": 16,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 0.1,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 6553.5,
+            "unit": "km/h",
+            "mux": {
+              "value": 35,
+              "start_bit": 0,
+              "bit_length": 8
+            }
+          }
+        }
+      ]
+    },
+    {
+      "bus": "can0",
+      "frame_id": 2024,
+      "frame_id_hex": "0x7E8",
+      "id_format": "standard11",
+      "name": "MSG_7E8",
+      "dlc": 8,
+      "signals": [
+        {
+          "name": "ACCEL_POS",
+          "decode": {
+            "start_bit": 31,
+            "bit_length": 8,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 0.54347826086,
+            "offset": -19.565217391,
+            "minimum": -19.565217391,
+            "maximum": 119.02173912829997,
+            "unit": "%",
+            "mux": {
+              "value": 16713,
+              "start_bit": 16,
+              "bit_length": 16
+            }
+          }
+        },
+        {
+          "name": "COOLANT_TEMP",
+          "decode": {
+            "start_bit": 31,
+            "bit_length": 8,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 1.0,
+            "offset": -40.0,
+            "minimum": -40.0,
+            "maximum": 215.0,
+            "unit": "C",
+            "mux": {
+              "value": 16645,
+              "start_bit": 16,
+              "bit_length": 16
+            }
+          }
+        },
+        {
+          "name": "FUEL_LEVEL",
+          "decode": {
+            "start_bit": 31,
+            "bit_length": 8,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 0.3921568627,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 99.9999999885,
+            "unit": "%",
+            "mux": {
+              "value": 16687,
+              "start_bit": 16,
+              "bit_length": 16
+            }
+          }
+        },
+        {
+          "name": "INTK_AIR_TEMP",
+          "decode": {
+            "start_bit": 31,
+            "bit_length": 8,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 1.0,
+            "offset": -40.0,
+            "minimum": -40.0,
+            "maximum": 215.0,
+            "unit": "C",
+            "mux": {
+              "value": 16655,
+              "start_bit": 16,
+              "bit_length": 16
+            }
+          }
+        },
+        {
+          "name": "MANIFOLD_PRESS",
+          "decode": {
+            "start_bit": 31,
+            "bit_length": 8,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 0.01,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 2.5500000000000003,
+            "unit": "bar",
+            "mux": {
+              "value": 16651,
+              "start_bit": 16,
+              "bit_length": 16
+            }
+          }
+        },
+        {
+          "name": "RPM",
+          "decode": {
+            "start_bit": 31,
+            "bit_length": 14,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 1.0,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 16383.0,
+            "unit": "rpm",
+            "mux": {
+              "value": 16652,
+              "start_bit": 16,
+              "bit_length": 16
+            }
+          }
+        },
+        {
+          "name": "THROTTLE_POS",
+          "decode": {
+            "start_bit": 31,
+            "bit_length": 8,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 0.54347826086,
+            "offset": -19.565217391,
+            "minimum": -19.565217391,
+            "maximum": 119.02173912829997,
+            "unit": "%",
+            "mux": {
+              "value": 16657,
+              "start_bit": 16,
+              "bit_length": 16
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "diagnostic_queries": [
+    {
+      "id": "diag_70C_22030A",
+      "bus": "can0",
+      "kind": "uds_read_data_by_identifier",
+      "role": "channel_query",
+      "tx_id": 1804,
+      "tx_id_hex": "0x70C",
+      "rx_id": 1910,
+      "rx_id_hex": "0x776",
+      "request_hex": "22 03 0A",
+      "payload_hex": "03 22 03 0A AA AA AA AA",
+      "expected_mux": 778,
+      "mode01_pid": null
+    },
+    {
+      "id": "diag_70C_301002",
+      "bus": "can0",
+      "kind": "isotp_flow_control",
+      "role": "flow_control",
+      "tx_id": 1804,
+      "tx_id_hex": "0x70C",
+      "rx_id": 1910,
+      "rx_id_hex": "0x776",
+      "request_hex": "30 10 02",
+      "payload_hex": "30 10 02 AA AA AA AA AA",
+      "expected_mux": null,
+      "mode01_pid": null
+    },
+    {
+      "id": "diag_71E_2121",
+      "bus": "can0",
+      "kind": "legacy_read_data_by_local_id",
+      "role": "channel_query",
+      "tx_id": 1822,
+      "tx_id_hex": "0x71E",
+      "rx_id": 1928,
+      "rx_id_hex": "0x788",
+      "request_hex": "21 21",
+      "payload_hex": "02 21 21 00 00 00 00 00",
+      "expected_mux": 33,
+      "mode01_pid": null
+    },
+    {
+      "id": "diag_71E_300802",
+      "bus": "can0",
+      "kind": "isotp_flow_control",
+      "role": "flow_control",
+      "tx_id": 1822,
+      "tx_id_hex": "0x71E",
+      "rx_id": 1928,
+      "rx_id_hex": "0x788",
+      "request_hex": "30 08 02",
+      "payload_hex": "30 08 02 00 00 00 00 00",
+      "expected_mux": null,
+      "mode01_pid": null
+    },
+    {
+      "id": "diag_7DF_0100",
+      "bus": "can0",
+      "kind": "obd_mode_01",
+      "role": "support_query",
+      "tx_id": 2015,
+      "tx_id_hex": "0x7DF",
+      "rx_id": null,
+      "rx_id_hex": null,
+      "request_hex": "01 00",
+      "payload_hex": "02 01 00 55 55 55 55 55",
+      "expected_mux": 16640,
+      "mode01_pid": 0
+    },
+    {
+      "id": "diag_7DF_0105",
+      "bus": "can0",
+      "kind": "obd_mode_01",
+      "role": "channel_query",
+      "tx_id": 2015,
+      "tx_id_hex": "0x7DF",
+      "rx_id": 2024,
+      "rx_id_hex": "0x7E8",
+      "request_hex": "01 05",
+      "payload_hex": "02 01 05 55 55 55 55 55",
+      "expected_mux": 16645,
+      "mode01_pid": 5
+    },
+    {
+      "id": "diag_7DF_010B",
+      "bus": "can0",
+      "kind": "obd_mode_01",
+      "role": "channel_query",
+      "tx_id": 2015,
+      "tx_id_hex": "0x7DF",
+      "rx_id": 2024,
+      "rx_id_hex": "0x7E8",
+      "request_hex": "01 0B",
+      "payload_hex": "02 01 0B 55 55 55 55 55",
+      "expected_mux": 16651,
+      "mode01_pid": 11
+    },
+    {
+      "id": "diag_7DF_010C",
+      "bus": "can0",
+      "kind": "obd_mode_01",
+      "role": "channel_query",
+      "tx_id": 2015,
+      "tx_id_hex": "0x7DF",
+      "rx_id": 2024,
+      "rx_id_hex": "0x7E8",
+      "request_hex": "01 0C",
+      "payload_hex": "02 01 0C 55 55 55 55 55",
+      "expected_mux": 16652,
+      "mode01_pid": 12
+    },
+    {
+      "id": "diag_7DF_010F",
+      "bus": "can0",
+      "kind": "obd_mode_01",
+      "role": "channel_query",
+      "tx_id": 2015,
+      "tx_id_hex": "0x7DF",
+      "rx_id": 2024,
+      "rx_id_hex": "0x7E8",
+      "request_hex": "01 0F",
+      "payload_hex": "02 01 0F 55 55 55 55 55",
+      "expected_mux": 16655,
+      "mode01_pid": 15
+    },
+    {
+      "id": "diag_7DF_0111",
+      "bus": "can0",
+      "kind": "obd_mode_01",
+      "role": "channel_query",
+      "tx_id": 2015,
+      "tx_id_hex": "0x7DF",
+      "rx_id": 2024,
+      "rx_id_hex": "0x7E8",
+      "request_hex": "01 11",
+      "payload_hex": "02 01 11 55 55 55 55 55",
+      "expected_mux": 16657,
+      "mode01_pid": 17
+    },
+    {
+      "id": "diag_7DF_0120",
+      "bus": "can0",
+      "kind": "obd_mode_01",
+      "role": "support_query",
+      "tx_id": 2015,
+      "tx_id_hex": "0x7DF",
+      "rx_id": null,
+      "rx_id_hex": null,
+      "request_hex": "01 20",
+      "payload_hex": "02 01 20 55 55 55 55 55",
+      "expected_mux": 16672,
+      "mode01_pid": 32
+    },
+    {
+      "id": "diag_7DF_012F",
+      "bus": "can0",
+      "kind": "obd_mode_01",
+      "role": "inferred_channel_query",
+      "tx_id": 2015,
+      "tx_id_hex": "0x7DF",
+      "rx_id": 2024,
+      "rx_id_hex": "0x7E8",
+      "request_hex": "01 2F",
+      "payload_hex": null,
+      "expected_mux": null,
+      "mode01_pid": null
+    },
+    {
+      "id": "diag_7DF_0140",
+      "bus": "can0",
+      "kind": "obd_mode_01",
+      "role": "support_query",
+      "tx_id": 2015,
+      "tx_id_hex": "0x7DF",
+      "rx_id": null,
+      "rx_id_hex": null,
+      "request_hex": "01 40",
+      "payload_hex": "02 01 40 55 55 55 55 55",
+      "expected_mux": 16704,
+      "mode01_pid": 64
+    },
+    {
+      "id": "diag_7DF_0149",
+      "bus": "can0",
+      "kind": "obd_mode_01",
+      "role": "channel_query",
+      "tx_id": 2015,
+      "tx_id_hex": "0x7DF",
+      "rx_id": 2024,
+      "rx_id_hex": "0x7E8",
+      "request_hex": "01 49",
+      "payload_hex": "02 01 49 55 55 55 55 55",
+      "expected_mux": 16713,
+      "mode01_pid": 73
+    },
+    {
+      "id": "diag_7DF_0160",
+      "bus": "can0",
+      "kind": "obd_mode_01",
+      "role": "support_query",
+      "tx_id": 2015,
+      "tx_id_hex": "0x7DF",
+      "rx_id": null,
+      "rx_id_hex": null,
+      "request_hex": "01 60",
+      "payload_hex": "02 01 60 55 55 55 55 55",
+      "expected_mux": 16736,
+      "mode01_pid": 96
+    },
+    {
+      "id": "diag_7DF_0180",
+      "bus": "can0",
+      "kind": "obd_mode_01",
+      "role": "support_query",
+      "tx_id": 2015,
+      "tx_id_hex": "0x7DF",
+      "rx_id": null,
+      "rx_id_hex": null,
+      "request_hex": "01 80",
+      "payload_hex": "02 01 80 55 55 55 55 55",
+      "expected_mux": 16768,
+      "mode01_pid": 128
+    },
+    {
+      "id": "diag_7DF_01A0",
+      "bus": "can0",
+      "kind": "obd_mode_01",
+      "role": "support_query",
+      "tx_id": 2015,
+      "tx_id_hex": "0x7DF",
+      "rx_id": null,
+      "rx_id_hex": null,
+      "request_hex": "01 A0",
+      "payload_hex": "02 01 A0 55 55 55 55 55",
+      "expected_mux": 16800,
+      "mode01_pid": 160
+    },
+    {
+      "id": "diag_7DF_01C0",
+      "bus": "can0",
+      "kind": "obd_mode_01",
+      "role": "support_query",
+      "tx_id": 2015,
+      "tx_id_hex": "0x7DF",
+      "rx_id": null,
+      "rx_id_hex": null,
+      "request_hex": "01 C0",
+      "payload_hex": "02 01 C0 55 55 55 55 55",
+      "expected_mux": 16832,
+      "mode01_pid": 192
+    }
+  ],
+  "signals": [
+    {
+      "name": "ACCEL_POS",
+      "decode": {
+        "start_bit": 31,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.54347826086,
+        "offset": -19.565217391,
+        "minimum": -19.565217391,
+        "maximum": 119.02173912829997,
+        "unit": "%",
+        "mux": {
+          "value": 16713,
+          "start_bit": 16,
+          "bit_length": 16
+        }
+      },
+      "raw": {
+        "cflag": 2,
+        "canp_start_bit": 24,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "diagnostic_query",
+        "bus": "can0",
+        "query_id": "diag_7DF_0149",
+        "tx_id": 2015,
+        "tx_id_hex": "0x7DF",
+        "rx_id": 2024,
+        "rx_id_hex": "0x7E8",
+        "request_hex": "01 49",
+        "request_kind": "obd_mode_01",
+        "response_frame_id": 2024,
+        "response_frame_id_hex": "0x7E8"
+      },
+      "canonical": {
+        "id": "accelerator.pedal.position",
+        "label": "Accelerator pedal position",
+        "quantity": "position",
+        "preferred_unit": "%",
+        "confidence": "mapped",
+        "aliases": [
+          "ACCEL_POS"
+        ]
+      }
+    },
+    {
+      "name": "BRAKE_PRESS",
+      "decode": {
+        "start_bit": 47,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.3,
+        "offset": -30.0,
+        "minimum": -30.0,
+        "maximum": 19630.5,
+        "unit": "bar",
+        "mux": {
+          "value": 35,
+          "start_bit": 0,
+          "bit_length": 8
+        }
+      },
+      "raw": {
+        "cflag": 2,
+        "canp_start_bit": 48,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "diagnostic_query",
+        "bus": "can0",
+        "query_id": "diag_71E_2121",
+        "tx_id": 1822,
+        "tx_id_hex": "0x71E",
+        "rx_id": 1928,
+        "rx_id_hex": "0x788",
+        "request_hex": "21 21",
+        "request_kind": "legacy_read_data_by_local_id",
+        "response_frame_id": 1928,
+        "response_frame_id_hex": "0x788"
+      },
+      "canonical": {
+        "id": "brake.pressure",
+        "label": "Brake pressure",
+        "quantity": "pressure",
+        "preferred_unit": "bar",
+        "confidence": "mapped",
+        "aliases": [
+          "BRAKE_PRESS"
+        ]
+      }
+    },
+    {
+      "name": "COOLANT_TEMP",
+      "decode": {
+        "start_bit": 31,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": -40.0,
+        "minimum": -40.0,
+        "maximum": 215.0,
+        "unit": "C",
+        "mux": {
+          "value": 16645,
+          "start_bit": 16,
+          "bit_length": 16
+        }
+      },
+      "raw": {
+        "cflag": 2,
+        "canp_start_bit": 24,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "diagnostic_query",
+        "bus": "can0",
+        "query_id": "diag_7DF_0105",
+        "tx_id": 2015,
+        "tx_id_hex": "0x7DF",
+        "rx_id": 2024,
+        "rx_id_hex": "0x7E8",
+        "request_hex": "01 05",
+        "request_kind": "obd_mode_01",
+        "response_frame_id": 2024,
+        "response_frame_id_hex": "0x7E8"
+      },
+      "canonical": {
+        "id": "engine.coolant.temperature",
+        "label": "Engine coolant temperature",
+        "quantity": "temperature",
+        "preferred_unit": "C",
+        "confidence": "mapped",
+        "aliases": [
+          "COOLANT_TEMP"
+        ]
+      }
+    },
+    {
+      "name": "RPM",
+      "decode": {
+        "start_bit": 31,
+        "bit_length": 14,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 16383.0,
+        "unit": "rpm",
+        "mux": {
+          "value": 16652,
+          "start_bit": 16,
+          "bit_length": 16
+        }
+      },
+      "raw": {
+        "cflag": 2,
+        "canp_start_bit": 34,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "diagnostic_query",
+        "bus": "can0",
+        "query_id": "diag_7DF_010C",
+        "tx_id": 2015,
+        "tx_id_hex": "0x7DF",
+        "rx_id": 2024,
+        "rx_id_hex": "0x7E8",
+        "request_hex": "01 0C",
+        "request_kind": "obd_mode_01",
+        "response_frame_id": 2024,
+        "response_frame_id_hex": "0x7E8"
+      },
+      "canonical": {
+        "id": "engine.speed",
+        "label": "Engine speed",
+        "quantity": "rotational_speed",
+        "preferred_unit": "rpm",
+        "confidence": "mapped",
+        "aliases": [
+          "RPM"
+        ]
+      }
+    },
+    {
+      "name": "FUEL_LEVEL",
+      "decode": {
+        "start_bit": 31,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.3921568627,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 99.9999999885,
+        "unit": "%",
+        "mux": {
+          "value": 16687,
+          "start_bit": 16,
+          "bit_length": 16
+        }
+      },
+      "raw": {
+        "cflag": 2,
+        "canp_start_bit": 24,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "diagnostic_query",
+        "bus": "can0",
+        "query_id": "diag_7DF_012F",
+        "tx_id": 2015,
+        "tx_id_hex": "0x7DF",
+        "rx_id": 2024,
+        "rx_id_hex": "0x7E8",
+        "request_hex": "01 2F",
+        "request_kind": "obd_mode_01",
+        "response_frame_id": 2024,
+        "response_frame_id_hex": "0x7E8"
+      },
+      "canonical": {
+        "id": "fuel.level",
+        "label": "Fuel level",
+        "quantity": "level",
+        "preferred_unit": "%",
+        "confidence": "mapped",
+        "aliases": [
+          "FUEL_LEVEL"
+        ]
+      }
+    },
+    {
+      "name": "INTK_AIR_TEMP",
+      "decode": {
+        "start_bit": 31,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": -40.0,
+        "minimum": -40.0,
+        "maximum": 215.0,
+        "unit": "C",
+        "mux": {
+          "value": 16655,
+          "start_bit": 16,
+          "bit_length": 16
+        }
+      },
+      "raw": {
+        "cflag": 2,
+        "canp_start_bit": 24,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "diagnostic_query",
+        "bus": "can0",
+        "query_id": "diag_7DF_010F",
+        "tx_id": 2015,
+        "tx_id_hex": "0x7DF",
+        "rx_id": 2024,
+        "rx_id_hex": "0x7E8",
+        "request_hex": "01 0F",
+        "request_kind": "obd_mode_01",
+        "response_frame_id": 2024,
+        "response_frame_id_hex": "0x7E8"
+      },
+      "canonical": {
+        "id": "intake_air.temperature",
+        "label": "Intake air temperature",
+        "quantity": "temperature",
+        "preferred_unit": "C",
+        "confidence": "mapped",
+        "aliases": [
+          "INTK_AIR_TEMP"
+        ]
+      }
+    },
+    {
+      "name": "MANIFOLD_PRESS",
+      "decode": {
+        "start_bit": 31,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.01,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 2.5500000000000003,
+        "unit": "bar",
+        "mux": {
+          "value": 16651,
+          "start_bit": 16,
+          "bit_length": 16
+        }
+      },
+      "raw": {
+        "cflag": 2,
+        "canp_start_bit": 24,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "diagnostic_query",
+        "bus": "can0",
+        "query_id": "diag_7DF_010B",
+        "tx_id": 2015,
+        "tx_id_hex": "0x7DF",
+        "rx_id": 2024,
+        "rx_id_hex": "0x7E8",
+        "request_hex": "01 0B",
+        "request_kind": "obd_mode_01",
+        "response_frame_id": 2024,
+        "response_frame_id_hex": "0x7E8"
+      },
+      "canonical": {
+        "id": "intake_manifold.pressure",
+        "label": "Intake manifold pressure",
+        "quantity": "pressure",
+        "preferred_unit": "bar",
+        "confidence": "mapped",
+        "aliases": [
+          "MANIFOLD_PRESS"
+        ]
+      }
+    },
+    {
+      "name": "STEER_ANGLE",
+      "decode": {
+        "start_bit": 47,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": true,
+        "factor": 0.1,
+        "offset": 0.0,
+        "minimum": -3276.8,
+        "maximum": 3276.7000000000003,
+        "unit": "deg",
+        "mux": {
+          "value": 16,
+          "start_bit": 0,
+          "bit_length": 8
+        }
+      },
+      "raw": {
+        "cflag": 2,
+        "canp_start_bit": 48,
+        "signed_known": false,
+        "signed_reason": "heuristic:signed_motion"
+      },
+      "acquisition": {
+        "type": "diagnostic_query",
+        "bus": "can0",
+        "query_id": "diag_70C_22030A",
+        "tx_id": 1804,
+        "tx_id_hex": "0x70C",
+        "rx_id": 1910,
+        "rx_id_hex": "0x776",
+        "request_hex": "22 03 0A",
+        "request_kind": "uds_read_data_by_identifier",
+        "response_frame_id": 1910,
+        "response_frame_id_hex": "0x776"
+      },
+      "canonical": {
+        "id": "steering.wheel.angle",
+        "label": "Steering wheel angle",
+        "quantity": "angle",
+        "preferred_unit": "deg",
+        "confidence": "mapped",
+        "aliases": [
+          "STEER_ANGLE"
+        ]
+      }
+    },
+    {
+      "name": "THROTTLE_POS",
+      "decode": {
+        "start_bit": 31,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.54347826086,
+        "offset": -19.565217391,
+        "minimum": -19.565217391,
+        "maximum": 119.02173912829997,
+        "unit": "%",
+        "mux": {
+          "value": 16657,
+          "start_bit": 16,
+          "bit_length": 16
+        }
+      },
+      "raw": {
+        "cflag": 2,
+        "canp_start_bit": 24,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "diagnostic_query",
+        "bus": "can0",
+        "query_id": "diag_7DF_0111",
+        "tx_id": 2015,
+        "tx_id_hex": "0x7DF",
+        "rx_id": 2024,
+        "rx_id_hex": "0x7E8",
+        "request_hex": "01 11",
+        "request_kind": "obd_mode_01",
+        "response_frame_id": 2024,
+        "response_frame_id_hex": "0x7E8"
+      },
+      "canonical": {
+        "id": "throttle.position",
+        "label": "Throttle position",
+        "quantity": "position",
+        "preferred_unit": "%",
+        "confidence": "mapped",
+        "aliases": [
+          "THROTTLE_POS"
+        ]
+      }
+    },
+    {
+      "name": "WHEEL_SP_FL",
+      "decode": {
+        "start_bit": 23,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.1,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 6553.5,
+        "unit": "km/h",
+        "mux": {
+          "value": 34,
+          "start_bit": 0,
+          "bit_length": 8
+        }
+      },
+      "raw": {
+        "cflag": 2,
+        "canp_start_bit": 24,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "diagnostic_query",
+        "bus": "can0",
+        "query_id": "diag_71E_2121",
+        "tx_id": 1822,
+        "tx_id_hex": "0x71E",
+        "rx_id": 1928,
+        "rx_id_hex": "0x788",
+        "request_hex": "21 21",
+        "request_kind": "legacy_read_data_by_local_id",
+        "response_frame_id": 1928,
+        "response_frame_id_hex": "0x788"
+      },
+      "canonical": {
+        "id": "wheel.speed.front_left",
+        "label": "Front-left wheel speed",
+        "quantity": "speed",
+        "preferred_unit": "km/h",
+        "confidence": "mapped",
+        "aliases": [
+          "WHEEL_SP_FL"
+        ]
+      }
+    },
+    {
+      "name": "WHEEL_SP_FR",
+      "decode": {
+        "start_bit": 39,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.1,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 6553.5,
+        "unit": "km/h",
+        "mux": {
+          "value": 34,
+          "start_bit": 0,
+          "bit_length": 8
+        }
+      },
+      "raw": {
+        "cflag": 2,
+        "canp_start_bit": 40,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "diagnostic_query",
+        "bus": "can0",
+        "query_id": "diag_71E_2121",
+        "tx_id": 1822,
+        "tx_id_hex": "0x71E",
+        "rx_id": 1928,
+        "rx_id_hex": "0x788",
+        "request_hex": "21 21",
+        "request_kind": "legacy_read_data_by_local_id",
+        "response_frame_id": 1928,
+        "response_frame_id_hex": "0x788"
+      },
+      "canonical": {
+        "id": "wheel.speed.front_right",
+        "label": "Front-right wheel speed",
+        "quantity": "speed",
+        "preferred_unit": "km/h",
+        "confidence": "mapped",
+        "aliases": [
+          "WHEEL_SP_FR"
+        ]
+      }
+    },
+    {
+      "name": "WHEEL_SP_RL",
+      "decode": {
+        "start_bit": 31,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.01,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 655.35,
+        "unit": "km/h",
+        "mux": {
+          "value": 35,
+          "start_bit": 0,
+          "bit_length": 8
+        }
+      },
+      "raw": {
+        "cflag": 2,
+        "canp_start_bit": 32,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "diagnostic_query",
+        "bus": "can0",
+        "query_id": "diag_71E_2121",
+        "tx_id": 1822,
+        "tx_id_hex": "0x71E",
+        "rx_id": 1928,
+        "rx_id_hex": "0x788",
+        "request_hex": "21 21",
+        "request_kind": "legacy_read_data_by_local_id",
+        "response_frame_id": 1928,
+        "response_frame_id_hex": "0x788"
+      },
+      "canonical": {
+        "id": "wheel.speed.rear_left",
+        "label": "Rear-left wheel speed",
+        "quantity": "speed",
+        "preferred_unit": "km/h",
+        "confidence": "mapped",
+        "aliases": [
+          "WHEEL_SP_RL"
+        ]
+      }
+    },
+    {
+      "name": "WHEEL_SP_RR",
+      "decode": {
+        "start_bit": 15,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.1,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 6553.5,
+        "unit": "km/h",
+        "mux": {
+          "value": 35,
+          "start_bit": 0,
+          "bit_length": 8
+        }
+      },
+      "raw": {
+        "cflag": 2,
+        "canp_start_bit": 16,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "diagnostic_query",
+        "bus": "can0",
+        "query_id": "diag_71E_2121",
+        "tx_id": 1822,
+        "tx_id_hex": "0x71E",
+        "rx_id": 1928,
+        "rx_id_hex": "0x788",
+        "request_hex": "21 21",
+        "request_kind": "legacy_read_data_by_local_id",
+        "response_frame_id": 1928,
+        "response_frame_id_hex": "0x788"
+      },
+      "canonical": {
+        "id": "wheel.speed.rear_right",
+        "label": "Rear-right wheel speed",
+        "quantity": "speed",
+        "preferred_unit": "km/h",
+        "confidence": "mapped",
+        "aliases": [
+          "WHEEL_SP_RR"
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,728 @@
+{
+  "schema": "vehicle_data_profile.v1",
+  "vehicle": {
+    "manufacturer": "AEM",
+    "model": "DYNO SHAFT"
+  },
+  "applicability": {
+    "generation": null,
+    "platform": null,
+    "year_start": null,
+    "year_end": null,
+    "market": null,
+    "trim": null,
+    "powertrain": null
+  },
+  "buses": [
+    {
+      "id": "can0",
+      "type": "can",
+      "bitrate": 500000
+    }
+  ],
+  "can_frames": [
+    {
+      "bus": "can0",
+      "frame_id": 352,
+      "frame_id_hex": "0x160",
+      "id_format": "standard11",
+      "name": "MSG_160",
+      "dlc": 8,
+      "signals": [
+        {
+          "name": "DY_DSH_PW_HP",
+          "decode": {
+            "start_bit": 39,
+            "bit_length": 16,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 1.0,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 65535.0,
+            "unit": "#",
+            "mux": null
+          }
+        },
+        {
+          "name": "DY_DSH_RPM",
+          "decode": {
+            "start_bit": 7,
+            "bit_length": 16,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 1.0,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 65535.0,
+            "unit": "rpm",
+            "mux": null
+          }
+        },
+        {
+          "name": "DY_DSH_TQ_FTLB",
+          "decode": {
+            "start_bit": 23,
+            "bit_length": 16,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 1.0,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 65535.0,
+            "unit": "#",
+            "mux": null
+          }
+        },
+        {
+          "name": "DY_PW_FR_HP",
+          "decode": {
+            "start_bit": 63,
+            "bit_length": 8,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 0.00390625,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 0.99609375,
+            "unit": "#",
+            "mux": null
+          }
+        },
+        {
+          "name": "DY_TQ_FR_FTLB",
+          "decode": {
+            "start_bit": 55,
+            "bit_length": 8,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 0.00390625,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 0.99609375,
+            "unit": "#",
+            "mux": null
+          }
+        }
+      ]
+    },
+    {
+      "bus": "can0",
+      "frame_id": 353,
+      "frame_id_hex": "0x161",
+      "id_format": "standard11",
+      "name": "MSG_161",
+      "dlc": 8,
+      "signals": [
+        {
+          "name": "DY_DSH_PW2_HP",
+          "decode": {
+            "start_bit": 39,
+            "bit_length": 16,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 0.00390625,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 255.99609375,
+            "unit": "#",
+            "mux": null
+          }
+        },
+        {
+          "name": "DY_DSH_RPM2",
+          "decode": {
+            "start_bit": 7,
+            "bit_length": 16,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 1.0,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 65535.0,
+            "unit": "rpm",
+            "mux": null
+          }
+        },
+        {
+          "name": "DY_DSH_TQ2FTLB",
+          "decode": {
+            "start_bit": 23,
+            "bit_length": 16,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 0.00390625,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 255.99609375,
+            "unit": "#",
+            "mux": null
+          }
+        }
+      ]
+    },
+    {
+      "bus": "can0",
+      "frame_id": 354,
+      "frame_id_hex": "0x162",
+      "id_format": "standard11",
+      "name": "MSG_162",
+      "dlc": 8,
+      "signals": [
+        {
+          "name": "DY_DRV_FREQ",
+          "decode": {
+            "start_bit": 47,
+            "bit_length": 8,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 50.0,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 12750.0,
+            "unit": "Hz",
+            "mux": null
+          }
+        },
+        {
+          "name": "DY_ERROR",
+          "decode": {
+            "start_bit": 63,
+            "bit_length": 8,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 1.0,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 255.0,
+            "unit": "#",
+            "mux": null
+          }
+        },
+        {
+          "name": "DY_POW_LEV",
+          "decode": {
+            "start_bit": 31,
+            "bit_length": 8,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 0.3921568,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 99.99998400000001,
+            "unit": "%",
+            "mux": null
+          }
+        },
+        {
+          "name": "DY_SENS_TEMP",
+          "decode": {
+            "start_bit": 39,
+            "bit_length": 8,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 0.55555555555,
+            "offset": -17.8,
+            "minimum": -17.8,
+            "maximum": 123.86666666525001,
+            "unit": "C",
+            "mux": null
+          }
+        },
+        {
+          "name": "DY_SENS_VOLT",
+          "decode": {
+            "start_bit": 23,
+            "bit_length": 8,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 100.0,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 25500.0,
+            "unit": "mV",
+            "mux": null
+          }
+        },
+        {
+          "name": "DY_SYST_TEMP",
+          "decode": {
+            "start_bit": 55,
+            "bit_length": 8,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 0.55555555555,
+            "offset": -17.8,
+            "minimum": -17.8,
+            "maximum": 123.86666666525001,
+            "unit": "C",
+            "mux": null
+          }
+        },
+        {
+          "name": "DY_SYS_VOLT",
+          "decode": {
+            "start_bit": 7,
+            "bit_length": 8,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 100.0,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 25500.0,
+            "unit": "mV",
+            "mux": null
+          }
+        },
+        {
+          "name": "DY_TANK_VOLT",
+          "decode": {
+            "start_bit": 15,
+            "bit_length": 8,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 100.0,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 25500.0,
+            "unit": "mV",
+            "mux": null
+          }
+        }
+      ]
+    }
+  ],
+  "diagnostic_queries": [],
+  "signals": [
+    {
+      "name": "DY_DSH_RPM2",
+      "decode": {
+        "start_bit": 7,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 65535.0,
+        "unit": "rpm",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 8,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 353,
+        "frame_id_hex": "0x161",
+        "frame_name": "MSG_161"
+      },
+      "canonical": {
+        "id": "engine.speed",
+        "label": "Engine speed",
+        "quantity": "rotational_speed",
+        "preferred_unit": "rpm",
+        "confidence": "heuristic",
+        "aliases": [
+          "DY_DSH_RPM2"
+        ]
+      }
+    },
+    {
+      "name": "DY_DRV_FREQ",
+      "decode": {
+        "start_bit": 47,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 50.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 12750.0,
+        "unit": "Hz",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 40,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 354,
+        "frame_id_hex": "0x162",
+        "frame_name": "MSG_162"
+      }
+    },
+    {
+      "name": "DY_DSH_PW2_HP",
+      "decode": {
+        "start_bit": 39,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.00390625,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 255.99609375,
+        "unit": "#",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 40,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 353,
+        "frame_id_hex": "0x161",
+        "frame_name": "MSG_161"
+      }
+    },
+    {
+      "name": "DY_DSH_PW_HP",
+      "decode": {
+        "start_bit": 39,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 65535.0,
+        "unit": "#",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 40,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 352,
+        "frame_id_hex": "0x160",
+        "frame_name": "MSG_160"
+      }
+    },
+    {
+      "name": "DY_DSH_TQ2FTLB",
+      "decode": {
+        "start_bit": 23,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.00390625,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 255.99609375,
+        "unit": "#",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 24,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 353,
+        "frame_id_hex": "0x161",
+        "frame_name": "MSG_161"
+      }
+    },
+    {
+      "name": "DY_DSH_TQ_FTLB",
+      "decode": {
+        "start_bit": 23,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 65535.0,
+        "unit": "#",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 24,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 352,
+        "frame_id_hex": "0x160",
+        "frame_name": "MSG_160"
+      }
+    },
+    {
+      "name": "DY_ERROR",
+      "decode": {
+        "start_bit": 63,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 255.0,
+        "unit": "#",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 56,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 354,
+        "frame_id_hex": "0x162",
+        "frame_name": "MSG_162"
+      }
+    },
+    {
+      "name": "DY_POW_LEV",
+      "decode": {
+        "start_bit": 31,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.3921568,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 99.99998400000001,
+        "unit": "%",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 24,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 354,
+        "frame_id_hex": "0x162",
+        "frame_name": "MSG_162"
+      }
+    },
+    {
+      "name": "DY_PW_FR_HP",
+      "decode": {
+        "start_bit": 63,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.00390625,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 0.99609375,
+        "unit": "#",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 56,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 352,
+        "frame_id_hex": "0x160",
+        "frame_name": "MSG_160"
+      }
+    },
+    {
+      "name": "DY_SENS_TEMP",
+      "decode": {
+        "start_bit": 39,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.55555555555,
+        "offset": -17.8,
+        "minimum": -17.8,
+        "maximum": 123.86666666525001,
+        "unit": "C",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 32,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 354,
+        "frame_id_hex": "0x162",
+        "frame_name": "MSG_162"
+      }
+    },
+    {
+      "name": "DY_SENS_VOLT",
+      "decode": {
+        "start_bit": 23,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 100.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 25500.0,
+        "unit": "mV",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 16,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 354,
+        "frame_id_hex": "0x162",
+        "frame_name": "MSG_162"
+      }
+    },
+    {
+      "name": "DY_SYS_VOLT",
+      "decode": {
+        "start_bit": 7,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 100.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 25500.0,
+        "unit": "mV",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 0,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 354,
+        "frame_id_hex": "0x162",
+        "frame_name": "MSG_162"
+      }
+    },
+    {
+      "name": "DY_SYST_TEMP",
+      "decode": {
+        "start_bit": 55,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.55555555555,
+        "offset": -17.8,
+        "minimum": -17.8,
+        "maximum": 123.86666666525001,
+        "unit": "C",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 48,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 354,
+        "frame_id_hex": "0x162",
+        "frame_name": "MSG_162"
+      }
+    },
+    {
+      "name": "DY_TANK_VOLT",
+      "decode": {
+        "start_bit": 15,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 100.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 25500.0,
+        "unit": "mV",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 8,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 354,
+        "frame_id_hex": "0x162",
+        "frame_name": "MSG_162"
+      }
+    },
+    {
+      "name": "DY_TQ_FR_FTLB",
+      "decode": {
+        "start_bit": 55,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.00390625,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 0.99609375,
+        "unit": "#",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 48,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 352,
+        "frame_id_hex": "0x160",
+        "frame_name": "MSG_160"
+      }
+    }
+  ]
+}

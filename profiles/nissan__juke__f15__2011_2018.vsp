@@ -1,0 +1,1697 @@
+{
+  "schema": "vehicle_data_profile.v1",
+  "vehicle": {
+    "manufacturer": "Nissan",
+    "model": "Juke"
+  },
+  "applicability": {
+    "generation": "F15",
+    "platform": null,
+    "year_start": 2011,
+    "year_end": 2018,
+    "market": null,
+    "trim": null,
+    "powertrain": null
+  },
+  "buses": [
+    {
+      "id": "can0",
+      "type": "can",
+      "bitrate": 500000
+    }
+  ],
+  "can_frames": [
+    {
+      "bus": "can0",
+      "frame_id": 2,
+      "frame_id_hex": "0x2",
+      "id_format": "standard11",
+      "name": "MSG_002",
+      "dlc": 5,
+      "signals": [
+        {
+          "name": "Steering_Rate",
+          "decode": {
+            "start_bit": 40,
+            "bit_length": 8,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 4.0,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 1020.0,
+            "unit": "��/s",
+            "mux": null
+          }
+        }
+      ]
+    },
+    {
+      "bus": "can0",
+      "frame_id": 352,
+      "frame_id_hex": "0x160",
+      "id_format": "standard11",
+      "name": "MSG_160",
+      "dlc": 7,
+      "signals": [
+        {
+          "name": "Throttle_Position",
+          "decode": {
+            "start_bit": 32,
+            "bit_length": 8,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 0.5,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 127.5,
+            "unit": "%",
+            "mux": null
+          }
+        }
+      ]
+    },
+    {
+      "bus": "can0",
+      "frame_id": 384,
+      "frame_id_hex": "0x180",
+      "id_format": "standard11",
+      "name": "MSG_180",
+      "dlc": 8,
+      "signals": [
+        {
+          "name": "Brake_Position",
+          "decode": {
+            "start_bit": 56,
+            "bit_length": 1,
+            "byte_order": "little_endian",
+            "signed": false,
+            "factor": 1.0,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 0.0,
+            "unit": "",
+            "mux": null
+          }
+        },
+        {
+          "name": "Engine_Speed",
+          "decode": {
+            "start_bit": 56,
+            "bit_length": 8,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 32.0,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 10000.0,
+            "unit": "rpm",
+            "mux": null
+          }
+        }
+      ]
+    },
+    {
+      "bus": "can0",
+      "frame_id": 505,
+      "frame_id_hex": "0x1F9",
+      "id_format": "standard11",
+      "name": "MSG_1F9",
+      "dlc": 8,
+      "signals": [
+        {
+          "name": "Ignition___Run_Position",
+          "decode": {
+            "start_bit": 61,
+            "bit_length": 1,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 1.0,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 0.0,
+            "unit": "",
+            "mux": null
+          }
+        },
+        {
+          "name": "Ignition___Starter_Position",
+          "decode": {
+            "start_bit": 60,
+            "bit_length": 1,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 1.0,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 0.0,
+            "unit": "",
+            "mux": null
+          }
+        }
+      ]
+    },
+    {
+      "bus": "can0",
+      "frame_id": 534,
+      "frame_id_hex": "0x216",
+      "id_format": "standard11",
+      "name": "MSG_216",
+      "dlc": 2,
+      "signals": [
+        {
+          "name": "Clutch_Position",
+          "decode": {
+            "start_bit": 51,
+            "bit_length": 1,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 1.0,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 0.0,
+            "unit": "",
+            "mux": null
+          }
+        }
+      ]
+    },
+    {
+      "bus": "can0",
+      "frame_id": 644,
+      "frame_id_hex": "0x284",
+      "id_format": "standard11",
+      "name": "MSG_284",
+      "dlc": 8,
+      "signals": [
+        {
+          "name": "Indicated_Vehicle_Speed_kph",
+          "decode": {
+            "start_bit": 16,
+            "bit_length": 16,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 0.01,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 655.35,
+            "unit": "km/h",
+            "mux": null
+          }
+        },
+        {
+          "name": "Indicated_Vehicle_Speed_mph",
+          "decode": {
+            "start_bit": 16,
+            "bit_length": 16,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 0.00621,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 406.97235,
+            "unit": "mph",
+            "mux": null
+          }
+        },
+        {
+          "name": "Wheel_Speed_FL_kph",
+          "decode": {
+            "start_bit": 32,
+            "bit_length": 16,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 0.00541,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 354.54435,
+            "unit": "km/h",
+            "mux": null
+          }
+        },
+        {
+          "name": "Wheel_Speed_FL_mph",
+          "decode": {
+            "start_bit": 32,
+            "bit_length": 16,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 0.00335961,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 220.17204135,
+            "unit": "mph",
+            "mux": null
+          }
+        },
+        {
+          "name": "Wheel_Speed_FR_kph",
+          "decode": {
+            "start_bit": 48,
+            "bit_length": 16,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 0.00541,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 354.54435,
+            "unit": "km/h",
+            "mux": null
+          }
+        },
+        {
+          "name": "Wheel_Speed_FR_mph",
+          "decode": {
+            "start_bit": 48,
+            "bit_length": 16,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 0.00335961,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 220.17204135,
+            "unit": "mph",
+            "mux": null
+          }
+        }
+      ]
+    },
+    {
+      "bus": "can0",
+      "frame_id": 645,
+      "frame_id_hex": "0x285",
+      "id_format": "standard11",
+      "name": "MSG_285",
+      "dlc": 8,
+      "signals": [
+        {
+          "name": "Wheel_Speed_RL_kph",
+          "decode": {
+            "start_bit": 32,
+            "bit_length": 16,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 0.00537,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 351.92295,
+            "unit": "km/h",
+            "mux": null
+          }
+        },
+        {
+          "name": "Wheel_Speed_RL_mph",
+          "decode": {
+            "start_bit": 32,
+            "bit_length": 16,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 0.00333477,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 218.54415195,
+            "unit": "mph",
+            "mux": null
+          }
+        },
+        {
+          "name": "Wheel_Speed_RR_kph",
+          "decode": {
+            "start_bit": 48,
+            "bit_length": 16,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 0.00537,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 351.92295,
+            "unit": "km/h",
+            "mux": null
+          }
+        },
+        {
+          "name": "Wheel_Speed_RR_mph",
+          "decode": {
+            "start_bit": 48,
+            "bit_length": 16,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 0.00333477,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 218.54415195,
+            "unit": "mph",
+            "mux": null
+          }
+        }
+      ]
+    },
+    {
+      "bus": "can0",
+      "frame_id": 658,
+      "frame_id_hex": "0x292",
+      "id_format": "standard11",
+      "name": "MSG_292",
+      "dlc": 8,
+      "signals": [
+        {
+          "name": "Indicated_Lateral_Acceleration",
+          "decode": {
+            "start_bit": 40,
+            "bit_length": 12,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 1.0,
+            "offset": -2048.0,
+            "minimum": -2048.0,
+            "maximum": 2047.0,
+            "unit": "",
+            "mux": null
+          }
+        },
+        {
+          "name": "Indicated_Longitudinal_Acceleration",
+          "decode": {
+            "start_bit": 52,
+            "bit_length": 12,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 1.0,
+            "offset": -2048.0,
+            "minimum": -2048.0,
+            "maximum": 2047.0,
+            "unit": "",
+            "mux": null
+          }
+        },
+        {
+          "name": "Yaw_Rate",
+          "decode": {
+            "start_bit": 28,
+            "bit_length": 12,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 1.0,
+            "offset": -2048.0,
+            "minimum": -2048.0,
+            "maximum": 2047.0,
+            "unit": "",
+            "mux": null
+          }
+        }
+      ]
+    },
+    {
+      "bus": "can0",
+      "frame_id": 861,
+      "frame_id_hex": "0x35D",
+      "id_format": "standard11",
+      "name": "MSG_35D",
+      "dlc": 8,
+      "signals": [
+        {
+          "name": "Wiper_Fast",
+          "decode": {
+            "start_bit": 41,
+            "bit_length": 1,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 1.0,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 0.0,
+            "unit": "",
+            "mux": null
+          }
+        },
+        {
+          "name": "Wiper_Once",
+          "decode": {
+            "start_bit": 43,
+            "bit_length": 1,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 1.0,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 0.0,
+            "unit": "",
+            "mux": null
+          }
+        },
+        {
+          "name": "Wiper_Trigger",
+          "decode": {
+            "start_bit": 42,
+            "bit_length": 1,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 1.0,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 0.0,
+            "unit": "",
+            "mux": null
+          }
+        }
+      ]
+    },
+    {
+      "bus": "can0",
+      "frame_id": 1057,
+      "frame_id_hex": "0x421",
+      "id_format": "standard11",
+      "name": "MSG_421",
+      "dlc": 3,
+      "signals": [
+        {
+          "name": "Gear",
+          "decode": {
+            "start_bit": 59,
+            "bit_length": 5,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 1.0,
+            "offset": -15.0,
+            "minimum": -16.0,
+            "maximum": 16.0,
+            "unit": "",
+            "mux": null
+          }
+        }
+      ]
+    },
+    {
+      "bus": "can0",
+      "frame_id": 1361,
+      "frame_id_hex": "0x551",
+      "id_format": "standard11",
+      "name": "MSG_551",
+      "dlc": 8,
+      "signals": [
+        {
+          "name": "Coolant_Temperature",
+          "decode": {
+            "start_bit": 56,
+            "bit_length": 8,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 1.0,
+            "offset": -40.0,
+            "minimum": -40.0,
+            "maximum": 200.0,
+            "unit": "��C",
+            "mux": null
+          }
+        },
+        {
+          "name": "Fuel_Consumption",
+          "decode": {
+            "start_bit": 8,
+            "bit_length": 8,
+            "byte_order": "little_endian",
+            "signed": false,
+            "factor": 1.0,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 0.0,
+            "unit": "mm��",
+            "mux": null
+          }
+        }
+      ]
+    },
+    {
+      "bus": "can0",
+      "frame_id": 1376,
+      "frame_id_hex": "0x560",
+      "id_format": "standard11",
+      "name": "MSG_560",
+      "dlc": 6,
+      "signals": [
+        {
+          "name": "Transmission_Oil_Temperature",
+          "decode": {
+            "start_bit": 56,
+            "bit_length": 8,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 1.0,
+            "offset": -40.0,
+            "minimum": -40.0,
+            "maximum": 215.0,
+            "unit": "��C",
+            "mux": null
+          }
+        }
+      ]
+    },
+    {
+      "bus": "can0",
+      "frame_id": 1477,
+      "frame_id_hex": "0x5C5",
+      "id_format": "standard11",
+      "name": "MSG_5C5",
+      "dlc": 8,
+      "signals": [
+        {
+          "name": "Handbrake",
+          "decode": {
+            "start_bit": 58,
+            "bit_length": 1,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 1.0,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 0.0,
+            "unit": "",
+            "mux": null
+          }
+        }
+      ]
+    },
+    {
+      "bus": "can0",
+      "frame_id": 1549,
+      "frame_id_hex": "0x60D",
+      "id_format": "standard11",
+      "name": "MSG_60D",
+      "dlc": 8,
+      "signals": [
+        {
+          "name": "Door_Open___Front_Left",
+          "decode": {
+            "start_bit": 59,
+            "bit_length": 1,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 1.0,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 0.0,
+            "unit": "",
+            "mux": null
+          }
+        },
+        {
+          "name": "Door_Open___Front_Right",
+          "decode": {
+            "start_bit": 60,
+            "bit_length": 1,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 1.0,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 0.0,
+            "unit": "",
+            "mux": null
+          }
+        },
+        {
+          "name": "Full_Beam",
+          "decode": {
+            "start_bit": 51,
+            "bit_length": 1,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 1.0,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 0.0,
+            "unit": "",
+            "mux": null
+          }
+        },
+        {
+          "name": "Headlights",
+          "decode": {
+            "start_bit": 57,
+            "bit_length": 1,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 1.0,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 0.0,
+            "unit": "",
+            "mux": null
+          }
+        },
+        {
+          "name": "Ignition_On",
+          "decode": {
+            "start_bit": 50,
+            "bit_length": 1,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 1.0,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 0.0,
+            "unit": "",
+            "mux": null
+          }
+        },
+        {
+          "name": "Ignition___Acc_Position",
+          "decode": {
+            "start_bit": 49,
+            "bit_length": 1,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 1.0,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 0.0,
+            "unit": "",
+            "mux": null
+          }
+        },
+        {
+          "name": "Indicator_Left",
+          "decode": {
+            "start_bit": 53,
+            "bit_length": 1,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 1.0,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 0.0,
+            "unit": "",
+            "mux": null
+          }
+        },
+        {
+          "name": "Indicator_Right",
+          "decode": {
+            "start_bit": 54,
+            "bit_length": 1,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 1.0,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 0.0,
+            "unit": "",
+            "mux": null
+          }
+        },
+        {
+          "name": "Side_Lights",
+          "decode": {
+            "start_bit": 58,
+            "bit_length": 1,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 1.0,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 0.0,
+            "unit": "",
+            "mux": null
+          }
+        }
+      ]
+    }
+  ],
+  "diagnostic_queries": [],
+  "signals": [
+    {
+      "name": "Brake_Position",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 384,
+        "frame_id_hex": "0x180",
+        "frame_name": "MSG_180"
+      },
+      "decode": {
+        "start_bit": 56,
+        "bit_length": 1,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 0.0,
+        "unit": "",
+        "mux": null
+      },
+      "canonical": {
+        "id": "brake.pedal.position",
+        "label": "Brake pedal position",
+        "quantity": "position",
+        "preferred_unit": "%",
+        "confidence": "mapped",
+        "aliases": [
+          "Brake_Position"
+        ]
+      }
+    },
+    {
+      "name": "Clutch_Position",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 534,
+        "frame_id_hex": "0x216",
+        "frame_name": "MSG_216"
+      },
+      "decode": {
+        "start_bit": 51,
+        "bit_length": 1,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 0.0,
+        "unit": "",
+        "mux": null
+      },
+      "canonical": {
+        "id": "clutch.position",
+        "label": "Clutch position",
+        "quantity": "position",
+        "preferred_unit": "%",
+        "confidence": "mapped",
+        "aliases": [
+          "Clutch_Position"
+        ]
+      }
+    },
+    {
+      "name": "Door_Open___Front_Left",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1549,
+        "frame_id_hex": "0x60D",
+        "frame_name": "MSG_60D"
+      },
+      "decode": {
+        "start_bit": 59,
+        "bit_length": 1,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 0.0,
+        "unit": "",
+        "mux": null
+      },
+      "canonical": {
+        "id": "door.open.front_left",
+        "label": "Front-left door open",
+        "quantity": "state",
+        "preferred_unit": "bool",
+        "confidence": "mapped",
+        "aliases": [
+          "Door_Open___Front_Left"
+        ]
+      }
+    },
+    {
+      "name": "Door_Open___Front_Right",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1549,
+        "frame_id_hex": "0x60D",
+        "frame_name": "MSG_60D"
+      },
+      "decode": {
+        "start_bit": 60,
+        "bit_length": 1,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 0.0,
+        "unit": "",
+        "mux": null
+      },
+      "canonical": {
+        "id": "door.open.front_right",
+        "label": "Front-right door open",
+        "quantity": "state",
+        "preferred_unit": "bool",
+        "confidence": "mapped",
+        "aliases": [
+          "Door_Open___Front_Right"
+        ]
+      }
+    },
+    {
+      "name": "Coolant_Temperature",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1361,
+        "frame_id_hex": "0x551",
+        "frame_name": "MSG_551"
+      },
+      "decode": {
+        "start_bit": 56,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": -40.0,
+        "minimum": -40.0,
+        "maximum": 200.0,
+        "unit": "��C",
+        "mux": null
+      },
+      "canonical": {
+        "id": "engine.coolant.temperature",
+        "label": "Engine coolant temperature",
+        "quantity": "temperature",
+        "preferred_unit": "C",
+        "confidence": "mapped",
+        "aliases": [
+          "Coolant_Temperature"
+        ]
+      }
+    },
+    {
+      "name": "Engine_Speed",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 384,
+        "frame_id_hex": "0x180",
+        "frame_name": "MSG_180"
+      },
+      "decode": {
+        "start_bit": 56,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 32.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 10000.0,
+        "unit": "rpm",
+        "mux": null
+      },
+      "canonical": {
+        "id": "engine.speed",
+        "label": "Engine speed",
+        "quantity": "rotational_speed",
+        "preferred_unit": "rpm",
+        "confidence": "mapped",
+        "aliases": [
+          "Engine_Speed"
+        ]
+      }
+    },
+    {
+      "name": "Fuel_Consumption",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1361,
+        "frame_id_hex": "0x551",
+        "frame_name": "MSG_551"
+      },
+      "decode": {
+        "start_bit": 8,
+        "bit_length": 8,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 0.0,
+        "unit": "mm��",
+        "mux": null
+      },
+      "canonical": {
+        "id": "fuel.consumption",
+        "label": "Fuel consumption",
+        "quantity": "consumption",
+        "preferred_unit": "L/h",
+        "confidence": "mapped",
+        "aliases": [
+          "Fuel_Consumption"
+        ]
+      }
+    },
+    {
+      "name": "Ignition_On",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1549,
+        "frame_id_hex": "0x60D",
+        "frame_name": "MSG_60D"
+      },
+      "decode": {
+        "start_bit": 50,
+        "bit_length": 1,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 0.0,
+        "unit": "",
+        "mux": null
+      },
+      "canonical": {
+        "id": "ignition.on",
+        "label": "Ignition on",
+        "quantity": "state",
+        "preferred_unit": "bool",
+        "confidence": "mapped",
+        "aliases": [
+          "Ignition_On"
+        ]
+      }
+    },
+    {
+      "name": "Headlights",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1549,
+        "frame_id_hex": "0x60D",
+        "frame_name": "MSG_60D"
+      },
+      "decode": {
+        "start_bit": 57,
+        "bit_length": 1,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 0.0,
+        "unit": "",
+        "mux": null
+      },
+      "canonical": {
+        "id": "lighting.headlight",
+        "label": "Headlight",
+        "quantity": "state",
+        "preferred_unit": "bool",
+        "confidence": "mapped",
+        "aliases": [
+          "Headlights"
+        ]
+      }
+    },
+    {
+      "name": "Full_Beam",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1549,
+        "frame_id_hex": "0x60D",
+        "frame_name": "MSG_60D"
+      },
+      "decode": {
+        "start_bit": 51,
+        "bit_length": 1,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 0.0,
+        "unit": "",
+        "mux": null
+      },
+      "canonical": {
+        "id": "lighting.high_beam",
+        "label": "High beam",
+        "quantity": "state",
+        "preferred_unit": "bool",
+        "confidence": "mapped",
+        "aliases": [
+          "Full_Beam"
+        ]
+      }
+    },
+    {
+      "name": "Indicator_Left",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1549,
+        "frame_id_hex": "0x60D",
+        "frame_name": "MSG_60D"
+      },
+      "decode": {
+        "start_bit": 53,
+        "bit_length": 1,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 0.0,
+        "unit": "",
+        "mux": null
+      },
+      "canonical": {
+        "id": "lighting.indicator.left",
+        "label": "Left indicator",
+        "quantity": "state",
+        "preferred_unit": "bool",
+        "confidence": "mapped",
+        "aliases": [
+          "Indicator_Left"
+        ]
+      }
+    },
+    {
+      "name": "Indicator_Right",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1549,
+        "frame_id_hex": "0x60D",
+        "frame_name": "MSG_60D"
+      },
+      "decode": {
+        "start_bit": 54,
+        "bit_length": 1,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 0.0,
+        "unit": "",
+        "mux": null
+      },
+      "canonical": {
+        "id": "lighting.indicator.right",
+        "label": "Right indicator",
+        "quantity": "state",
+        "preferred_unit": "bool",
+        "confidence": "mapped",
+        "aliases": [
+          "Indicator_Right"
+        ]
+      }
+    },
+    {
+      "name": "Side_Lights",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1549,
+        "frame_id_hex": "0x60D",
+        "frame_name": "MSG_60D"
+      },
+      "decode": {
+        "start_bit": 58,
+        "bit_length": 1,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 0.0,
+        "unit": "",
+        "mux": null
+      },
+      "canonical": {
+        "id": "lighting.position",
+        "label": "Position light",
+        "quantity": "state",
+        "preferred_unit": "bool",
+        "confidence": "mapped",
+        "aliases": [
+          "Side_Lights"
+        ]
+      }
+    },
+    {
+      "name": "Handbrake",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1477,
+        "frame_id_hex": "0x5C5",
+        "frame_name": "MSG_5C5"
+      },
+      "decode": {
+        "start_bit": 58,
+        "bit_length": 1,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 0.0,
+        "unit": "",
+        "mux": null
+      },
+      "canonical": {
+        "id": "parking_brake.switch",
+        "label": "Parking brake switch",
+        "quantity": "state",
+        "preferred_unit": "bool",
+        "confidence": "mapped",
+        "aliases": [
+          "Handbrake"
+        ]
+      }
+    },
+    {
+      "name": "Steering_Rate",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 2,
+        "frame_id_hex": "0x2",
+        "frame_name": "MSG_002"
+      },
+      "decode": {
+        "start_bit": 40,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 4.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 1020.0,
+        "unit": "��/s",
+        "mux": null
+      },
+      "canonical": {
+        "id": "steering.wheel.speed",
+        "label": "Steering wheel speed",
+        "quantity": "angular_speed",
+        "preferred_unit": "deg/s",
+        "confidence": "mapped",
+        "aliases": [
+          "Steering_Rate"
+        ]
+      }
+    },
+    {
+      "name": "Throttle_Position",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 352,
+        "frame_id_hex": "0x160",
+        "frame_name": "MSG_160"
+      },
+      "decode": {
+        "start_bit": 32,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.5,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 127.5,
+        "unit": "%",
+        "mux": null
+      },
+      "canonical": {
+        "id": "throttle.position",
+        "label": "Throttle position",
+        "quantity": "position",
+        "preferred_unit": "%",
+        "confidence": "mapped",
+        "aliases": [
+          "Throttle_Position"
+        ]
+      }
+    },
+    {
+      "name": "Gear",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1057,
+        "frame_id_hex": "0x421",
+        "frame_name": "MSG_421"
+      },
+      "decode": {
+        "start_bit": 59,
+        "bit_length": 5,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": -15.0,
+        "minimum": -16.0,
+        "maximum": 16.0,
+        "unit": "",
+        "mux": null
+      },
+      "canonical": {
+        "id": "transmission.gear.selected",
+        "label": "Selected gear",
+        "quantity": "gear",
+        "preferred_unit": "gear",
+        "confidence": "mapped",
+        "aliases": [
+          "Gear"
+        ]
+      }
+    },
+    {
+      "name": "Transmission_Oil_Temperature",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1376,
+        "frame_id_hex": "0x560",
+        "frame_name": "MSG_560"
+      },
+      "decode": {
+        "start_bit": 56,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": -40.0,
+        "minimum": -40.0,
+        "maximum": 215.0,
+        "unit": "��C",
+        "mux": null
+      },
+      "canonical": {
+        "id": "transmission.oil.temperature",
+        "label": "Transmission oil temperature",
+        "quantity": "temperature",
+        "preferred_unit": "C",
+        "confidence": "mapped",
+        "aliases": [
+          "Transmission_Oil_Temperature"
+        ]
+      }
+    },
+    {
+      "name": "Indicated_Lateral_Acceleration",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 658,
+        "frame_id_hex": "0x292",
+        "frame_name": "MSG_292"
+      },
+      "decode": {
+        "start_bit": 40,
+        "bit_length": 12,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": -2048.0,
+        "minimum": -2048.0,
+        "maximum": 2047.0,
+        "unit": "",
+        "mux": null
+      },
+      "canonical": {
+        "id": "vehicle.acceleration.lateral",
+        "label": "Lateral acceleration",
+        "quantity": "acceleration",
+        "preferred_unit": "g",
+        "confidence": "heuristic",
+        "aliases": [
+          "Indicated_Lateral_Acceleration"
+        ]
+      }
+    },
+    {
+      "name": "Indicated_Longitudinal_Acceleration",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 658,
+        "frame_id_hex": "0x292",
+        "frame_name": "MSG_292"
+      },
+      "decode": {
+        "start_bit": 52,
+        "bit_length": 12,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": -2048.0,
+        "minimum": -2048.0,
+        "maximum": 2047.0,
+        "unit": "",
+        "mux": null
+      },
+      "canonical": {
+        "id": "vehicle.acceleration.longitudinal",
+        "label": "Longitudinal acceleration",
+        "quantity": "acceleration",
+        "preferred_unit": "g",
+        "confidence": "heuristic",
+        "aliases": [
+          "Indicated_Longitudinal_Acceleration"
+        ]
+      }
+    },
+    {
+      "name": "Indicated_Vehicle_Speed_mph",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 644,
+        "frame_id_hex": "0x284",
+        "frame_name": "MSG_284"
+      },
+      "decode": {
+        "start_bit": 16,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.00621,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 406.97235,
+        "unit": "mph",
+        "mux": null
+      },
+      "canonical": {
+        "id": "vehicle.speed",
+        "label": "Vehicle speed",
+        "quantity": "speed",
+        "preferred_unit": "km/h",
+        "confidence": "heuristic",
+        "aliases": [
+          "Indicated_Vehicle_Speed_mph"
+        ]
+      }
+    },
+    {
+      "name": "Yaw_Rate",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 658,
+        "frame_id_hex": "0x292",
+        "frame_name": "MSG_292"
+      },
+      "decode": {
+        "start_bit": 28,
+        "bit_length": 12,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": -2048.0,
+        "minimum": -2048.0,
+        "maximum": 2047.0,
+        "unit": "",
+        "mux": null
+      },
+      "canonical": {
+        "id": "vehicle.yaw_rate",
+        "label": "Yaw rate",
+        "quantity": "angular_speed",
+        "preferred_unit": "deg/s",
+        "confidence": "mapped",
+        "aliases": [
+          "Yaw_Rate"
+        ]
+      }
+    },
+    {
+      "name": "Wheel_Speed_FL_mph",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 644,
+        "frame_id_hex": "0x284",
+        "frame_name": "MSG_284"
+      },
+      "decode": {
+        "start_bit": 32,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.00335961,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 220.17204135,
+        "unit": "mph",
+        "mux": null
+      },
+      "canonical": {
+        "id": "wheel.speed.front_left",
+        "label": "Front-left wheel speed",
+        "quantity": "speed",
+        "preferred_unit": "km/h",
+        "confidence": "mapped",
+        "aliases": [
+          "Wheel_Speed_FL_mph"
+        ]
+      }
+    },
+    {
+      "name": "Wheel_Speed_FR_mph",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 644,
+        "frame_id_hex": "0x284",
+        "frame_name": "MSG_284"
+      },
+      "decode": {
+        "start_bit": 48,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.00335961,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 220.17204135,
+        "unit": "mph",
+        "mux": null
+      },
+      "canonical": {
+        "id": "wheel.speed.front_right",
+        "label": "Front-right wheel speed",
+        "quantity": "speed",
+        "preferred_unit": "km/h",
+        "confidence": "mapped",
+        "aliases": [
+          "Wheel_Speed_FR_mph"
+        ]
+      }
+    },
+    {
+      "name": "Wheel_Speed_RL_mph",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 645,
+        "frame_id_hex": "0x285",
+        "frame_name": "MSG_285"
+      },
+      "decode": {
+        "start_bit": 32,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.00333477,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 218.54415195,
+        "unit": "mph",
+        "mux": null
+      },
+      "canonical": {
+        "id": "wheel.speed.rear_left",
+        "label": "Rear-left wheel speed",
+        "quantity": "speed",
+        "preferred_unit": "km/h",
+        "confidence": "mapped",
+        "aliases": [
+          "Wheel_Speed_RL_mph"
+        ]
+      }
+    },
+    {
+      "name": "Wheel_Speed_RR_mph",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 645,
+        "frame_id_hex": "0x285",
+        "frame_name": "MSG_285"
+      },
+      "decode": {
+        "start_bit": 48,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.00333477,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 218.54415195,
+        "unit": "mph",
+        "mux": null
+      },
+      "canonical": {
+        "id": "wheel.speed.rear_right",
+        "label": "Rear-right wheel speed",
+        "quantity": "speed",
+        "preferred_unit": "km/h",
+        "confidence": "mapped",
+        "aliases": [
+          "Wheel_Speed_RR_mph"
+        ]
+      }
+    },
+    {
+      "name": "Wiper_Trigger",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 861,
+        "frame_id_hex": "0x35D",
+        "frame_name": "MSG_35D"
+      },
+      "decode": {
+        "start_bit": 42,
+        "bit_length": 1,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 0.0,
+        "unit": "",
+        "mux": null
+      },
+      "canonical": {
+        "id": "wiper.trigger",
+        "label": "Wiper trigger",
+        "quantity": "state",
+        "preferred_unit": "bool",
+        "confidence": "mapped",
+        "aliases": [
+          "Wiper_Trigger"
+        ]
+      }
+    },
+    {
+      "name": "Ignition___Acc_Position",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1549,
+        "frame_id_hex": "0x60D",
+        "frame_name": "MSG_60D"
+      },
+      "decode": {
+        "start_bit": 49,
+        "bit_length": 1,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 0.0,
+        "unit": "",
+        "mux": null
+      }
+    },
+    {
+      "name": "Ignition___Run_Position",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 505,
+        "frame_id_hex": "0x1F9",
+        "frame_name": "MSG_1F9"
+      },
+      "decode": {
+        "start_bit": 61,
+        "bit_length": 1,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 0.0,
+        "unit": "",
+        "mux": null
+      }
+    },
+    {
+      "name": "Ignition___Starter_Position",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 505,
+        "frame_id_hex": "0x1F9",
+        "frame_name": "MSG_1F9"
+      },
+      "decode": {
+        "start_bit": 60,
+        "bit_length": 1,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 0.0,
+        "unit": "",
+        "mux": null
+      }
+    },
+    {
+      "name": "Wiper_Fast",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 861,
+        "frame_id_hex": "0x35D",
+        "frame_name": "MSG_35D"
+      },
+      "decode": {
+        "start_bit": 41,
+        "bit_length": 1,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 0.0,
+        "unit": "",
+        "mux": null
+      }
+    },
+    {
+      "name": "Wiper_Once",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 861,
+        "frame_id_hex": "0x35D",
+        "frame_name": "MSG_35D"
+      },
+      "decode": {
+        "start_bit": 43,
+        "bit_length": 1,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 0.0,
+        "unit": "",
+        "mux": null
+      }
+    }
+  ]
+}
