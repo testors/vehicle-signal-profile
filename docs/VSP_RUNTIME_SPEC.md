@@ -188,6 +188,33 @@ vehicle. A `.vsp` file describes one compatible vehicle scope. If model year,
 generation, market, trim, or powertrain changes the signal behavior, use a
 separate profile.
 
+Profile filenames and applicability are generation/scope-specific. Do not infer
+that a base-model profile applies to another generation or trim unless the
+selected `.vsp` already includes those channels.
+
+## Generated Profile Composition
+
+Public profiles may be generated from multiple compatible source formats. A
+single `.vsp` can contain both passive CAN signals and diagnostic-query signals
+when build-time evidence shows they share a compatible vehicle scope.
+
+Build-time composition follows these runtime-visible rules:
+
+- Same-scope sources can be merged so both acquisition paths stay available.
+- Reviewed alias/supplement evidence or strict compatibility checks may add
+  base-model passive CAN definitions to a trim-specific OBD-focused profile,
+  but the generated profile must still be selected by its own `vehicle` and
+  `applicability` scope.
+- Generation, platform, year, market, trim, and powertrain boundaries remain
+  profile-selection boundaries unless the generated profile already represents
+  a compatible merged scope.
+- Conflict resolution must not collapse acquisition modes. If the same
+  canonical ID appears in both CAN and diagnostic acquisition modes, both can
+  be present and runtime code should choose by `signals[].acquisition.type`.
+
+Applications do not need source provenance. Select the profile by `vehicle` and
+`applicability`, then choose channels by acquisition mode.
+
 ## Implementation Checklist
 
 - Load the `.vsp` JSON.
