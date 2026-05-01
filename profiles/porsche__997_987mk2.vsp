@@ -1,7 +1,7 @@
 {
   "schema": "vehicle_data_profile.v1",
   "vehicle": {
-    "manufacturer": "PORSCHE",
+    "manufacturer": "Porsche",
     "model": "997 987MK2"
   },
   "applicability": {
@@ -299,21 +299,6 @@
       "name": "DIAG_RESPONSE_6F2",
       "dlc": 8,
       "signals": [
-        {
-          "name": "BrakePress",
-          "decode": {
-            "start_bit": 0,
-            "bit_length": 16,
-            "byte_order": "little_endian",
-            "signed": false,
-            "factor": 0.1,
-            "offset": 0.0,
-            "minimum": 0.0,
-            "maximum": 6553.5,
-            "unit": "bar",
-            "mux": null
-          }
-        },
         {
           "name": "SpeedFL",
           "decode": {
@@ -691,50 +676,11 @@
         "aliases": [
           "PedalPos"
         ]
-      }
-    },
-    {
-      "name": "BrakePress",
-      "decode": {
-        "start_bit": 0,
-        "bit_length": 16,
-        "byte_order": "little_endian",
-        "signed": false,
-        "factor": 0.1,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 6553.5,
-        "unit": "bar",
-        "mux": null
       },
-      "raw": {
-        "cflag": 5,
-        "canp_start_bit": 0,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
-      },
-      "acquisition": {
-        "type": "diagnostic_query",
-        "bus": "can0",
-        "query_id": "diag_5F2_2104",
-        "tx_id": 1522,
-        "tx_id_hex": "0x5F2",
-        "rx_id": 1778,
-        "rx_id_hex": "0x6F2",
-        "request_hex": "21 04",
-        "request_kind": "legacy_read_data_by_local_id",
-        "response_frame_id": 1778,
-        "response_frame_id_hex": "0x6F2"
-      },
-      "canonical": {
-        "id": "brake.pressure",
-        "label": "Brake pressure",
-        "quantity": "pressure",
-        "preferred_unit": "bar",
-        "confidence": "mapped",
-        "aliases": [
-          "BrakePress"
-        ]
+      "match": {
+        "confidence": "inferred",
+        "reason": "mode01_batch_synthetic_name",
+        "record_offset": 5872
       }
     },
     {
@@ -779,6 +725,11 @@
         "aliases": [
           "WaterTemp"
         ]
+      },
+      "match": {
+        "confidence": "inferred",
+        "reason": "mode01_batch_synthetic_name",
+        "record_offset": 5872
       }
     },
     {
@@ -823,6 +774,11 @@
         "aliases": [
           "RPM"
         ]
+      },
+      "match": {
+        "confidence": "inferred",
+        "reason": "mode01_batch_synthetic_name",
+        "record_offset": 5872
       }
     },
     {
@@ -867,6 +823,11 @@
         "aliases": [
           "IntakeAirTemp"
         ]
+      },
+      "match": {
+        "confidence": "inferred",
+        "reason": "mode01_batch_synthetic_name",
+        "record_offset": 5872
       }
     },
     {
@@ -911,6 +872,11 @@
         "aliases": [
           "MAP"
         ]
+      },
+      "match": {
+        "confidence": "inferred",
+        "reason": "mode01_batch_synthetic_name",
+        "record_offset": 5872
       }
     },
     {
@@ -955,6 +921,11 @@
         "aliases": [
           "SteerAngle"
         ]
+      },
+      "match": {
+        "confidence": "high",
+        "reason": "legacy_synthetic_frame_id",
+        "record_offset": 5904
       }
     },
     {
@@ -999,6 +970,11 @@
         "aliases": [
           "TPS"
         ]
+      },
+      "match": {
+        "confidence": "inferred",
+        "reason": "mode01_batch_synthetic_name",
+        "record_offset": 5872
       }
     },
     {
@@ -1043,6 +1019,11 @@
         "aliases": [
           "SpeedFL"
         ]
+      },
+      "match": {
+        "confidence": "high",
+        "reason": "legacy_synthetic_frame_id",
+        "record_offset": 5888
       }
     },
     {
@@ -1087,6 +1068,11 @@
         "aliases": [
           "SpeedFR"
         ]
+      },
+      "match": {
+        "confidence": "high",
+        "reason": "legacy_synthetic_frame_id",
+        "record_offset": 5888
       }
     },
     {
@@ -1131,6 +1117,11 @@
         "aliases": [
           "SpeedRL"
         ]
+      },
+      "match": {
+        "confidence": "high",
+        "reason": "legacy_synthetic_frame_id",
+        "record_offset": 5888
       }
     },
     {
@@ -1175,6 +1166,11 @@
         "aliases": [
           "SpeedRR"
         ]
+      },
+      "match": {
+        "confidence": "high",
+        "reason": "legacy_synthetic_frame_id",
+        "record_offset": 5888
       }
     }
   ]

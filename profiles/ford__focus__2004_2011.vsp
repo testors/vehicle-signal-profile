@@ -23,6 +23,31 @@
   "can_frames": [
     {
       "bus": "can0",
+      "frame_id": 340,
+      "frame_id_hex": "0x154",
+      "id_format": "standard11",
+      "name": "MSG_154",
+      "dlc": 8,
+      "signals": [
+        {
+          "name": "TurboBoost",
+          "decode": {
+            "start_bit": 1,
+            "bit_length": 10,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 0.00689474482549,
+            "offset": -2.06842344765,
+            "minimum": -2.06842344765,
+            "maximum": 4.98490050882627,
+            "unit": "bar",
+            "mux": null
+          }
+        }
+      ]
+    },
+    {
+      "bus": "can0",
       "frame_id": 513,
       "frame_id_hex": "0x201",
       "id_format": "standard11",
@@ -41,6 +66,51 @@
             "minimum": 0.0,
             "maximum": 10000.0,
             "unit": "rpm",
+            "mux": null
+          }
+        },
+        {
+          "name": "PedalPosition",
+          "decode": {
+            "start_bit": 55,
+            "bit_length": 8,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 0.5,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 127.5,
+            "unit": "%",
+            "mux": null
+          }
+        },
+        {
+          "name": "RPM",
+          "decode": {
+            "start_bit": 7,
+            "bit_length": 16,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 0.25,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 16383.75,
+            "unit": "rpm",
+            "mux": null
+          }
+        },
+        {
+          "name": "SpeedVeh",
+          "decode": {
+            "start_bit": 39,
+            "bit_length": 16,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 0.01,
+            "offset": -100.0,
+            "minimum": -100.0,
+            "maximum": 555.35,
+            "unit": "km/h",
             "mux": null
           }
         },
@@ -128,6 +198,141 @@
     },
     {
       "bus": "can0",
+      "frame_id": 529,
+      "frame_id_hex": "0x211",
+      "id_format": "standard11",
+      "name": "MSG_211",
+      "dlc": 8,
+      "signals": [
+        {
+          "name": "TCSBrake",
+          "decode": {
+            "start_bit": 34,
+            "bit_length": 1,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 1.0,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 1.0,
+            "unit": "#",
+            "mux": null
+          }
+        },
+        {
+          "name": "TCSEng",
+          "decode": {
+            "start_bit": 45,
+            "bit_length": 1,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 1.0,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 1.0,
+            "unit": "#",
+            "mux": null
+          }
+        }
+      ]
+    },
+    {
+      "bus": "can0",
+      "frame_id": 533,
+      "frame_id_hex": "0x215",
+      "id_format": "standard11",
+      "name": "MSG_215",
+      "dlc": 8,
+      "signals": [
+        {
+          "name": "SpeedFL",
+          "decode": {
+            "start_bit": 7,
+            "bit_length": 16,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 0.01,
+            "offset": -100.0,
+            "minimum": -100.0,
+            "maximum": 555.35,
+            "unit": "km/h",
+            "mux": null
+          }
+        },
+        {
+          "name": "SpeedFR",
+          "decode": {
+            "start_bit": 23,
+            "bit_length": 16,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 0.01,
+            "offset": -100.0,
+            "minimum": -100.0,
+            "maximum": 555.35,
+            "unit": "km/h",
+            "mux": null
+          }
+        },
+        {
+          "name": "SpeedRL",
+          "decode": {
+            "start_bit": 39,
+            "bit_length": 16,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 0.01,
+            "offset": -100.0,
+            "minimum": -100.0,
+            "maximum": 555.35,
+            "unit": "km/h",
+            "mux": null
+          }
+        },
+        {
+          "name": "SpeedRR",
+          "decode": {
+            "start_bit": 55,
+            "bit_length": 16,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 0.01,
+            "offset": -100.0,
+            "minimum": -100.0,
+            "maximum": 555.35,
+            "unit": "km/h",
+            "mux": null
+          }
+        }
+      ]
+    },
+    {
+      "bus": "can0",
+      "frame_id": 560,
+      "frame_id_hex": "0x230",
+      "id_format": "standard11",
+      "name": "MSG_230",
+      "dlc": 8,
+      "signals": [
+        {
+          "name": "Gear",
+          "decode": {
+            "start_bit": 7,
+            "bit_length": 4,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 1.0,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 15.0,
+            "unit": "gear",
+            "mux": null
+          }
+        }
+      ]
+    },
+    {
+      "bus": "can0",
       "frame_id": 624,
       "frame_id_hex": "0x270",
       "id_format": "standard11",
@@ -146,6 +351,256 @@
             "minimum": 0.0,
             "maximum": 1.8003,
             "unit": "bar",
+            "mux": null
+          }
+        }
+      ]
+    },
+    {
+      "bus": "can0",
+      "frame_id": 1045,
+      "frame_id_hex": "0x415",
+      "id_format": "standard11",
+      "name": "MSG_415",
+      "dlc": 8,
+      "signals": [
+        {
+          "name": "ABSTelTal",
+          "decode": {
+            "start_bit": 37,
+            "bit_length": 2,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 1.0,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 3.0,
+            "unit": "#",
+            "mux": null
+          }
+        },
+        {
+          "name": "Brake",
+          "decode": {
+            "start_bit": 1,
+            "bit_length": 1,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 1.0,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 1.0,
+            "unit": "#",
+            "mux": null
+          }
+        },
+        {
+          "name": "TyreSize",
+          "decode": {
+            "start_bit": 63,
+            "bit_length": 8,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 0.00285714285,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 0.72857142675,
+            "unit": "#",
+            "mux": null
+          }
+        }
+      ]
+    },
+    {
+      "bus": "can0",
+      "frame_id": 1047,
+      "frame_id_hex": "0x417",
+      "id_format": "standard11",
+      "name": "MSG_417",
+      "dlc": 8,
+      "signals": [
+        {
+          "name": "TCSEng_01",
+          "decode": {
+            "start_bit": 4,
+            "bit_length": 1,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 1.0,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 1.0,
+            "unit": "#",
+            "mux": null
+          }
+        }
+      ]
+    },
+    {
+      "bus": "can0",
+      "frame_id": 1056,
+      "frame_id_hex": "0x420",
+      "id_format": "standard11",
+      "name": "MSG_420",
+      "dlc": 8,
+      "signals": [
+        {
+          "name": "ClutchPedalSw",
+          "decode": {
+            "start_bit": 48,
+            "bit_length": 1,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 1.0,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 1.0,
+            "unit": "#",
+            "mux": null
+          }
+        },
+        {
+          "name": "ETCTelTal",
+          "decode": {
+            "start_bit": 40,
+            "bit_length": 1,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 1.0,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 1.0,
+            "unit": "#",
+            "mux": null
+          }
+        },
+        {
+          "name": "FailSafeCool",
+          "decode": {
+            "start_bit": 35,
+            "bit_length": 2,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 1.0,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 3.0,
+            "unit": "#",
+            "mux": null
+          }
+        },
+        {
+          "name": "FuelFlow",
+          "decode": {
+            "start_bit": 23,
+            "bit_length": 8,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 7.88501430886e-05,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 0.020106786487593002,
+            "unit": "l",
+            "mux": null
+          }
+        },
+        {
+          "name": "MILTelTal",
+          "decode": {
+            "start_bit": 33,
+            "bit_length": 2,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 1.0,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 3.0,
+            "unit": "#",
+            "mux": null
+          }
+        },
+        {
+          "name": "WaterTemp",
+          "decode": {
+            "start_bit": 7,
+            "bit_length": 8,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 1.0,
+            "offset": -40.0,
+            "minimum": -40.0,
+            "maximum": 215.0,
+            "unit": "C",
+            "mux": null
+          }
+        }
+      ]
+    },
+    {
+      "bus": "can0",
+      "frame_id": 1072,
+      "frame_id_hex": "0x430",
+      "id_format": "standard11",
+      "name": "MSG_430",
+      "dlc": 8,
+      "signals": [
+        {
+          "name": "Brake2",
+          "decode": {
+            "start_bit": 55,
+            "bit_length": 1,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 1.0,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 1.0,
+            "unit": "#",
+            "mux": null
+          }
+        },
+        {
+          "name": "FuelInst1",
+          "decode": {
+            "start_bit": 23,
+            "bit_length": 8,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 0.39215686274,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 99.9999999987,
+            "unit": "%",
+            "mux": null
+          }
+        },
+        {
+          "name": "FuelInst2",
+          "decode": {
+            "start_bit": 31,
+            "bit_length": 8,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 0.39215686274,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 99.9999999987,
+            "unit": "%",
+            "mux": null
+          }
+        },
+        {
+          "name": "FuelLevel",
+          "decode": {
+            "start_bit": 7,
+            "bit_length": 8,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 0.43478260869,
+            "offset": -5.2,
+            "minimum": -5.2,
+            "maximum": 105.66956521595,
+            "unit": "%",
             "mux": null
           }
         }
@@ -280,10 +735,111 @@
           }
         }
       ]
+    },
+    {
+      "bus": "can0",
+      "frame_id": 1248,
+      "frame_id_hex": "0x4E0",
+      "id_format": "standard11",
+      "name": "MSG_4E0",
+      "dlc": 8,
+      "signals": [
+        {
+          "name": "AxleRatio",
+          "decode": {
+            "start_bit": 31,
+            "bit_length": 16,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 0.01,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 655.35,
+            "unit": "#",
+            "mux": null
+          }
+        }
+      ]
     }
   ],
   "diagnostic_queries": [],
   "signals": [
+    {
+      "name": "ABSTelTal",
+      "decode": {
+        "start_bit": 37,
+        "bit_length": 2,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 3.0,
+        "unit": "#",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 36,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1045,
+        "frame_id_hex": "0x415",
+        "frame_name": "MSG_415"
+      },
+      "canonical": {
+        "id": "abs.warning_lamp",
+        "label": "ABS warning lamp",
+        "quantity": "state",
+        "preferred_unit": "bool",
+        "confidence": "mapped",
+        "aliases": [
+          "ABSTelTal"
+        ]
+      }
+    },
+    {
+      "name": "PedalPosition",
+      "decode": {
+        "start_bit": 55,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.5,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 127.5,
+        "unit": "%",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 48,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 513,
+        "frame_id_hex": "0x201",
+        "frame_name": "MSG_201"
+      },
+      "canonical": {
+        "id": "accelerator.pedal.position",
+        "label": "Accelerator pedal position",
+        "quantity": "position",
+        "preferred_unit": "%",
+        "confidence": "heuristic",
+        "aliases": [
+          "PedalPosition"
+        ]
+      }
+    },
     {
       "name": "Brake_Position",
       "acquisition": {
@@ -317,25 +873,107 @@
       }
     },
     {
-      "name": "Engine_Speed",
+      "name": "ClutchPedalSw",
+      "decode": {
+        "start_bit": 48,
+        "bit_length": 1,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "unit": "#",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 48,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
       "acquisition": {
         "type": "can_frame",
         "bus": "can0",
-        "frame_id": 513,
-        "frame_id_hex": "0x201",
-        "frame_name": "MSG_201"
+        "frame_id": 1056,
+        "frame_id_hex": "0x420",
+        "frame_name": "MSG_420"
       },
+      "canonical": {
+        "id": "clutch.switch",
+        "label": "Clutch switch",
+        "quantity": "state",
+        "preferred_unit": "bool",
+        "confidence": "heuristic",
+        "aliases": [
+          "ClutchPedalSw"
+        ]
+      }
+    },
+    {
+      "name": "WaterTemp",
       "decode": {
-        "start_bit": 48,
+        "start_bit": 7,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": -40.0,
+        "minimum": -40.0,
+        "maximum": 215.0,
+        "unit": "C",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 0,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1056,
+        "frame_id_hex": "0x420",
+        "frame_name": "MSG_420"
+      },
+      "canonical": {
+        "id": "engine.coolant.temperature",
+        "label": "Engine coolant temperature",
+        "quantity": "temperature",
+        "preferred_unit": "C",
+        "confidence": "mapped",
+        "aliases": [
+          "WaterTemp"
+        ]
+      }
+    },
+    {
+      "name": "RPM",
+      "decode": {
+        "start_bit": 7,
         "bit_length": 16,
         "byte_order": "big_endian",
         "signed": false,
         "factor": 0.25,
         "offset": 0.0,
         "minimum": 0.0,
-        "maximum": 10000.0,
+        "maximum": 16383.75,
         "unit": "rpm",
         "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 8,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 513,
+        "frame_id_hex": "0x201",
+        "frame_name": "MSG_201"
       },
       "canonical": {
         "id": "engine.speed",
@@ -344,7 +982,83 @@
         "preferred_unit": "rpm",
         "confidence": "mapped",
         "aliases": [
-          "Engine_Speed"
+          "RPM"
+        ]
+      }
+    },
+    {
+      "name": "FuelFlow",
+      "decode": {
+        "start_bit": 23,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 7.88501430886e-05,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 0.020106786487593002,
+        "unit": "l",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 16,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1056,
+        "frame_id_hex": "0x420",
+        "frame_name": "MSG_420"
+      },
+      "canonical": {
+        "id": "fuel.flow",
+        "label": "Fuel flow",
+        "quantity": "flow",
+        "preferred_unit": "L/h",
+        "confidence": "mapped",
+        "aliases": [
+          "FuelFlow"
+        ]
+      }
+    },
+    {
+      "name": "FuelLevel",
+      "decode": {
+        "start_bit": 7,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.43478260869,
+        "offset": -5.2,
+        "minimum": -5.2,
+        "maximum": 105.66956521595,
+        "unit": "%",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 0,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1072,
+        "frame_id_hex": "0x430",
+        "frame_name": "MSG_430"
+      },
+      "canonical": {
+        "id": "fuel.level",
+        "label": "Fuel level",
+        "quantity": "level",
+        "preferred_unit": "%",
+        "confidence": "mapped",
+        "aliases": [
+          "FuelLevel"
         ]
       }
     },
@@ -413,25 +1127,107 @@
       }
     },
     {
-      "name": "Indicated_Vehicle_Speed_kph",
+      "name": "TCSEng_01",
+      "decode": {
+        "start_bit": 4,
+        "bit_length": 1,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "unit": "#",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 4,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
       "acquisition": {
         "type": "can_frame",
         "bus": "can0",
-        "frame_id": 527,
-        "frame_id_hex": "0x20F",
-        "frame_name": "MSG_20F"
+        "frame_id": 1047,
+        "frame_id_hex": "0x417",
+        "frame_name": "MSG_417"
       },
+      "canonical": {
+        "id": "traction_control.event",
+        "label": "Traction control event",
+        "quantity": "state",
+        "preferred_unit": "state",
+        "confidence": "heuristic",
+        "aliases": [
+          "TCSEng_01"
+        ]
+      }
+    },
+    {
+      "name": "Gear",
       "decode": {
-        "start_bit": 32,
+        "start_bit": 7,
+        "bit_length": 4,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 15.0,
+        "unit": "gear",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 4,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 560,
+        "frame_id_hex": "0x230",
+        "frame_name": "MSG_230"
+      },
+      "canonical": {
+        "id": "transmission.gear.selected",
+        "label": "Selected gear",
+        "quantity": "gear",
+        "preferred_unit": "gear",
+        "confidence": "mapped",
+        "aliases": [
+          "Gear"
+        ]
+      }
+    },
+    {
+      "name": "SpeedVeh",
+      "decode": {
+        "start_bit": 39,
         "bit_length": 16,
         "byte_order": "big_endian",
         "signed": false,
-        "factor": 0.0100040761944,
-        "offset": -62.13711922,
-        "minimum": 0.0,
-        "maximum": 0.0,
+        "factor": 0.01,
+        "offset": -100.0,
+        "minimum": -100.0,
+        "maximum": 555.35,
         "unit": "km/h",
         "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 40,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 513,
+        "frame_id_hex": "0x201",
+        "frame_name": "MSG_201"
       },
       "canonical": {
         "id": "vehicle.speed",
@@ -440,30 +1236,36 @@
         "preferred_unit": "km/h",
         "confidence": "heuristic",
         "aliases": [
-          "Indicated_Vehicle_Speed_kph"
+          "SpeedVeh"
         ]
       }
     },
     {
-      "name": "Wheel_Speed_FL_mph",
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1200,
-        "frame_id_hex": "0x4B0",
-        "frame_name": "MSG_4B0"
-      },
+      "name": "SpeedFL",
       "decode": {
-        "start_bit": 48,
+        "start_bit": 7,
         "bit_length": 16,
         "byte_order": "big_endian",
         "signed": false,
-        "factor": 0.00621,
+        "factor": 0.01,
         "offset": -100.0,
-        "minimum": 0.0,
-        "maximum": 217.35,
-        "unit": "mph",
+        "minimum": -100.0,
+        "maximum": 555.35,
+        "unit": "km/h",
         "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 8,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 533,
+        "frame_id_hex": "0x215",
+        "frame_name": "MSG_215"
       },
       "canonical": {
         "id": "wheel.speed.front_left",
@@ -472,30 +1274,36 @@
         "preferred_unit": "km/h",
         "confidence": "mapped",
         "aliases": [
-          "Wheel_Speed_FL_mph"
+          "SpeedFL"
         ]
       }
     },
     {
-      "name": "Wheel_Speed_FR_mph",
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1200,
-        "frame_id_hex": "0x4B0",
-        "frame_name": "MSG_4B0"
-      },
+      "name": "SpeedFR",
       "decode": {
-        "start_bit": 32,
+        "start_bit": 23,
         "bit_length": 16,
         "byte_order": "big_endian",
         "signed": false,
-        "factor": 0.00621,
+        "factor": 0.01,
         "offset": -100.0,
-        "minimum": 0.0,
-        "maximum": 217.35,
-        "unit": "mph",
+        "minimum": -100.0,
+        "maximum": 555.35,
+        "unit": "km/h",
         "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 24,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 533,
+        "frame_id_hex": "0x215",
+        "frame_name": "MSG_215"
       },
       "canonical": {
         "id": "wheel.speed.front_right",
@@ -504,30 +1312,36 @@
         "preferred_unit": "km/h",
         "confidence": "mapped",
         "aliases": [
-          "Wheel_Speed_FR_mph"
+          "SpeedFR"
         ]
       }
     },
     {
-      "name": "Wheel_Speed_RL_mph",
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1200,
-        "frame_id_hex": "0x4B0",
-        "frame_name": "MSG_4B0"
-      },
+      "name": "SpeedRL",
       "decode": {
-        "start_bit": 16,
+        "start_bit": 39,
         "bit_length": 16,
         "byte_order": "big_endian",
         "signed": false,
-        "factor": 0.00621,
+        "factor": 0.01,
         "offset": -100.0,
-        "minimum": 0.0,
-        "maximum": 217.35,
-        "unit": "mph",
+        "minimum": -100.0,
+        "maximum": 555.35,
+        "unit": "km/h",
         "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 40,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 533,
+        "frame_id_hex": "0x215",
+        "frame_name": "MSG_215"
       },
       "canonical": {
         "id": "wheel.speed.rear_left",
@@ -536,30 +1350,36 @@
         "preferred_unit": "km/h",
         "confidence": "mapped",
         "aliases": [
-          "Wheel_Speed_RL_mph"
+          "SpeedRL"
         ]
       }
     },
     {
-      "name": "Wheel_Speed_RR_mph",
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1200,
-        "frame_id_hex": "0x4B0",
-        "frame_name": "MSG_4B0"
-      },
+      "name": "SpeedRR",
       "decode": {
-        "start_bit": 0,
+        "start_bit": 55,
         "bit_length": 16,
         "byte_order": "big_endian",
         "signed": false,
-        "factor": 0.00621,
+        "factor": 0.01,
         "offset": -100.0,
-        "minimum": 0.0,
-        "maximum": 217.35,
-        "unit": "mph",
+        "minimum": -100.0,
+        "maximum": 555.35,
+        "unit": "km/h",
         "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 56,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 533,
+        "frame_id_hex": "0x215",
+        "frame_name": "MSG_215"
       },
       "canonical": {
         "id": "wheel.speed.rear_right",
@@ -568,8 +1388,288 @@
         "preferred_unit": "km/h",
         "confidence": "mapped",
         "aliases": [
-          "Wheel_Speed_RR_mph"
+          "SpeedRR"
         ]
+      }
+    },
+    {
+      "name": "AxleRatio",
+      "decode": {
+        "start_bit": 31,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.01,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 655.35,
+        "unit": "#",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 32,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1248,
+        "frame_id_hex": "0x4E0",
+        "frame_name": "MSG_4E0"
+      }
+    },
+    {
+      "name": "Brake2",
+      "decode": {
+        "start_bit": 55,
+        "bit_length": 1,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "unit": "#",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 55,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1072,
+        "frame_id_hex": "0x430",
+        "frame_name": "MSG_430"
+      }
+    },
+    {
+      "name": "Brake",
+      "decode": {
+        "start_bit": 1,
+        "bit_length": 1,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "unit": "#",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 1,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1045,
+        "frame_id_hex": "0x415",
+        "frame_name": "MSG_415"
+      }
+    },
+    {
+      "name": "ETCTelTal",
+      "decode": {
+        "start_bit": 40,
+        "bit_length": 1,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "unit": "#",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 40,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1056,
+        "frame_id_hex": "0x420",
+        "frame_name": "MSG_420"
+      }
+    },
+    {
+      "name": "FailSafeCool",
+      "decode": {
+        "start_bit": 35,
+        "bit_length": 2,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 3.0,
+        "unit": "#",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 34,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1056,
+        "frame_id_hex": "0x420",
+        "frame_name": "MSG_420"
+      }
+    },
+    {
+      "name": "FuelInst1",
+      "decode": {
+        "start_bit": 23,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.39215686274,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 99.9999999987,
+        "unit": "%",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 16,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1072,
+        "frame_id_hex": "0x430",
+        "frame_name": "MSG_430"
+      }
+    },
+    {
+      "name": "FuelInst2",
+      "decode": {
+        "start_bit": 31,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.39215686274,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 99.9999999987,
+        "unit": "%",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 24,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1072,
+        "frame_id_hex": "0x430",
+        "frame_name": "MSG_430"
+      }
+    },
+    {
+      "name": "MILTelTal",
+      "decode": {
+        "start_bit": 33,
+        "bit_length": 2,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 3.0,
+        "unit": "#",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 32,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1056,
+        "frame_id_hex": "0x420",
+        "frame_name": "MSG_420"
+      }
+    },
+    {
+      "name": "TurboBoost",
+      "decode": {
+        "start_bit": 1,
+        "bit_length": 10,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.00689474482549,
+        "offset": -2.06842344765,
+        "minimum": -2.06842344765,
+        "maximum": 4.98490050882627,
+        "unit": "bar",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 8,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 340,
+        "frame_id_hex": "0x154",
+        "frame_name": "MSG_154"
+      }
+    },
+    {
+      "name": "TyreSize",
+      "decode": {
+        "start_bit": 63,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.00285714285,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 0.72857142675,
+        "unit": "#",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 56,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1045,
+        "frame_id_hex": "0x415",
+        "frame_name": "MSG_415"
       }
     }
   ]

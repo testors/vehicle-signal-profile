@@ -1,0 +1,586 @@
+{
+  "schema": "vehicle_data_profile.v1",
+  "vehicle": {
+    "manufacturer": "Skoda",
+    "model": "OCTAVIA CUP"
+  },
+  "applicability": {
+    "generation": "MS6",
+    "platform": null,
+    "year_start": null,
+    "year_end": null,
+    "market": null,
+    "trim": null,
+    "powertrain": null
+  },
+  "buses": [
+    {
+      "id": "can0",
+      "type": "can",
+      "bitrate": 1000000
+    }
+  ],
+  "can_frames": [
+    {
+      "bus": "can0",
+      "frame_id": 576,
+      "frame_id_hex": "0x240",
+      "id_format": "standard11",
+      "name": "MSG_240",
+      "dlc": 8,
+      "signals": [
+        {
+          "name": "MS6_Lambda",
+          "decode": {
+            "start_bit": 39,
+            "bit_length": 16,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 0.01,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 655.35,
+            "unit": "λ",
+            "mux": null
+          }
+        },
+        {
+          "name": "MS6_Lambda_Fac",
+          "decode": {
+            "start_bit": 55,
+            "bit_length": 16,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 0.005,
+            "offset": 0.36,
+            "minimum": 0.36,
+            "maximum": 328.035,
+            "unit": "#",
+            "mux": null
+          }
+        },
+        {
+          "name": "MS6_Pfuel",
+          "decode": {
+            "start_bit": 7,
+            "bit_length": 16,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 0.05,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 3276.75,
+            "unit": "bar",
+            "mux": null
+          }
+        },
+        {
+          "name": "MS6_Prail",
+          "decode": {
+            "start_bit": 23,
+            "bit_length": 16,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 0.1,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 6553.5,
+            "unit": "bar",
+            "mux": null
+          }
+        }
+      ]
+    },
+    {
+      "bus": "can0",
+      "frame_id": 584,
+      "frame_id_hex": "0x248",
+      "id_format": "standard11",
+      "name": "MSG_248",
+      "dlc": 8,
+      "signals": [
+        {
+          "name": "MS6_PPS",
+          "decode": {
+            "start_bit": 39,
+            "bit_length": 16,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 0.01,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 655.35,
+            "unit": "%",
+            "mux": null
+          }
+        },
+        {
+          "name": "MS6_RPM",
+          "decode": {
+            "start_bit": 7,
+            "bit_length": 16,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 1.0,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 65535.0,
+            "unit": "rpm",
+            "mux": null
+          }
+        },
+        {
+          "name": "MS6_TPS",
+          "decode": {
+            "start_bit": 23,
+            "bit_length": 16,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 0.01,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 655.35,
+            "unit": "%",
+            "mux": null
+          }
+        },
+        {
+          "name": "MS6_Twater",
+          "decode": {
+            "start_bit": 55,
+            "bit_length": 16,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 1.0,
+            "offset": -40.0,
+            "minimum": -40.0,
+            "maximum": 65495.0,
+            "unit": "C",
+            "mux": null
+          }
+        }
+      ]
+    },
+    {
+      "bus": "can0",
+      "frame_id": 592,
+      "frame_id_hex": "0x250",
+      "id_format": "standard11",
+      "name": "MSG_250",
+      "dlc": 8,
+      "signals": [
+        {
+          "name": "MS6_Battery_Volt",
+          "decode": {
+            "start_bit": 55,
+            "bit_length": 16,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 1.0,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 65535.0,
+            "unit": "mV",
+            "mux": null
+          }
+        },
+        {
+          "name": "MS6_Pintake",
+          "decode": {
+            "start_bit": 23,
+            "bit_length": 16,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 0.0001,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 6.5535000000000005,
+            "unit": "bar",
+            "mux": null
+          }
+        },
+        {
+          "name": "MS6_Pmanifold",
+          "decode": {
+            "start_bit": 39,
+            "bit_length": 16,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 0.0001,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 6.5535000000000005,
+            "unit": "bar",
+            "mux": null
+          }
+        },
+        {
+          "name": "MS6_Tintake",
+          "decode": {
+            "start_bit": 7,
+            "bit_length": 16,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 1.0,
+            "offset": -40.0,
+            "minimum": -40.0,
+            "maximum": 65495.0,
+            "unit": "C",
+            "mux": null
+          }
+        }
+      ]
+    }
+  ],
+  "diagnostic_queries": [],
+  "signals": [
+    {
+      "name": "MS6_PPS",
+      "decode": {
+        "start_bit": 39,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.01,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 655.35,
+        "unit": "%",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 40,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 584,
+        "frame_id_hex": "0x248",
+        "frame_name": "MSG_248"
+      },
+      "canonical": {
+        "id": "accelerator.pedal.position",
+        "label": "Accelerator pedal position",
+        "quantity": "position",
+        "preferred_unit": "%",
+        "confidence": "heuristic",
+        "aliases": [
+          "MS6_PPS"
+        ]
+      }
+    },
+    {
+      "name": "MS6_RPM",
+      "decode": {
+        "start_bit": 7,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 65535.0,
+        "unit": "rpm",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 8,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 584,
+        "frame_id_hex": "0x248",
+        "frame_name": "MSG_248"
+      },
+      "canonical": {
+        "id": "engine.speed",
+        "label": "Engine speed",
+        "quantity": "rotational_speed",
+        "preferred_unit": "rpm",
+        "confidence": "heuristic",
+        "aliases": [
+          "MS6_RPM"
+        ]
+      }
+    },
+    {
+      "name": "MS6_Lambda_Fac",
+      "decode": {
+        "start_bit": 55,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.005,
+        "offset": 0.36,
+        "minimum": 0.36,
+        "maximum": 328.035,
+        "unit": "#",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 56,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 576,
+        "frame_id_hex": "0x240",
+        "frame_name": "MSG_240"
+      },
+      "canonical": {
+        "id": "exhaust.lambda",
+        "label": "Lambda",
+        "quantity": "ratio",
+        "preferred_unit": "lambda",
+        "confidence": "heuristic",
+        "aliases": [
+          "MS6_Lambda_Fac"
+        ]
+      }
+    },
+    {
+      "name": "MS6_TPS",
+      "decode": {
+        "start_bit": 23,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.01,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 655.35,
+        "unit": "%",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 24,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 584,
+        "frame_id_hex": "0x248",
+        "frame_name": "MSG_248"
+      },
+      "canonical": {
+        "id": "throttle.position",
+        "label": "Throttle position",
+        "quantity": "position",
+        "preferred_unit": "%",
+        "confidence": "heuristic",
+        "aliases": [
+          "MS6_TPS"
+        ]
+      }
+    },
+    {
+      "name": "MS6_Battery_Volt",
+      "decode": {
+        "start_bit": 55,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 65535.0,
+        "unit": "mV",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 56,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 592,
+        "frame_id_hex": "0x250",
+        "frame_name": "MSG_250"
+      }
+    },
+    {
+      "name": "MS6_Pfuel",
+      "decode": {
+        "start_bit": 7,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.05,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 3276.75,
+        "unit": "bar",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 8,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 576,
+        "frame_id_hex": "0x240",
+        "frame_name": "MSG_240"
+      }
+    },
+    {
+      "name": "MS6_Pintake",
+      "decode": {
+        "start_bit": 23,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.0001,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 6.5535000000000005,
+        "unit": "bar",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 24,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 592,
+        "frame_id_hex": "0x250",
+        "frame_name": "MSG_250"
+      }
+    },
+    {
+      "name": "MS6_Pmanifold",
+      "decode": {
+        "start_bit": 39,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.0001,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 6.5535000000000005,
+        "unit": "bar",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 40,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 592,
+        "frame_id_hex": "0x250",
+        "frame_name": "MSG_250"
+      }
+    },
+    {
+      "name": "MS6_Prail",
+      "decode": {
+        "start_bit": 23,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.1,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 6553.5,
+        "unit": "bar",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 24,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 576,
+        "frame_id_hex": "0x240",
+        "frame_name": "MSG_240"
+      }
+    },
+    {
+      "name": "MS6_Tintake",
+      "decode": {
+        "start_bit": 7,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": -40.0,
+        "minimum": -40.0,
+        "maximum": 65495.0,
+        "unit": "C",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 8,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 592,
+        "frame_id_hex": "0x250",
+        "frame_name": "MSG_250"
+      }
+    },
+    {
+      "name": "MS6_Twater",
+      "decode": {
+        "start_bit": 55,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": -40.0,
+        "minimum": -40.0,
+        "maximum": 65495.0,
+        "unit": "C",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 56,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 584,
+        "frame_id_hex": "0x248",
+        "frame_name": "MSG_248"
+      }
+    }
+  ]
+}
