@@ -540,6 +540,59 @@
     {
       "name": "MAF",
       "decode": {
+        "start_bit": 23,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.01,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 655.35,
+        "unit": "#",
+        "mux": {
+          "value": 16,
+          "start_bit": 16,
+          "bit_length": 8
+        }
+      },
+      "raw": {
+        "cflag": 7,
+        "canp_start_bit": 24,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "diagnostic_query",
+        "bus": "can0",
+        "query_id": "diag_7DF_0110",
+        "tx_id": 2015,
+        "tx_id_hex": "0x7DF",
+        "rx_id": 2024,
+        "rx_id_hex": "0x7E8",
+        "request_hex": "01 10",
+        "request_kind": "obd_mode_01",
+        "response_frame_id": 2024,
+        "response_frame_id_hex": "0x7E8"
+      },
+      "canonical": {
+        "id": "engine.mass_air_flow",
+        "label": "Mass air flow",
+        "quantity": "mass_flow",
+        "preferred_unit": "kg/s",
+        "confidence": "mapped",
+        "aliases": [
+          "MAF"
+        ]
+      },
+      "match": {
+        "confidence": "high",
+        "reason": "exact_mode01_pid_mux",
+        "record_offset": 1912
+      }
+    },
+    {
+      "name": "MAF",
+      "decode": {
         "start_bit": 31,
         "bit_length": 16,
         "byte_order": "big_endian",

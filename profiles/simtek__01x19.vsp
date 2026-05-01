@@ -715,31 +715,31 @@
   "diagnostic_queries": [],
   "signals": [
     {
-      "name": "PEDAL_1_RAW",
+      "name": "PEDAL",
       "decode": {
-        "start_bit": 63,
+        "start_bit": 15,
         "bit_length": 8,
         "byte_order": "big_endian",
         "signed": false,
-        "factor": 19.5315,
+        "factor": 0.390631,
         "offset": 0.0,
         "minimum": 0.0,
-        "maximum": 4980.5325,
-        "unit": "mV",
+        "maximum": 99.610905,
+        "unit": "%",
         "mux": null
       },
       "raw": {
         "cflag": 0,
-        "canp_start_bit": 56,
+        "canp_start_bit": 8,
         "signed_known": false,
         "signed_reason": "heuristic:unsigned_default"
       },
       "acquisition": {
         "type": "can_frame",
         "bus": "can0",
-        "frame_id": 1537,
-        "frame_id_hex": "0x601",
-        "frame_name": "MSG_601"
+        "frame_id": 1040,
+        "frame_id_hex": "0x410",
+        "frame_name": "MSG_410"
       },
       "canonical": {
         "id": "accelerator.pedal.position",
@@ -748,7 +748,7 @@
         "preferred_unit": "%",
         "confidence": "heuristic",
         "aliases": [
-          "PEDAL_1_RAW"
+          "PEDAL"
         ]
       }
     },
@@ -1095,40 +1095,40 @@
       }
     },
     {
-      "name": "GEAR_R_KM",
+      "name": "GEAR",
       "decode": {
-        "start_bit": 63,
+        "start_bit": 15,
         "bit_length": 8,
         "byte_order": "big_endian",
         "signed": false,
-        "factor": 0.390631,
+        "factor": 1.0,
         "offset": 0.0,
         "minimum": 0.0,
-        "maximum": 99.610905,
-        "unit": "#",
+        "maximum": 255.0,
+        "unit": "gear",
         "mux": null
       },
       "raw": {
         "cflag": 0,
-        "canp_start_bit": 56,
+        "canp_start_bit": 8,
         "signed_known": false,
         "signed_reason": "heuristic:unsigned_default"
       },
       "acquisition": {
         "type": "can_frame",
         "bus": "can0",
-        "frame_id": 1042,
-        "frame_id_hex": "0x412",
-        "frame_name": "MSG_412"
+        "frame_id": 1041,
+        "frame_id_hex": "0x411",
+        "frame_name": "MSG_411"
       },
       "canonical": {
         "id": "transmission.gear.selected",
         "label": "Selected gear",
         "quantity": "gear",
         "preferred_unit": "gear",
-        "confidence": "heuristic",
+        "confidence": "mapped",
         "aliases": [
-          "GEAR_R_KM"
+          "GEAR"
         ]
       }
     },

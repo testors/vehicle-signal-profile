@@ -232,6 +232,21 @@
         {
           "name": "Gear",
           "decode": {
+            "start_bit": 8,
+            "bit_length": 8,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 1.0,
+            "offset": -48.0,
+            "minimum": 0.0,
+            "maximum": 0.0,
+            "unit": "",
+            "mux": null
+          }
+        },
+        {
+          "name": "Gear",
+          "decode": {
             "start_bit": 55,
             "bit_length": 8,
             "byte_order": "big_endian",
@@ -470,6 +485,38 @@
   "diagnostic_queries": [],
   "signals": [
     {
+      "name": "Battery_Voltage",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 354,
+        "frame_id_hex": "0x162",
+        "frame_name": "MSG_162"
+      },
+      "decode": {
+        "start_bit": 32,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.1,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 30.0,
+        "unit": "V",
+        "mux": null
+      },
+      "canonical": {
+        "id": "battery.voltage",
+        "label": "Battery voltage",
+        "quantity": "voltage",
+        "preferred_unit": "V",
+        "confidence": "mapped",
+        "aliases": [
+          "Battery_Voltage"
+        ]
+      }
+    },
+    {
       "name": "Battery",
       "decode": {
         "start_bit": 23,
@@ -584,6 +631,38 @@
       }
     },
     {
+      "name": "Coolant_Temperature",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 354,
+        "frame_id_hex": "0x162",
+        "frame_name": "MSG_162"
+      },
+      "decode": {
+        "start_bit": 48,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": true,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 120.0,
+        "unit": "C",
+        "mux": null
+      },
+      "canonical": {
+        "id": "engine.coolant.temperature",
+        "label": "Engine coolant temperature",
+        "quantity": "temperature",
+        "preferred_unit": "C",
+        "confidence": "mapped",
+        "aliases": [
+          "Coolant_Temperature"
+        ]
+      }
+    },
+    {
       "name": "WaterTemp",
       "decode": {
         "start_bit": 7,
@@ -618,6 +697,38 @@
         "confidence": "mapped",
         "aliases": [
           "WaterTemp"
+        ]
+      }
+    },
+    {
+      "name": "Oil_Pressure",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 352,
+        "frame_id_hex": "0x160",
+        "frame_name": "MSG_160"
+      },
+      "decode": {
+        "start_bit": 32,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.1,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 0.0,
+        "unit": "bar",
+        "mux": null
+      },
+      "canonical": {
+        "id": "engine.oil.pressure",
+        "label": "Engine oil pressure",
+        "quantity": "pressure",
+        "preferred_unit": "bar",
+        "confidence": "mapped",
+        "aliases": [
+          "Oil_Pressure"
         ]
       }
     },
@@ -660,6 +771,38 @@
       }
     },
     {
+      "name": "Engine_Speed",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 353,
+        "frame_id_hex": "0x161",
+        "frame_name": "MSG_161"
+      },
+      "decode": {
+        "start_bit": 16,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 10000.0,
+        "unit": "rpm",
+        "mux": null
+      },
+      "canonical": {
+        "id": "engine.speed",
+        "label": "Engine speed",
+        "quantity": "rotational_speed",
+        "preferred_unit": "rpm",
+        "confidence": "mapped",
+        "aliases": [
+          "Engine_Speed"
+        ]
+      }
+    },
+    {
       "name": "RPM",
       "decode": {
         "start_bit": 39,
@@ -694,6 +837,38 @@
         "confidence": "mapped",
         "aliases": [
           "RPM"
+        ]
+      }
+    },
+    {
+      "name": "Air_Temperature",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 353,
+        "frame_id_hex": "0x161",
+        "frame_name": "MSG_161"
+      },
+      "decode": {
+        "start_bit": 0,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": true,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 100.0,
+        "unit": "C",
+        "mux": null
+      },
+      "canonical": {
+        "id": "intake_air.temperature",
+        "label": "Intake air temperature",
+        "quantity": "temperature",
+        "preferred_unit": "C",
+        "confidence": "mapped",
+        "aliases": [
+          "Air_Temperature"
         ]
       }
     },
@@ -768,6 +943,38 @@
       }
     },
     {
+      "name": "Throttle_Position",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 359,
+        "frame_id_hex": "0x167",
+        "frame_name": "MSG_167"
+      },
+      "decode": {
+        "start_bit": 0,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 100.0,
+        "unit": "%",
+        "mux": null
+      },
+      "canonical": {
+        "id": "throttle.position",
+        "label": "Throttle position",
+        "quantity": "position",
+        "preferred_unit": "%",
+        "confidence": "mapped",
+        "aliases": [
+          "Throttle_Position"
+        ]
+      }
+    },
+    {
       "name": "TPS",
       "decode": {
         "start_bit": 55,
@@ -802,6 +1009,146 @@
         "confidence": "mapped",
         "aliases": [
           "TPS"
+        ]
+      }
+    },
+    {
+      "name": "Gear",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 354,
+        "frame_id_hex": "0x162",
+        "frame_name": "MSG_162"
+      },
+      "decode": {
+        "start_bit": 8,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": -48.0,
+        "minimum": 0.0,
+        "maximum": 0.0,
+        "unit": "",
+        "mux": null
+      },
+      "canonical": {
+        "id": "transmission.gear.selected",
+        "label": "Selected gear",
+        "quantity": "gear",
+        "preferred_unit": "gear",
+        "confidence": "mapped",
+        "aliases": [
+          "Gear"
+        ]
+      }
+    },
+    {
+      "name": "Gear_Switch",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 358,
+        "frame_id_hex": "0x166",
+        "frame_name": "MSG_166"
+      },
+      "decode": {
+        "start_bit": 48,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 0.0,
+        "unit": "on/off",
+        "mux": null
+      },
+      "canonical": {
+        "id": "transmission.gear.selected",
+        "label": "Selected gear",
+        "quantity": "gear",
+        "preferred_unit": "gear",
+        "confidence": "heuristic",
+        "aliases": [
+          "Gear_Switch"
+        ]
+      }
+    },
+    {
+      "name": "Gear",
+      "decode": {
+        "start_bit": 55,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 255.0,
+        "unit": "gear",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 48,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 354,
+        "frame_id_hex": "0x162",
+        "frame_name": "MSG_162"
+      },
+      "canonical": {
+        "id": "transmission.gear.selected",
+        "label": "Selected gear",
+        "quantity": "gear",
+        "preferred_unit": "gear",
+        "confidence": "mapped",
+        "aliases": [
+          "Gear"
+        ]
+      }
+    },
+    {
+      "name": "GearSwitch",
+      "decode": {
+        "start_bit": 15,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 255.0,
+        "unit": "#",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 8,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 358,
+        "frame_id_hex": "0x166",
+        "frame_name": "MSG_166"
+      },
+      "canonical": {
+        "id": "transmission.gear.selected",
+        "label": "Selected gear",
+        "quantity": "gear",
+        "preferred_unit": "gear",
+        "confidence": "heuristic",
+        "aliases": [
+          "GearSwitch"
         ]
       }
     },

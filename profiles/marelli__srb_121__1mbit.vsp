@@ -485,40 +485,40 @@
   "diagnostic_queries": [],
   "signals": [
     {
-      "name": "KJBaroPress",
+      "name": "Baro",
       "decode": {
         "start_bit": 55,
-        "bit_length": 8,
+        "bit_length": 16,
         "byte_order": "big_endian",
         "signed": false,
         "factor": 0.001,
         "offset": 0.0,
         "minimum": 0.0,
-        "maximum": 0.255,
-        "unit": "ms",
+        "maximum": 65.535,
+        "unit": "bar",
         "mux": null
       },
       "raw": {
         "cflag": 0,
-        "canp_start_bit": 48,
+        "canp_start_bit": 56,
         "signed_known": false,
         "signed_reason": "heuristic:unsigned_default"
       },
       "acquisition": {
         "type": "can_frame",
         "bus": "can0",
-        "frame_id": 528,
-        "frame_id_hex": "0x210",
-        "frame_name": "MSG_210"
+        "frame_id": 512,
+        "frame_id_hex": "0x200",
+        "frame_name": "MSG_200"
       },
       "canonical": {
         "id": "ambient_air.pressure",
         "label": "Ambient air pressure",
         "quantity": "pressure",
         "preferred_unit": "bar",
-        "confidence": "heuristic",
+        "confidence": "mapped",
         "aliases": [
-          "KJBaroPress"
+          "Baro"
         ]
       }
     },
@@ -561,40 +561,40 @@
       }
     },
     {
-      "name": "KAWaterTemp",
+      "name": "WaterTemp",
       "decode": {
-        "start_bit": 31,
-        "bit_length": 8,
+        "start_bit": 39,
+        "bit_length": 16,
         "byte_order": "big_endian",
         "signed": false,
-        "factor": 0.5,
-        "offset": -64.0,
-        "minimum": -64.0,
-        "maximum": 63.5,
-        "unit": "deg",
+        "factor": 0.1,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 6553.5,
+        "unit": "C",
         "mux": null
       },
       "raw": {
         "cflag": 0,
-        "canp_start_bit": 24,
+        "canp_start_bit": 40,
         "signed_known": false,
         "signed_reason": "heuristic:unsigned_default"
       },
       "acquisition": {
         "type": "can_frame",
         "bus": "can0",
-        "frame_id": 528,
-        "frame_id_hex": "0x210",
-        "frame_name": "MSG_210"
+        "frame_id": 524,
+        "frame_id_hex": "0x20C",
+        "frame_name": "MSG_20C"
       },
       "canonical": {
         "id": "engine.coolant.temperature",
         "label": "Engine coolant temperature",
         "quantity": "temperature",
         "preferred_unit": "C",
-        "confidence": "heuristic",
+        "confidence": "mapped",
         "aliases": [
-          "KAWaterTemp"
+          "WaterTemp"
         ]
       }
     },
@@ -751,40 +751,40 @@
       }
     },
     {
-      "name": "KAAirTemp",
+      "name": "AirTemp",
       "decode": {
-        "start_bit": 23,
-        "bit_length": 8,
+        "start_bit": 55,
+        "bit_length": 16,
         "byte_order": "big_endian",
         "signed": false,
-        "factor": 0.5,
-        "offset": -64.0,
-        "minimum": -64.0,
-        "maximum": 63.5,
-        "unit": "deg",
+        "factor": 0.1,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 6553.5,
+        "unit": "C",
         "mux": null
       },
       "raw": {
         "cflag": 0,
-        "canp_start_bit": 16,
+        "canp_start_bit": 56,
         "signed_known": false,
         "signed_reason": "heuristic:unsigned_default"
       },
       "acquisition": {
         "type": "can_frame",
         "bus": "can0",
-        "frame_id": 528,
-        "frame_id_hex": "0x210",
-        "frame_name": "MSG_210"
+        "frame_id": 524,
+        "frame_id_hex": "0x20C",
+        "frame_name": "MSG_20C"
       },
       "canonical": {
         "id": "intake_air.temperature",
         "label": "Intake air temperature",
         "quantity": "temperature",
         "preferred_unit": "C",
-        "confidence": "heuristic",
+        "confidence": "mapped",
         "aliases": [
-          "KAAirTemp"
+          "AirTemp"
         ]
       }
     },

@@ -585,6 +585,76 @@
   "diagnostic_queries": [],
   "signals": [
     {
+      "name": "Accelerator_Pedal_Position",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 64,
+        "frame_id_hex": "0x40",
+        "frame_name": "MSG_040"
+      },
+      "decode": {
+        "start_bit": 24,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.3921,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 99.9855,
+        "unit": "%",
+        "mux": null
+      },
+      "canonical": {
+        "id": "accelerator.pedal.position",
+        "label": "Accelerator pedal position",
+        "quantity": "position",
+        "preferred_unit": "%",
+        "confidence": "mapped",
+        "aliases": [
+          "Accelerator_Pedal_Position"
+        ]
+      }
+    },
+    {
+      "name": "PPS",
+      "decode": {
+        "start_bit": 40,
+        "bit_length": 8,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 0.3921568627,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 99.9999999885,
+        "unit": "%",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 5,
+        "canp_start_bit": 40,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 64,
+        "frame_id_hex": "0x40",
+        "frame_name": "MSG_040"
+      },
+      "canonical": {
+        "id": "accelerator.pedal.position",
+        "label": "Accelerator pedal position",
+        "quantity": "position",
+        "preferred_unit": "%",
+        "confidence": "mapped",
+        "aliases": [
+          "PPS"
+        ]
+      }
+    },
+    {
       "name": "PPS2",
       "decode": {
         "start_bit": 48,
@@ -879,6 +949,38 @@
         "confidence": "mapped",
         "aliases": [
           "OilTemp"
+        ]
+      }
+    },
+    {
+      "name": "Engine_Speed",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 64,
+        "frame_id_hex": "0x40",
+        "frame_name": "MSG_040"
+      },
+      "decode": {
+        "start_bit": 16,
+        "bit_length": 15,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 32767.0,
+        "unit": "rpm",
+        "mux": null
+      },
+      "canonical": {
+        "id": "engine.speed",
+        "label": "Engine speed",
+        "quantity": "rotational_speed",
+        "preferred_unit": "rpm",
+        "confidence": "mapped",
+        "aliases": [
+          "Engine_Speed"
         ]
       }
     },

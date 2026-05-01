@@ -1623,40 +1623,40 @@
       }
     },
     {
-      "name": "DMap",
+      "name": "MAP",
       "decode": {
-        "start_bit": 23,
+        "start_bit": 39,
         "bit_length": 16,
         "byte_order": "big_endian",
         "signed": false,
-        "factor": 1.0,
+        "factor": 0.001,
         "offset": 0.0,
         "minimum": 0.0,
-        "maximum": 65535.0,
-        "unit": "#",
+        "maximum": 65.535,
+        "unit": "bar",
         "mux": null
       },
       "raw": {
         "cflag": 0,
-        "canp_start_bit": 24,
+        "canp_start_bit": 40,
         "signed_known": false,
         "signed_reason": "heuristic:unsigned_default"
       },
       "acquisition": {
         "type": "can_frame",
         "bus": "can0",
-        "frame_id": 769,
-        "frame_id_hex": "0x301",
-        "frame_name": "MSG_301"
+        "frame_id": 768,
+        "frame_id_hex": "0x300",
+        "frame_name": "MSG_300"
       },
       "canonical": {
         "id": "intake_manifold.pressure",
         "label": "Intake manifold pressure",
         "quantity": "pressure",
         "preferred_unit": "bar",
-        "confidence": "heuristic",
+        "confidence": "mapped",
         "aliases": [
-          "DMap"
+          "MAP"
         ]
       }
     },
@@ -1737,22 +1737,22 @@
       }
     },
     {
-      "name": "GearShiftTimeR",
+      "name": "Gear",
       "decode": {
-        "start_bit": 23,
-        "bit_length": 16,
+        "start_bit": 7,
+        "bit_length": 8,
         "byte_order": "big_endian",
         "signed": false,
-        "factor": 5.0,
+        "factor": 1.0,
         "offset": 0.0,
         "minimum": 0.0,
-        "maximum": 327675.0,
-        "unit": "#",
+        "maximum": 255.0,
+        "unit": "gear",
         "mux": null
       },
       "raw": {
         "cflag": 0,
-        "canp_start_bit": 24,
+        "canp_start_bit": 0,
         "signed_known": false,
         "signed_reason": "heuristic:unsigned_default"
       },
@@ -1768,9 +1768,9 @@
         "label": "Selected gear",
         "quantity": "gear",
         "preferred_unit": "gear",
-        "confidence": "heuristic",
+        "confidence": "mapped",
         "aliases": [
-          "GearShiftTimeR"
+          "Gear"
         ]
       }
     },
@@ -1813,31 +1813,31 @@
       }
     },
     {
-      "name": "OsaSlip",
+      "name": "TrimSlip",
       "decode": {
-        "start_bit": 55,
-        "bit_length": 16,
+        "start_bit": 7,
+        "bit_length": 8,
         "byte_order": "big_endian",
         "signed": false,
-        "factor": 0.25,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 16383.75,
-        "unit": "deg",
+        "factor": 1.0,
+        "offset": -100.0,
+        "minimum": -100.0,
+        "maximum": 155.0,
+        "unit": "%",
         "mux": null
       },
       "raw": {
         "cflag": 0,
-        "canp_start_bit": 56,
+        "canp_start_bit": 0,
         "signed_known": false,
         "signed_reason": "heuristic:unsigned_default"
       },
       "acquisition": {
         "type": "can_frame",
         "bus": "can0",
-        "frame_id": 770,
-        "frame_id_hex": "0x302",
-        "frame_name": "MSG_302"
+        "frame_id": 771,
+        "frame_id_hex": "0x303",
+        "frame_name": "MSG_303"
       },
       "canonical": {
         "id": "wheel.slip",
@@ -1846,7 +1846,7 @@
         "preferred_unit": "%",
         "confidence": "mapped",
         "aliases": [
-          "OsaSlip"
+          "TrimSlip"
         ]
       }
     },

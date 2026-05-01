@@ -1495,40 +1495,40 @@
   "diagnostic_queries": [],
   "signals": [
     {
-      "name": "K_IGN_BARO",
+      "name": "BARO",
       "decode": {
-        "start_bit": 56,
-        "bit_length": 8,
+        "start_bit": 48,
+        "bit_length": 16,
         "byte_order": "little_endian",
         "signed": false,
-        "factor": 0.25,
-        "offset": -32.0,
-        "minimum": -32.0,
-        "maximum": 31.75,
-        "unit": "deg",
+        "factor": 0.001,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 65.535,
+        "unit": "bar",
         "mux": null
       },
       "raw": {
         "cflag": 5,
-        "canp_start_bit": 56,
+        "canp_start_bit": 48,
         "signed_known": false,
         "signed_reason": "heuristic:unsigned_default"
       },
       "acquisition": {
         "type": "can_frame",
         "bus": "can0",
-        "frame_id": 772,
-        "frame_id_hex": "0x304",
-        "frame_name": "MSG_304"
+        "frame_id": 784,
+        "frame_id_hex": "0x310",
+        "frame_name": "MSG_310"
       },
       "canonical": {
         "id": "ambient_air.pressure",
         "label": "Ambient air pressure",
         "quantity": "pressure",
         "preferred_unit": "bar",
-        "confidence": "heuristic",
+        "confidence": "mapped",
         "aliases": [
-          "K_IGN_BARO"
+          "BARO"
         ]
       }
     },
@@ -1609,40 +1609,40 @@
       }
     },
     {
-      "name": "ACTIVE_MAP",
+      "name": "MAP",
       "decode": {
-        "start_bit": 40,
-        "bit_length": 8,
+        "start_bit": 48,
+        "bit_length": 16,
         "byte_order": "little_endian",
         "signed": false,
-        "factor": 1.0,
+        "factor": 0.001,
         "offset": 0.0,
         "minimum": 0.0,
-        "maximum": 255.0,
-        "unit": "#",
+        "maximum": 65.535,
+        "unit": "bar",
         "mux": null
       },
       "raw": {
         "cflag": 5,
-        "canp_start_bit": 40,
+        "canp_start_bit": 48,
         "signed_known": false,
         "signed_reason": "heuristic:unsigned_default"
       },
       "acquisition": {
         "type": "can_frame",
         "bus": "can0",
-        "frame_id": 786,
-        "frame_id_hex": "0x312",
-        "frame_name": "MSG_312"
+        "frame_id": 512,
+        "frame_id_hex": "0x200",
+        "frame_name": "MSG_200"
       },
       "canonical": {
         "id": "intake_manifold.pressure",
         "label": "Intake manifold pressure",
         "quantity": "pressure",
         "preferred_unit": "bar",
-        "confidence": "heuristic",
+        "confidence": "mapped",
         "aliases": [
-          "ACTIVE_MAP"
+          "MAP"
         ]
       }
     },

@@ -1330,17 +1330,17 @@
   "diagnostic_queries": [],
   "signals": [
     {
-      "name": "KapBaro",
+      "name": "BaroP",
       "decode": {
         "start_bit": 55,
         "bit_length": 16,
         "byte_order": "big_endian",
         "signed": false,
-        "factor": 0.1,
+        "factor": 0.001,
         "offset": 0.0,
         "minimum": 0.0,
-        "maximum": 6553.5,
-        "unit": "deg",
+        "maximum": 65.535,
+        "unit": "bar",
         "mux": null
       },
       "raw": {
@@ -1352,9 +1352,9 @@
       "acquisition": {
         "type": "can_frame",
         "bus": "can0",
-        "frame_id": 269,
-        "frame_id_hex": "0x10D",
-        "frame_name": "MSG_10D"
+        "frame_id": 258,
+        "frame_id_hex": "0x102",
+        "frame_name": "MSG_102"
       },
       "canonical": {
         "id": "ambient_air.pressure",
@@ -1363,7 +1363,7 @@
         "preferred_unit": "bar",
         "confidence": "heuristic",
         "aliases": [
-          "KapBaro"
+          "BaroP"
         ]
       }
     },
@@ -1444,22 +1444,22 @@
       }
     },
     {
-      "name": "RPMIst",
+      "name": "RPM",
       "decode": {
-        "start_bit": 7,
+        "start_bit": 23,
         "bit_length": 16,
         "byte_order": "big_endian",
         "signed": false,
-        "factor": 5.99998800002,
+        "factor": 1.0,
         "offset": 0.0,
         "minimum": 0.0,
-        "maximum": 393209.2135813107,
-        "unit": "deg/s",
+        "maximum": 65535.0,
+        "unit": "rpm",
         "mux": null
       },
       "raw": {
         "cflag": 0,
-        "canp_start_bit": 8,
+        "canp_start_bit": 24,
         "signed_known": false,
         "signed_reason": "heuristic:unsigned_default"
       },
@@ -1475,9 +1475,9 @@
         "label": "Engine speed",
         "quantity": "rotational_speed",
         "preferred_unit": "rpm",
-        "confidence": "heuristic",
+        "confidence": "mapped",
         "aliases": [
-          "RPMIst"
+          "RPM"
         ]
       }
     },
@@ -1596,17 +1596,17 @@
       }
     },
     {
-      "name": "KaGear",
+      "name": "GEAR",
       "decode": {
         "start_bit": 23,
         "bit_length": 16,
         "byte_order": "big_endian",
         "signed": false,
-        "factor": 0.1,
+        "factor": 1.0,
         "offset": 0.0,
         "minimum": 0.0,
-        "maximum": 6553.5,
-        "unit": "deg",
+        "maximum": 65535.0,
+        "unit": "gear",
         "mux": null
       },
       "raw": {
@@ -1618,18 +1618,18 @@
       "acquisition": {
         "type": "can_frame",
         "bus": "can0",
-        "frame_id": 270,
-        "frame_id_hex": "0x10E",
-        "frame_name": "MSG_10E"
+        "frame_id": 258,
+        "frame_id_hex": "0x102",
+        "frame_name": "MSG_102"
       },
       "canonical": {
         "id": "transmission.gear.selected",
         "label": "Selected gear",
         "quantity": "gear",
         "preferred_unit": "gear",
-        "confidence": "heuristic",
+        "confidence": "mapped",
         "aliases": [
-          "KaGear"
+          "GEAR"
         ]
       }
     },

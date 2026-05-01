@@ -1111,22 +1111,22 @@
       }
     },
     {
-      "name": "GearShiftTimeRem",
+      "name": "Gear",
       "decode": {
-        "start_bit": 23,
-        "bit_length": 16,
+        "start_bit": 7,
+        "bit_length": 8,
         "byte_order": "big_endian",
         "signed": false,
         "factor": 1.0,
         "offset": 0.0,
         "minimum": 0.0,
-        "maximum": 65535.0,
-        "unit": "#",
+        "maximum": 255.0,
+        "unit": "gear",
         "mux": null
       },
       "raw": {
         "cflag": 0,
-        "canp_start_bit": 24,
+        "canp_start_bit": 0,
         "signed_known": false,
         "signed_reason": "heuristic:unsigned_default"
       },
@@ -1142,9 +1142,9 @@
         "label": "Selected gear",
         "quantity": "gear",
         "preferred_unit": "gear",
-        "confidence": "heuristic",
+        "confidence": "mapped",
         "aliases": [
-          "GearShiftTimeRem"
+          "Gear"
         ]
       }
     },
@@ -1187,22 +1187,22 @@
       }
     },
     {
-      "name": "OsaSlip",
+      "name": "Slip",
       "decode": {
-        "start_bit": 55,
+        "start_bit": 39,
         "bit_length": 16,
         "byte_order": "big_endian",
         "signed": false,
-        "factor": 0.25,
+        "factor": 0.1,
         "offset": 0.0,
         "minimum": 0.0,
-        "maximum": 16383.75,
-        "unit": "deg",
+        "maximum": 6553.5,
+        "unit": "%",
         "mux": null
       },
       "raw": {
         "cflag": 0,
-        "canp_start_bit": 56,
+        "canp_start_bit": 40,
         "signed_known": false,
         "signed_reason": "heuristic:unsigned_default"
       },
@@ -1220,7 +1220,7 @@
         "preferred_unit": "%",
         "confidence": "mapped",
         "aliases": [
-          "OsaSlip"
+          "Slip"
         ]
       }
     },

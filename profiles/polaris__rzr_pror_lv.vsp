@@ -1075,31 +1075,31 @@
   "diagnostic_queries": [],
   "signals": [
     {
-      "name": "LongAccel",
+      "name": "Pedal_Position",
       "decode": {
-        "start_bit": 16,
-        "bit_length": 16,
+        "start_bit": 24,
+        "bit_length": 8,
         "byte_order": "little_endian",
-        "signed": true,
-        "factor": 0.01,
-        "offset": -320.0,
-        "minimum": -647.6800000000001,
-        "maximum": 7.670000000000016,
-        "unit": "g",
+        "signed": false,
+        "factor": 0.4,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 102.0,
+        "unit": "%",
         "mux": null
       },
       "raw": {
         "cflag": 5,
-        "canp_start_bit": 16,
+        "canp_start_bit": 24,
         "signed_known": false,
-        "signed_reason": "heuristic:signed_motion"
+        "signed_reason": "heuristic:unsigned_default"
       },
       "acquisition": {
         "type": "can_frame",
         "bus": "can0",
-        "frame_id": 418393391,
-        "frame_id_hex": "0x18F02D2F",
-        "frame_name": "MSG_18F02D2F"
+        "frame_id": 218046976,
+        "frame_id_hex": "0xCFF2200",
+        "frame_name": "MSG_CFF2200"
       },
       "canonical": {
         "id": "accelerator.pedal.position",
@@ -1108,7 +1108,7 @@
         "preferred_unit": "%",
         "confidence": "heuristic",
         "aliases": [
-          "LongAccel"
+          "Pedal_Position"
         ]
       }
     },

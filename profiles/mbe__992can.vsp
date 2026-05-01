@@ -873,17 +873,17 @@
       }
     },
     {
-      "name": "ThrotVolt",
+      "name": "ThrotPos",
       "decode": {
-        "start_bit": 39,
+        "start_bit": 47,
         "bit_length": 8,
         "byte_order": "big_endian",
         "signed": false,
-        "factor": 196.07843137,
+        "factor": 0.06274509803,
         "offset": 0.0,
         "minimum": 0.0,
-        "maximum": 49999.99999935,
-        "unit": "mV",
+        "maximum": 15.99999999765,
+        "unit": "#",
         "mux": {
           "value": 1,
           "start_bit": 0,
@@ -892,7 +892,7 @@
       },
       "raw": {
         "cflag": 7,
-        "canp_start_bit": 32,
+        "canp_start_bit": 40,
         "signed_known": false,
         "signed_reason": "heuristic:unsigned_default"
       },
@@ -908,24 +908,24 @@
         "label": "Throttle position",
         "quantity": "position",
         "preferred_unit": "%",
-        "confidence": "heuristic",
+        "confidence": "mapped",
         "aliases": [
-          "ThrotVolt"
+          "ThrotPos"
         ]
       }
     },
     {
-      "name": "GearVolt",
+      "name": "Gear",
       "decode": {
-        "start_bit": 23,
+        "start_bit": 15,
         "bit_length": 8,
         "byte_order": "big_endian",
         "signed": false,
-        "factor": 19.60784313,
+        "factor": 1.0,
         "offset": 0.0,
         "minimum": 0.0,
-        "maximum": 4999.99999815,
-        "unit": "mV",
+        "maximum": 255.0,
+        "unit": "gear",
         "mux": {
           "value": 2,
           "start_bit": 0,
@@ -934,7 +934,7 @@
       },
       "raw": {
         "cflag": 2,
-        "canp_start_bit": 16,
+        "canp_start_bit": 8,
         "signed_known": false,
         "signed_reason": "heuristic:unsigned_default"
       },
@@ -952,7 +952,7 @@
         "preferred_unit": "gear",
         "confidence": "mapped",
         "aliases": [
-          "GearVolt"
+          "Gear"
         ]
       }
     },

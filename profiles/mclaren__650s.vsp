@@ -95,6 +95,21 @@
       "dlc": 8,
       "signals": [
         {
+          "name": "Indicated_Vehicle_Speed_kph",
+          "decode": {
+            "start_bit": 40,
+            "bit_length": 8,
+            "byte_order": "little_endian",
+            "signed": false,
+            "factor": 1.0,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 400.0,
+            "unit": "km/h",
+            "mux": null
+          }
+        },
+        {
           "name": "Indicated_Vehicle_Speed_mph",
           "decode": {
             "start_bit": 40,
@@ -753,6 +768,38 @@
       }
     },
     {
+      "name": "Coolant_Temperature",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 128,
+        "frame_id_hex": "0x80",
+        "frame_name": "MSG_080"
+      },
+      "decode": {
+        "start_bit": 0,
+        "bit_length": 8,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 0.75,
+        "offset": -48.0,
+        "minimum": -48.0,
+        "maximum": 142.5,
+        "unit": "C",
+        "mux": null
+      },
+      "canonical": {
+        "id": "engine.coolant.temperature",
+        "label": "Engine coolant temperature",
+        "quantity": "temperature",
+        "preferred_unit": "C",
+        "confidence": "mapped",
+        "aliases": [
+          "Coolant_Temperature"
+        ]
+      }
+    },
+    {
       "name": "ECT",
       "decode": {
         "start_bit": 23,
@@ -787,6 +834,38 @@
         "confidence": "mapped",
         "aliases": [
           "ECT"
+        ]
+      }
+    },
+    {
+      "name": "Engine_Speed",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 131,
+        "frame_id_hex": "0x83",
+        "frame_name": "MSG_083"
+      },
+      "decode": {
+        "start_bit": 0,
+        "bit_length": 16,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 0.25,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 10000.0,
+        "unit": "rpm",
+        "mux": null
+      },
+      "canonical": {
+        "id": "engine.speed",
+        "label": "Engine speed",
+        "quantity": "rotational_speed",
+        "preferred_unit": "rpm",
+        "confidence": "mapped",
+        "aliases": [
+          "Engine_Speed"
         ]
       }
     },
@@ -925,6 +1004,76 @@
       }
     },
     {
+      "name": "Throttle_Position",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 132,
+        "frame_id_hex": "0x84",
+        "frame_name": "MSG_084"
+      },
+      "decode": {
+        "start_bit": 16,
+        "bit_length": 8,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 0.51282,
+        "offset": 4.0,
+        "minimum": 0.0,
+        "maximum": 100.0,
+        "unit": "",
+        "mux": null
+      },
+      "canonical": {
+        "id": "throttle.position",
+        "label": "Throttle position",
+        "quantity": "position",
+        "preferred_unit": "%",
+        "confidence": "mapped",
+        "aliases": [
+          "Throttle_Position"
+        ]
+      }
+    },
+    {
+      "name": "TPS1",
+      "decode": {
+        "start_bit": 23,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.515,
+        "offset": -19.0,
+        "minimum": -19.0,
+        "maximum": 112.32500000000002,
+        "unit": "%",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 16,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 145,
+        "frame_id_hex": "0x91",
+        "frame_name": "MSG_091"
+      },
+      "canonical": {
+        "id": "throttle.position",
+        "label": "Throttle position",
+        "quantity": "position",
+        "preferred_unit": "%",
+        "confidence": "heuristic",
+        "aliases": [
+          "TPS1"
+        ]
+      }
+    },
+    {
       "name": "TPS2",
       "decode": {
         "start_bit": 31,
@@ -959,6 +1108,38 @@
         "confidence": "heuristic",
         "aliases": [
           "TPS2"
+        ]
+      }
+    },
+    {
+      "name": "Gear",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 164,
+        "frame_id_hex": "0xA4",
+        "frame_name": "MSG_0A4"
+      },
+      "decode": {
+        "start_bit": 0,
+        "bit_length": 8,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 0.0625,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 112.0,
+        "unit": "",
+        "mux": null
+      },
+      "canonical": {
+        "id": "transmission.gear.selected",
+        "label": "Selected gear",
+        "quantity": "gear",
+        "preferred_unit": "gear",
+        "confidence": "mapped",
+        "aliases": [
+          "Gear"
         ]
       }
     },
@@ -1073,6 +1254,38 @@
         "confidence": "heuristic",
         "aliases": [
           "AccLon"
+        ]
+      }
+    },
+    {
+      "name": "Indicated_Vehicle_Speed_kph",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 132,
+        "frame_id_hex": "0x84",
+        "frame_name": "MSG_084"
+      },
+      "decode": {
+        "start_bit": 40,
+        "bit_length": 8,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 400.0,
+        "unit": "km/h",
+        "mux": null
+      },
+      "canonical": {
+        "id": "vehicle.speed",
+        "label": "Vehicle speed",
+        "quantity": "speed",
+        "preferred_unit": "km/h",
+        "confidence": "heuristic",
+        "aliases": [
+          "Indicated_Vehicle_Speed_kph"
         ]
       }
     },

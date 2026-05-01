@@ -939,6 +939,25 @@
           }
         },
         {
+          "name": "ECU_MAF",
+          "decode": {
+            "start_bit": 31,
+            "bit_length": 8,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 1e-05,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 0.00255,
+            "unit": "kg/s",
+            "mux": {
+              "value": 16656,
+              "start_bit": 16,
+              "bit_length": 16
+            }
+          }
+        },
+        {
           "name": "ECU_MAP",
           "decode": {
             "start_bit": 31,
@@ -1382,6 +1401,59 @@
         "confidence": "inferred",
         "reason": "standard_mode01_mux_without_companion_record",
         "record_offset": null
+      }
+    },
+    {
+      "name": "ECU_MAF",
+      "decode": {
+        "start_bit": 31,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1e-05,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 0.00255,
+        "unit": "kg/s",
+        "mux": {
+          "value": 16656,
+          "start_bit": 16,
+          "bit_length": 16
+        }
+      },
+      "raw": {
+        "cflag": 2,
+        "canp_start_bit": 24,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "diagnostic_query",
+        "bus": "can0",
+        "query_id": "diag_7DF_0110",
+        "tx_id": 2015,
+        "tx_id_hex": "0x7DF",
+        "rx_id": 2024,
+        "rx_id_hex": "0x7E8",
+        "request_hex": "01 10",
+        "request_kind": "obd_mode_01",
+        "response_frame_id": 2024,
+        "response_frame_id_hex": "0x7E8"
+      },
+      "canonical": {
+        "id": "engine.mass_air_flow",
+        "label": "Mass air flow",
+        "quantity": "mass_flow",
+        "preferred_unit": "kg/s",
+        "confidence": "mapped",
+        "aliases": [
+          "ECU_MAF"
+        ]
+      },
+      "match": {
+        "confidence": "high",
+        "reason": "exact_mode01_mux",
+        "record_offset": 1700
       }
     },
     {

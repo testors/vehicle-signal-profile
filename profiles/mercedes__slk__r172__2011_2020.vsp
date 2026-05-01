@@ -435,6 +435,38 @@
   "diagnostic_queries": [],
   "signals": [
     {
+      "name": "Accelerator_Pedal_Position",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 261,
+        "frame_id_hex": "0x105",
+        "frame_name": "MSG_105"
+      },
+      "decode": {
+        "start_bit": 32,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.4,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 100.0,
+        "unit": "%",
+        "mux": null
+      },
+      "canonical": {
+        "id": "accelerator.pedal.position",
+        "label": "Accelerator pedal position",
+        "quantity": "position",
+        "preferred_unit": "%",
+        "confidence": "mapped",
+        "aliases": [
+          "Accelerator_Pedal_Position"
+        ]
+      }
+    },
+    {
       "name": "ECU_PEDAL_POS",
       "decode": {
         "start_bit": 23,
@@ -615,6 +647,38 @@
         "confidence": "heuristic",
         "aliases": [
           "ECU_ENGINE_TMP"
+        ]
+      }
+    },
+    {
+      "name": "Engine_Speed",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 261,
+        "frame_id_hex": "0x105",
+        "frame_name": "MSG_105"
+      },
+      "decode": {
+        "start_bit": 48,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 10000.0,
+        "unit": "rpm",
+        "mux": null
+      },
+      "canonical": {
+        "id": "engine.speed",
+        "label": "Engine speed",
+        "quantity": "rotational_speed",
+        "preferred_unit": "rpm",
+        "confidence": "mapped",
+        "aliases": [
+          "Engine_Speed"
         ]
       }
     },

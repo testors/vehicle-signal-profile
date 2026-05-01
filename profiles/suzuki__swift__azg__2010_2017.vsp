@@ -445,6 +445,38 @@
   ],
   "signals": [
     {
+      "name": "Brake_Pressure",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 431,
+        "frame_id_hex": "0x1AF",
+        "frame_name": "MSG_1AF"
+      },
+      "decode": {
+        "start_bit": 8,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.31579,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 335.0,
+        "unit": "%",
+        "mux": null
+      },
+      "canonical": {
+        "id": "brake.pressure",
+        "label": "Brake pressure",
+        "quantity": "pressure",
+        "preferred_unit": "bar",
+        "confidence": "mapped",
+        "aliases": [
+          "Brake_Pressure"
+        ]
+      }
+    },
+    {
       "name": "BrakePress",
       "decode": {
         "start_bit": 55,
@@ -703,6 +735,38 @@
       }
     },
     {
+      "name": "Engine_Speed",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 319,
+        "frame_id_hex": "0x13F",
+        "frame_name": "MSG_13F"
+      },
+      "decode": {
+        "start_bit": 40,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.233744,
+        "offset": 158.606,
+        "minimum": 158.7,
+        "maximum": 8000.0,
+        "unit": "rpm",
+        "mux": null
+      },
+      "canonical": {
+        "id": "engine.speed",
+        "label": "Engine speed",
+        "quantity": "rotational_speed",
+        "preferred_unit": "rpm",
+        "confidence": "mapped",
+        "aliases": [
+          "Engine_Speed"
+        ]
+      }
+    },
+    {
       "name": "RPM",
       "decode": {
         "start_bit": 15,
@@ -828,6 +892,76 @@
         "confidence": "heuristic",
         "aliases": [
           "MAP2"
+        ]
+      }
+    },
+    {
+      "name": "Throttle_Position",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 290,
+        "frame_id_hex": "0x122",
+        "frame_name": "MSG_122"
+      },
+      "decode": {
+        "start_bit": 40,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.0015259,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 99.0,
+        "unit": "%",
+        "mux": null
+      },
+      "canonical": {
+        "id": "throttle.position",
+        "label": "Throttle position",
+        "quantity": "position",
+        "preferred_unit": "%",
+        "confidence": "mapped",
+        "aliases": [
+          "Throttle_Position"
+        ]
+      }
+    },
+    {
+      "name": "TPS1",
+      "decode": {
+        "start_bit": 15,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.3921568,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 99.99998400000001,
+        "unit": "%",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 8,
+        "signed_known": false,
+        "signed_reason": "heuristic:unsigned_default"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 290,
+        "frame_id_hex": "0x122",
+        "frame_name": "MSG_122"
+      },
+      "canonical": {
+        "id": "throttle.position",
+        "label": "Throttle position",
+        "quantity": "position",
+        "preferred_unit": "%",
+        "confidence": "heuristic",
+        "aliases": [
+          "TPS1"
         ]
       }
     },

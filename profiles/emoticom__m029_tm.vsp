@@ -1002,40 +1002,40 @@
       }
     },
     {
-      "name": "RPMBaro",
+      "name": "RPM",
       "decode": {
-        "start_bit": 7,
+        "start_bit": 39,
         "bit_length": 16,
         "byte_order": "big_endian",
         "signed": false,
-        "factor": 5.99998800002,
+        "factor": 1.0,
         "offset": 0.0,
         "minimum": 0.0,
-        "maximum": 393209.2135813107,
-        "unit": "deg/s",
+        "maximum": 65535.0,
+        "unit": "rpm",
         "mux": null
       },
       "raw": {
         "cflag": 0,
-        "canp_start_bit": 8,
+        "canp_start_bit": 40,
         "signed_known": false,
         "signed_reason": "heuristic:unsigned_default"
       },
       "acquisition": {
         "type": "can_frame",
         "bus": "can0",
-        "frame_id": 604,
-        "frame_id_hex": "0x25C",
-        "frame_name": "MSG_25C"
+        "frame_id": 512,
+        "frame_id_hex": "0x200",
+        "frame_name": "MSG_200"
       },
       "canonical": {
         "id": "engine.speed",
         "label": "Engine speed",
         "quantity": "rotational_speed",
         "preferred_unit": "rpm",
-        "confidence": "heuristic",
+        "confidence": "mapped",
         "aliases": [
-          "RPMBaro"
+          "RPM"
         ]
       }
     },

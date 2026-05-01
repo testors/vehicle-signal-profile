@@ -212,9 +212,11 @@ Build-time composition follows these runtime-visible rules:
   profile-selection boundaries unless the generated profile already represents
   a compatible merged scope. Revision or bitrate-like source suffixes may be
   collapsed by the generator when the signal layouts prove duplicate coverage.
-- Conflict resolution must not collapse acquisition modes. If the same
-  canonical ID appears in both CAN and diagnostic acquisition modes, both can
-  be present and runtime code should choose by `signals[].acquisition.type`.
+- Conflict resolution must not collapse acquisition modes or distinct CAN
+  layouts from different source files. If the same canonical ID appears in both
+  CAN and diagnostic acquisition modes, or in multiple source-backed CAN frame
+  layouts, each compatible channel can be present and runtime code should
+  choose by `signals[].acquisition`.
 
 Applications do not need source provenance. Select the profile by `vehicle` and
 `applicability`, then choose channels by acquisition mode.

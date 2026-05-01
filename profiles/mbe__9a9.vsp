@@ -734,17 +734,17 @@
   "diagnostic_queries": [],
   "signals": [
     {
-      "name": "PedalVolt",
+      "name": "PedalSite",
       "decode": {
-        "start_bit": 47,
+        "start_bit": 55,
         "bit_length": 8,
         "byte_order": "big_endian",
         "signed": false,
-        "factor": 19.6078,
+        "factor": 0.062745,
         "offset": 0.0,
         "minimum": 0.0,
-        "maximum": 4999.9890000000005,
-        "unit": "mV",
+        "maximum": 15.999975,
+        "unit": "#",
         "mux": {
           "value": 8,
           "start_bit": 0,
@@ -753,7 +753,7 @@
       },
       "raw": {
         "cflag": 2,
-        "canp_start_bit": 40,
+        "canp_start_bit": 48,
         "signed_known": false,
         "signed_reason": "heuristic:unsigned_default"
       },
@@ -771,7 +771,7 @@
         "preferred_unit": "%",
         "confidence": "heuristic",
         "aliases": [
-          "PedalVolt"
+          "PedalSite"
         ]
       }
     },
@@ -1402,26 +1402,26 @@
       }
     },
     {
-      "name": "GearVolt",
+      "name": "GEAR",
       "decode": {
-        "start_bit": 31,
+        "start_bit": 63,
         "bit_length": 8,
         "byte_order": "big_endian",
         "signed": false,
-        "factor": 19.607,
+        "factor": 1.0,
         "offset": 0.0,
         "minimum": 0.0,
-        "maximum": 4999.785,
-        "unit": "mV",
+        "maximum": 255.0,
+        "unit": "gear",
         "mux": {
-          "value": 2,
+          "value": 1,
           "start_bit": 0,
           "bit_length": 8
         }
       },
       "raw": {
         "cflag": 2,
-        "canp_start_bit": 24,
+        "canp_start_bit": 56,
         "signed_known": false,
         "signed_reason": "heuristic:unsigned_default"
       },
@@ -1439,7 +1439,7 @@
         "preferred_unit": "gear",
         "confidence": "mapped",
         "aliases": [
-          "GearVolt"
+          "GEAR"
         ]
       }
     },

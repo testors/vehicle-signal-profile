@@ -1293,17 +1293,17 @@
       }
     },
     {
-      "name": "IATVolt",
+      "name": "AirTemp",
       "decode": {
         "start_bit": 48,
         "bit_length": 16,
         "byte_order": "little_endian",
         "signed": false,
-        "factor": 1.0,
+        "factor": 0.1,
         "offset": 0.0,
         "minimum": 0.0,
-        "maximum": 65535.0,
-        "unit": "mV",
+        "maximum": 6553.5,
+        "unit": "C",
         "mux": null
       },
       "raw": {
@@ -1315,9 +1315,9 @@
       "acquisition": {
         "type": "can_frame",
         "bus": "can0",
-        "frame_id": 1805,
-        "frame_id_hex": "0x70D",
-        "frame_name": "MSG_70D"
+        "frame_id": 1794,
+        "frame_id_hex": "0x702",
+        "frame_name": "MSG_702"
       },
       "canonical": {
         "id": "intake_air.temperature",
@@ -1326,36 +1326,36 @@
         "preferred_unit": "C",
         "confidence": "mapped",
         "aliases": [
-          "IATVolt"
+          "AirTemp"
         ]
       }
     },
     {
-      "name": "MAPVoltage",
+      "name": "MAP",
       "decode": {
-        "start_bit": 24,
+        "start_bit": 0,
         "bit_length": 16,
         "byte_order": "little_endian",
         "signed": false,
-        "factor": 1.0,
+        "factor": 0.001,
         "offset": 0.0,
         "minimum": 0.0,
-        "maximum": 65535.0,
-        "unit": "mV",
+        "maximum": 65.535,
+        "unit": "bar",
         "mux": null
       },
       "raw": {
         "cflag": 5,
-        "canp_start_bit": 24,
+        "canp_start_bit": 0,
         "signed_known": false,
         "signed_reason": "heuristic:unsigned_default"
       },
       "acquisition": {
         "type": "can_frame",
         "bus": "can0",
-        "frame_id": 1804,
-        "frame_id_hex": "0x70C",
-        "frame_name": "MSG_70C"
+        "frame_id": 1796,
+        "frame_id_hex": "0x704",
+        "frame_name": "MSG_704"
       },
       "canonical": {
         "id": "intake_manifold.pressure",
@@ -1364,7 +1364,7 @@
         "preferred_unit": "bar",
         "confidence": "mapped",
         "aliases": [
-          "MAPVoltage"
+          "MAP"
         ]
       }
     },

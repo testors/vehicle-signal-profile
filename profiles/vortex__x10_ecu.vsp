@@ -825,31 +825,31 @@
   "diagnostic_queries": [],
   "signals": [
     {
-      "name": "BaroFuelTrim",
+      "name": "BaroP",
       "decode": {
-        "start_bit": 39,
+        "start_bit": 55,
         "bit_length": 16,
         "byte_order": "big_endian",
         "signed": false,
-        "factor": 0.1,
+        "factor": 0.001,
         "offset": 0.0,
         "minimum": 0.0,
-        "maximum": 6553.5,
-        "unit": "%",
+        "maximum": 65.535,
+        "unit": "bar",
         "mux": null
       },
       "raw": {
         "cflag": 0,
-        "canp_start_bit": 40,
+        "canp_start_bit": 56,
         "signed_known": false,
         "signed_reason": "heuristic:unsigned_default"
       },
       "acquisition": {
         "type": "can_frame",
         "bus": "can0",
-        "frame_id": 1556,
-        "frame_id_hex": "0x614",
-        "frame_name": "MSG_614"
+        "frame_id": 1555,
+        "frame_id_hex": "0x613",
+        "frame_name": "MSG_613"
       },
       "canonical": {
         "id": "ambient_air.pressure",
@@ -858,7 +858,7 @@
         "preferred_unit": "bar",
         "confidence": "heuristic",
         "aliases": [
-          "BaroFuelTrim"
+          "BaroP"
         ]
       }
     },
@@ -1091,17 +1091,17 @@
       }
     },
     {
-      "name": "ActiveMap",
+      "name": "MAP",
       "decode": {
-        "start_bit": 63,
-        "bit_length": 8,
+        "start_bit": 55,
+        "bit_length": 16,
         "byte_order": "big_endian",
         "signed": false,
-        "factor": 1.0,
+        "factor": 0.001,
         "offset": 0.0,
         "minimum": 0.0,
-        "maximum": 255.0,
-        "unit": "#",
+        "maximum": 65.535,
+        "unit": "bar",
         "mux": null
       },
       "raw": {
@@ -1113,18 +1113,18 @@
       "acquisition": {
         "type": "can_frame",
         "bus": "can0",
-        "frame_id": 1562,
-        "frame_id_hex": "0x61A",
-        "frame_name": "MSG_61A"
+        "frame_id": 1553,
+        "frame_id_hex": "0x611",
+        "frame_name": "MSG_611"
       },
       "canonical": {
         "id": "intake_manifold.pressure",
         "label": "Intake manifold pressure",
         "quantity": "pressure",
         "preferred_unit": "bar",
-        "confidence": "heuristic",
+        "confidence": "mapped",
         "aliases": [
-          "ActiveMap"
+          "MAP"
         ]
       }
     },

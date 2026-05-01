@@ -733,6 +733,38 @@
       }
     },
     {
+      "name": "Coolant_Temperature",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 310,
+        "frame_id_hex": "0x136",
+        "frame_name": "MSG_136"
+      },
+      "decode": {
+        "start_bit": 0,
+        "bit_length": 8,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": -30.0,
+        "minimum": 0.0,
+        "maximum": 0.0,
+        "unit": "C",
+        "mux": null
+      },
+      "canonical": {
+        "id": "engine.coolant.temperature",
+        "label": "Engine coolant temperature",
+        "quantity": "temperature",
+        "preferred_unit": "C",
+        "confidence": "mapped",
+        "aliases": [
+          "Coolant_Temperature"
+        ]
+      }
+    },
+    {
       "name": "WaterTemp",
       "decode": {
         "start_bit": 7,
@@ -847,6 +879,38 @@
       }
     },
     {
+      "name": "Oil_Pressure",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 300,
+        "frame_id_hex": "0x12C",
+        "frame_name": "MSG_12C"
+      },
+      "decode": {
+        "start_bit": 24,
+        "bit_length": 8,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 0.04,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 0.0,
+        "unit": "bar",
+        "mux": null
+      },
+      "canonical": {
+        "id": "engine.oil.pressure",
+        "label": "Engine oil pressure",
+        "quantity": "pressure",
+        "preferred_unit": "bar",
+        "confidence": "mapped",
+        "aliases": [
+          "Oil_Pressure"
+        ]
+      }
+    },
+    {
       "name": "OilPress",
       "decode": {
         "start_bit": 31,
@@ -885,6 +949,38 @@
       }
     },
     {
+      "name": "Oil_Temperature",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 310,
+        "frame_id_hex": "0x136",
+        "frame_name": "MSG_136"
+      },
+      "decode": {
+        "start_bit": 24,
+        "bit_length": 8,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": -30.0,
+        "minimum": 0.0,
+        "maximum": 0.0,
+        "unit": "C",
+        "mux": null
+      },
+      "canonical": {
+        "id": "engine.oil.temperature",
+        "label": "Engine oil temperature",
+        "quantity": "temperature",
+        "preferred_unit": "C",
+        "confidence": "mapped",
+        "aliases": [
+          "Oil_Temperature"
+        ]
+      }
+    },
+    {
       "name": "OilTemp",
       "decode": {
         "start_bit": 31,
@@ -919,6 +1015,38 @@
         "confidence": "mapped",
         "aliases": [
           "OilTemp"
+        ]
+      }
+    },
+    {
+      "name": "Engine_Speed",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 200,
+        "frame_id_hex": "0xC8",
+        "frame_name": "MSG_0C8"
+      },
+      "decode": {
+        "start_bit": 48,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 10000.0,
+        "unit": "rpm",
+        "mux": null
+      },
+      "canonical": {
+        "id": "engine.speed",
+        "label": "Engine speed",
+        "quantity": "rotational_speed",
+        "preferred_unit": "rpm",
+        "confidence": "mapped",
+        "aliases": [
+          "Engine_Speed"
         ]
       }
     },

@@ -1308,40 +1308,40 @@
       }
     },
     {
-      "name": "BaroCorr",
+      "name": "BaroPress",
       "decode": {
-        "start_bit": 23,
-        "bit_length": 8,
+        "start_bit": 7,
+        "bit_length": 16,
         "byte_order": "big_endian",
         "signed": false,
-        "factor": 1.568627,
+        "factor": 0.001,
         "offset": 0.0,
         "minimum": 0.0,
-        "maximum": 399.999885,
-        "unit": "%",
+        "maximum": 65.535,
+        "unit": "bar",
         "mux": null
       },
       "raw": {
         "cflag": 0,
-        "canp_start_bit": 16,
+        "canp_start_bit": 8,
         "signed_known": false,
         "signed_reason": "heuristic:unsigned_default"
       },
       "acquisition": {
         "type": "can_frame",
         "bus": "can0",
-        "frame_id": 781,
-        "frame_id_hex": "0x30D",
-        "frame_name": "MSG_30D"
+        "frame_id": 775,
+        "frame_id_hex": "0x307",
+        "frame_name": "MSG_307"
       },
       "canonical": {
         "id": "ambient_air.pressure",
         "label": "Ambient air pressure",
         "quantity": "pressure",
         "preferred_unit": "bar",
-        "confidence": "heuristic",
+        "confidence": "mapped",
         "aliases": [
-          "BaroCorr"
+          "BaroPress"
         ]
       }
     },
@@ -1384,40 +1384,40 @@
       }
     },
     {
-      "name": "EngRunT",
+      "name": "TH2O",
       "decode": {
         "start_bit": 7,
-        "bit_length": 16,
+        "bit_length": 8,
         "byte_order": "big_endian",
         "signed": false,
-        "factor": 0.002,
+        "factor": 1.0,
         "offset": 0.0,
         "minimum": 0.0,
-        "maximum": 131.07,
-        "unit": "#",
+        "maximum": 255.0,
+        "unit": "C",
         "mux": null
       },
       "raw": {
         "cflag": 0,
-        "canp_start_bit": 8,
+        "canp_start_bit": 0,
         "signed_known": false,
         "signed_reason": "heuristic:unsigned_default"
       },
       "acquisition": {
         "type": "can_frame",
         "bus": "can0",
-        "frame_id": 780,
-        "frame_id_hex": "0x30C",
-        "frame_name": "MSG_30C"
+        "frame_id": 779,
+        "frame_id_hex": "0x30B",
+        "frame_name": "MSG_30B"
       },
       "canonical": {
         "id": "engine.coolant.temperature",
         "label": "Engine coolant temperature",
         "quantity": "temperature",
         "preferred_unit": "C",
-        "confidence": "heuristic",
+        "confidence": "mapped",
         "aliases": [
-          "EngRunT"
+          "TH2O"
         ]
       }
     },
@@ -1536,9 +1536,9 @@
       }
     },
     {
-      "name": "RPMTar",
+      "name": "RPM",
       "decode": {
-        "start_bit": 55,
+        "start_bit": 7,
         "bit_length": 16,
         "byte_order": "big_endian",
         "signed": false,
@@ -1546,30 +1546,30 @@
         "offset": 0.0,
         "minimum": 0.0,
         "maximum": 65535.0,
-        "unit": "#",
+        "unit": "rpm",
         "mux": null
       },
       "raw": {
         "cflag": 0,
-        "canp_start_bit": 56,
+        "canp_start_bit": 8,
         "signed_known": false,
         "signed_reason": "heuristic:unsigned_default"
       },
       "acquisition": {
         "type": "can_frame",
         "bus": "can0",
-        "frame_id": 781,
-        "frame_id_hex": "0x30D",
-        "frame_name": "MSG_30D"
+        "frame_id": 768,
+        "frame_id_hex": "0x300",
+        "frame_name": "MSG_300"
       },
       "canonical": {
         "id": "engine.speed",
         "label": "Engine speed",
         "quantity": "rotational_speed",
         "preferred_unit": "rpm",
-        "confidence": "heuristic",
+        "confidence": "mapped",
         "aliases": [
-          "RPMTar"
+          "RPM"
         ]
       }
     },
@@ -1764,22 +1764,22 @@
       }
     },
     {
-      "name": "KFuelMAP",
+      "name": "MAP",
       "decode": {
-        "start_bit": 31,
-        "bit_length": 8,
+        "start_bit": 39,
+        "bit_length": 16,
         "byte_order": "big_endian",
         "signed": false,
-        "factor": 1.568627,
+        "factor": 0.001,
         "offset": 0.0,
         "minimum": 0.0,
-        "maximum": 399.999885,
-        "unit": "%",
+        "maximum": 65.535,
+        "unit": "bar",
         "mux": null
       },
       "raw": {
         "cflag": 0,
-        "canp_start_bit": 24,
+        "canp_start_bit": 40,
         "signed_known": false,
         "signed_reason": "heuristic:unsigned_default"
       },
@@ -1795,9 +1795,9 @@
         "label": "Intake manifold pressure",
         "quantity": "pressure",
         "preferred_unit": "bar",
-        "confidence": "heuristic",
+        "confidence": "mapped",
         "aliases": [
-          "KFuelMAP"
+          "MAP"
         ]
       }
     },

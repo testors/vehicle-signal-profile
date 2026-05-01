@@ -130,6 +130,21 @@
           }
         },
         {
+          "name": "Wheel_Speed_FL_kph",
+          "decode": {
+            "start_bit": 32,
+            "bit_length": 16,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 0.01,
+            "offset": -67.67,
+            "minimum": 0.0,
+            "maximum": 65535.0,
+            "unit": "km/h",
+            "mux": null
+          }
+        },
+        {
           "name": "Wheel_Speed_FL_mph",
           "decode": {
             "start_bit": 32,
@@ -141,6 +156,21 @@
             "minimum": 0.0,
             "maximum": 40697.235,
             "unit": "mph",
+            "mux": null
+          }
+        },
+        {
+          "name": "Wheel_Speed_FR_kph",
+          "decode": {
+            "start_bit": 48,
+            "bit_length": 16,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 0.01,
+            "offset": -67.67,
+            "minimum": 0.0,
+            "maximum": 65535.0,
+            "unit": "km/h",
             "mux": null
           }
         },
@@ -160,6 +190,21 @@
           }
         },
         {
+          "name": "Wheel_Speed_RL_kph",
+          "decode": {
+            "start_bit": 0,
+            "bit_length": 16,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 0.01,
+            "offset": -67.67,
+            "minimum": 0.0,
+            "maximum": 65535.0,
+            "unit": "km/h",
+            "mux": null
+          }
+        },
+        {
           "name": "Wheel_Speed_RL_mph",
           "decode": {
             "start_bit": 0,
@@ -171,6 +216,21 @@
             "minimum": 0.0,
             "maximum": 40697.235,
             "unit": "mph",
+            "mux": null
+          }
+        },
+        {
+          "name": "Wheel_Speed_RR_kph",
+          "decode": {
+            "start_bit": 16,
+            "bit_length": 16,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 0.01,
+            "offset": -67.67,
+            "minimum": 0.0,
+            "maximum": 65535.0,
+            "unit": "km/h",
             "mux": null
           }
         },
@@ -620,6 +680,38 @@
   "diagnostic_queries": [],
   "signals": [
     {
+      "name": "Accelerator_Pedal_Position",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 278,
+        "frame_id_hex": "0x116",
+        "frame_name": "MSG_116"
+      },
+      "decode": {
+        "start_bit": 56,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.5,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 100.0,
+        "unit": "%",
+        "mux": null
+      },
+      "canonical": {
+        "id": "accelerator.pedal.position",
+        "label": "Accelerator pedal position",
+        "quantity": "position",
+        "preferred_unit": "%",
+        "confidence": "mapped",
+        "aliases": [
+          "Accelerator_Pedal_Position"
+        ]
+      }
+    },
+    {
       "name": "AccPedalPos",
       "decode": {
         "start_bit": 0,
@@ -654,6 +746,38 @@
         "confidence": "heuristic",
         "aliases": [
           "AccPedalPos"
+        ]
+      }
+    },
+    {
+      "name": "Brake_Light",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 467,
+        "frame_id_hex": "0x1D3",
+        "frame_name": "MSG_1D3"
+      },
+      "decode": {
+        "start_bit": 59,
+        "bit_length": 1,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 0.0,
+        "unit": "",
+        "mux": null
+      },
+      "canonical": {
+        "id": "brake.light.switch",
+        "label": "Brake light switch",
+        "quantity": "state",
+        "preferred_unit": "bool",
+        "confidence": "mapped",
+        "aliases": [
+          "Brake_Light"
         ]
       }
     },
@@ -696,6 +820,38 @@
       }
     },
     {
+      "name": "Brake_Position",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 257,
+        "frame_id_hex": "0x101",
+        "frame_name": "MSG_101"
+      },
+      "decode": {
+        "start_bit": 32,
+        "bit_length": 10,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.13245,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 100.0,
+        "unit": "",
+        "mux": null
+      },
+      "canonical": {
+        "id": "brake.pedal.position",
+        "label": "Brake pedal position",
+        "quantity": "position",
+        "preferred_unit": "%",
+        "confidence": "mapped",
+        "aliases": [
+          "Brake_Position"
+        ]
+      }
+    },
+    {
       "name": "BrakePosition",
       "decode": {
         "start_bit": 17,
@@ -730,6 +886,38 @@
         "confidence": "mapped",
         "aliases": [
           "BrakePosition"
+        ]
+      }
+    },
+    {
+      "name": "Clutch_Position",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1045,
+        "frame_id_hex": "0x415",
+        "frame_name": "MSG_415"
+      },
+      "decode": {
+        "start_bit": 57,
+        "bit_length": 1,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 0.0,
+        "unit": "",
+        "mux": null
+      },
+      "canonical": {
+        "id": "clutch.position",
+        "label": "Clutch position",
+        "quantity": "position",
+        "preferred_unit": "%",
+        "confidence": "mapped",
+        "aliases": [
+          "Clutch_Position"
         ]
       }
     },
@@ -806,6 +994,38 @@
         "confidence": "mapped",
         "aliases": [
           "ClutchSwitch"
+        ]
+      }
+    },
+    {
+      "name": "Engine_Speed",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 277,
+        "frame_id_hex": "0x115",
+        "frame_name": "MSG_115"
+      },
+      "decode": {
+        "start_bit": 48,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.75,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 8000.0,
+        "unit": "rpm",
+        "mux": null
+      },
+      "canonical": {
+        "id": "engine.speed",
+        "label": "Engine speed",
+        "quantity": "rotational_speed",
+        "preferred_unit": "rpm",
+        "confidence": "mapped",
+        "aliases": [
+          "Engine_Speed"
         ]
       }
     },
@@ -944,6 +1164,76 @@
       }
     },
     {
+      "name": "Steering_Angle",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 37,
+        "frame_id_hex": "0x25",
+        "frame_name": "MSG_025"
+      },
+      "decode": {
+        "start_bit": 48,
+        "bit_length": 12,
+        "byte_order": "big_endian",
+        "signed": true,
+        "factor": 1.5,
+        "offset": 0.0,
+        "minimum": -400.0,
+        "maximum": 400.0,
+        "unit": "deg",
+        "mux": null
+      },
+      "canonical": {
+        "id": "steering.wheel.angle",
+        "label": "Steering wheel angle",
+        "quantity": "angle",
+        "preferred_unit": "deg",
+        "confidence": "mapped",
+        "aliases": [
+          "Steering_Angle"
+        ]
+      }
+    },
+    {
+      "name": "SteeringAngle",
+      "decode": {
+        "start_bit": 3,
+        "bit_length": 12,
+        "byte_order": "big_endian",
+        "signed": true,
+        "factor": 1.5,
+        "offset": 0.0,
+        "minimum": -3072.0,
+        "maximum": 3070.5,
+        "unit": "deg",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 8,
+        "signed_known": false,
+        "signed_reason": "heuristic:signed_motion"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 37,
+        "frame_id_hex": "0x25",
+        "frame_name": "MSG_025"
+      },
+      "canonical": {
+        "id": "steering.wheel.angle",
+        "label": "Steering wheel angle",
+        "quantity": "angle",
+        "preferred_unit": "deg",
+        "confidence": "mapped",
+        "aliases": [
+          "SteeringAngle"
+        ]
+      }
+    },
+    {
       "name": "Steering_angle",
       "decode": {
         "start_bit": 23,
@@ -978,6 +1268,38 @@
         "confidence": "mapped",
         "aliases": [
           "Steering_angle"
+        ]
+      }
+    },
+    {
+      "name": "Traction_Control_Mode",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 951,
+        "frame_id_hex": "0x3B7",
+        "frame_name": "MSG_3B7"
+      },
+      "decode": {
+        "start_bit": 53,
+        "bit_length": 1,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 0.0,
+        "unit": "",
+        "mux": null
+      },
+      "canonical": {
+        "id": "traction_control.mode",
+        "label": "Traction control mode",
+        "quantity": "state",
+        "preferred_unit": "state",
+        "confidence": "mapped",
+        "aliases": [
+          "Traction_Control_Mode"
         ]
       }
     },
@@ -1020,6 +1342,38 @@
       }
     },
     {
+      "name": "Wheel_Speed_FL_kph",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 170,
+        "frame_id_hex": "0xAA",
+        "frame_name": "MSG_0AA"
+      },
+      "decode": {
+        "start_bit": 32,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.01,
+        "offset": -67.67,
+        "minimum": 0.0,
+        "maximum": 65535.0,
+        "unit": "km/h",
+        "mux": null
+      },
+      "canonical": {
+        "id": "wheel.speed.front_left",
+        "label": "Front-left wheel speed",
+        "quantity": "speed",
+        "preferred_unit": "km/h",
+        "confidence": "mapped",
+        "aliases": [
+          "Wheel_Speed_FL_kph"
+        ]
+      }
+    },
+    {
       "name": "WheelSpeedFL",
       "decode": {
         "start_bit": 23,
@@ -1054,6 +1408,38 @@
         "confidence": "mapped",
         "aliases": [
           "WheelSpeedFL"
+        ]
+      }
+    },
+    {
+      "name": "Wheel_Speed_FR_kph",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 170,
+        "frame_id_hex": "0xAA",
+        "frame_name": "MSG_0AA"
+      },
+      "decode": {
+        "start_bit": 48,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.01,
+        "offset": -67.67,
+        "minimum": 0.0,
+        "maximum": 65535.0,
+        "unit": "km/h",
+        "mux": null
+      },
+      "canonical": {
+        "id": "wheel.speed.front_right",
+        "label": "Front-right wheel speed",
+        "quantity": "speed",
+        "preferred_unit": "km/h",
+        "confidence": "mapped",
+        "aliases": [
+          "Wheel_Speed_FR_kph"
         ]
       }
     },
@@ -1096,6 +1482,38 @@
       }
     },
     {
+      "name": "Wheel_Speed_RL_kph",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 170,
+        "frame_id_hex": "0xAA",
+        "frame_name": "MSG_0AA"
+      },
+      "decode": {
+        "start_bit": 0,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.01,
+        "offset": -67.67,
+        "minimum": 0.0,
+        "maximum": 65535.0,
+        "unit": "km/h",
+        "mux": null
+      },
+      "canonical": {
+        "id": "wheel.speed.rear_left",
+        "label": "Rear-left wheel speed",
+        "quantity": "speed",
+        "preferred_unit": "km/h",
+        "confidence": "mapped",
+        "aliases": [
+          "Wheel_Speed_RL_kph"
+        ]
+      }
+    },
+    {
       "name": "WheelSpeedRL",
       "decode": {
         "start_bit": 55,
@@ -1130,6 +1548,38 @@
         "confidence": "mapped",
         "aliases": [
           "WheelSpeedRL"
+        ]
+      }
+    },
+    {
+      "name": "Wheel_Speed_RR_kph",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 170,
+        "frame_id_hex": "0xAA",
+        "frame_name": "MSG_0AA"
+      },
+      "decode": {
+        "start_bit": 16,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.01,
+        "offset": -67.67,
+        "minimum": 0.0,
+        "maximum": 65535.0,
+        "unit": "km/h",
+        "mux": null
+      },
+      "canonical": {
+        "id": "wheel.speed.rear_right",
+        "label": "Rear-right wheel speed",
+        "quantity": "speed",
+        "preferred_unit": "km/h",
+        "confidence": "mapped",
+        "aliases": [
+          "Wheel_Speed_RR_kph"
         ]
       }
     },

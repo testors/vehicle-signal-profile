@@ -1899,40 +1899,40 @@
       }
     },
     {
-      "name": "Throttle_Opening",
+      "name": "Throttle_Pos",
       "decode": {
-        "start_bit": 48,
+        "start_bit": 0,
         "bit_length": 16,
         "byte_order": "little_endian",
         "signed": false,
-        "factor": 0.12207,
+        "factor": 0.01,
         "offset": 0.0,
         "minimum": 0.0,
-        "maximum": 7999.8574499999995,
-        "unit": "deg",
+        "maximum": 655.35,
+        "unit": "%",
         "mux": null
       },
       "raw": {
         "cflag": 5,
-        "canp_start_bit": 48,
+        "canp_start_bit": 0,
         "signed_known": false,
         "signed_reason": "heuristic:unsigned_default"
       },
       "acquisition": {
         "type": "can_frame",
         "bus": "can0",
-        "frame_id": 1696,
-        "frame_id_hex": "0x6A0",
-        "frame_name": "MSG_6A0"
+        "frame_id": 1697,
+        "frame_id_hex": "0x6A1",
+        "frame_name": "MSG_6A1"
       },
       "canonical": {
         "id": "throttle.position",
         "label": "Throttle position",
         "quantity": "position",
         "preferred_unit": "%",
-        "confidence": "heuristic",
+        "confidence": "mapped",
         "aliases": [
-          "Throttle_Opening"
+          "Throttle_Pos"
         ]
       }
     },
@@ -1975,9 +1975,9 @@
       }
     },
     {
-      "name": "Gear_Id_Err_Stat",
+      "name": "Gear_Position",
       "decode": {
-        "start_bit": 56,
+        "start_bit": 48,
         "bit_length": 8,
         "byte_order": "little_endian",
         "signed": false,
@@ -1985,30 +1985,30 @@
         "offset": 0.0,
         "minimum": 0.0,
         "maximum": 255.0,
-        "unit": "#",
+        "unit": "gear",
         "mux": null
       },
       "raw": {
         "cflag": 5,
-        "canp_start_bit": 56,
+        "canp_start_bit": 48,
         "signed_known": false,
         "signed_reason": "heuristic:unsigned_default"
       },
       "acquisition": {
         "type": "can_frame",
         "bus": "can0",
-        "frame_id": 2016,
-        "frame_id_hex": "0x7E0",
-        "frame_name": "MSG_7E0"
+        "frame_id": 1702,
+        "frame_id_hex": "0x6A6",
+        "frame_name": "MSG_6A6"
       },
       "canonical": {
         "id": "transmission.gear.selected",
         "label": "Selected gear",
         "quantity": "gear",
         "preferred_unit": "gear",
-        "confidence": "heuristic",
+        "confidence": "mapped",
         "aliases": [
-          "Gear_Id_Err_Stat"
+          "Gear_Position"
         ]
       }
     },

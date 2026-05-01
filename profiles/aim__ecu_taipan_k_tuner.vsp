@@ -1695,40 +1695,40 @@
   "diagnostic_queries": [],
   "signals": [
     {
-      "name": "INJ_BAP_CORR",
+      "name": "BARO",
       "decode": {
-        "start_bit": 23,
+        "start_bit": 39,
         "bit_length": 16,
         "byte_order": "big_endian",
         "signed": false,
-        "factor": 0.1,
-        "offset": -100.0,
-        "minimum": -100.0,
-        "maximum": 6453.5,
-        "unit": "%",
+        "factor": 0.001,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 65.535,
+        "unit": "bar",
         "mux": null
       },
       "raw": {
         "cflag": 0,
-        "canp_start_bit": 24,
+        "canp_start_bit": 40,
         "signed_known": false,
         "signed_reason": "heuristic:unsigned_default"
       },
       "acquisition": {
         "type": "can_frame",
         "bus": "can0",
-        "frame_id": 1033,
-        "frame_id_hex": "0x409",
-        "frame_name": "MSG_409"
+        "frame_id": 1026,
+        "frame_id_hex": "0x402",
+        "frame_name": "MSG_402"
       },
       "canonical": {
         "id": "ambient_air.pressure",
         "label": "Ambient air pressure",
         "quantity": "pressure",
         "preferred_unit": "bar",
-        "confidence": "heuristic",
+        "confidence": "mapped",
         "aliases": [
-          "INJ_BAP_CORR"
+          "BARO"
         ]
       }
     },
@@ -1885,7 +1885,7 @@
       }
     },
     {
-      "name": "RPM_MEAN_ACC",
+      "name": "VIRTUAL_RPM",
       "decode": {
         "start_bit": 39,
         "bit_length": 32,
@@ -1895,7 +1895,7 @@
         "offset": 0.0,
         "minimum": 0.0,
         "maximum": 4294967295.0,
-        "unit": "rpm/s",
+        "unit": "rpm",
         "mux": null
       },
       "raw": {
@@ -1907,9 +1907,9 @@
       "acquisition": {
         "type": "can_frame",
         "bus": "can0",
-        "frame_id": 1040,
-        "frame_id_hex": "0x410",
-        "frame_name": "MSG_410"
+        "frame_id": 1812,
+        "frame_id_hex": "0x714",
+        "frame_name": "MSG_714"
       },
       "canonical": {
         "id": "engine.speed",
@@ -1918,7 +1918,7 @@
         "preferred_unit": "rpm",
         "confidence": "heuristic",
         "aliases": [
-          "RPM_MEAN_ACC"
+          "VIRTUAL_RPM"
         ]
       }
     },

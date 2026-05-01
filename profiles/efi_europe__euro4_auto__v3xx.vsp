@@ -1089,40 +1089,40 @@
       }
     },
     {
-      "name": "TotalEngineRunT",
+      "name": "WaterTemp",
       "decode": {
-        "start_bit": 55,
-        "bit_length": 16,
+        "start_bit": 7,
+        "bit_length": 8,
         "byte_order": "big_endian",
         "signed": false,
-        "factor": 59999.8800002,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 3932092135.813107,
-        "unit": "ms",
+        "factor": 0.627451,
+        "offset": -10.0,
+        "minimum": -10.0,
+        "maximum": 150.000005,
+        "unit": "C",
         "mux": null
       },
       "raw": {
         "cflag": 0,
-        "canp_start_bit": 56,
+        "canp_start_bit": 0,
         "signed_known": false,
         "signed_reason": "heuristic:unsigned_default"
       },
       "acquisition": {
         "type": "can_frame",
         "bus": "can0",
-        "frame_id": 771,
-        "frame_id_hex": "0x303",
-        "frame_name": "MSG_303"
+        "frame_id": 779,
+        "frame_id_hex": "0x30B",
+        "frame_name": "MSG_30B"
       },
       "canonical": {
         "id": "engine.coolant.temperature",
         "label": "Engine coolant temperature",
         "quantity": "temperature",
         "preferred_unit": "C",
-        "confidence": "heuristic",
+        "confidence": "mapped",
         "aliases": [
-          "TotalEngineRunT"
+          "WaterTemp"
         ]
       }
     },
@@ -1545,22 +1545,22 @@
       }
     },
     {
-      "name": "GearShiftTime",
+      "name": "Gear",
       "decode": {
-        "start_bit": 23,
-        "bit_length": 16,
+        "start_bit": 7,
+        "bit_length": 8,
         "byte_order": "big_endian",
         "signed": false,
-        "factor": 0.2,
+        "factor": 1.0,
         "offset": 0.0,
         "minimum": 0.0,
-        "maximum": 13107.0,
-        "unit": "ms",
+        "maximum": 255.0,
+        "unit": "gear",
         "mux": null
       },
       "raw": {
         "cflag": 0,
-        "canp_start_bit": 24,
+        "canp_start_bit": 0,
         "signed_known": false,
         "signed_reason": "heuristic:unsigned_default"
       },
@@ -1576,9 +1576,9 @@
         "label": "Selected gear",
         "quantity": "gear",
         "preferred_unit": "gear",
-        "confidence": "heuristic",
+        "confidence": "mapped",
         "aliases": [
-          "GearShiftTime"
+          "Gear"
         ]
       }
     },

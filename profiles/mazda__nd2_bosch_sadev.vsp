@@ -1540,40 +1540,40 @@
       }
     },
     {
-      "name": "Error_Water_Temp",
+      "name": "Water_Temp",
       "decode": {
-        "start_bit": 48,
+        "start_bit": 24,
         "bit_length": 8,
         "byte_order": "little_endian",
         "signed": false,
         "factor": 1.0,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 255.0,
-        "unit": "#",
+        "offset": -40.0,
+        "minimum": -40.0,
+        "maximum": 215.0,
+        "unit": "C",
         "mux": null
       },
       "raw": {
         "cflag": 5,
-        "canp_start_bit": 48,
+        "canp_start_bit": 24,
         "signed_known": false,
         "signed_reason": "heuristic:unsigned_default"
       },
       "acquisition": {
         "type": "can_frame",
         "bus": "can0",
-        "frame_id": 1799,
-        "frame_id_hex": "0x707",
-        "frame_name": "MSG_707"
+        "frame_id": 1793,
+        "frame_id_hex": "0x701",
+        "frame_name": "MSG_701"
       },
       "canonical": {
         "id": "engine.coolant.temperature",
         "label": "Engine coolant temperature",
         "quantity": "temperature",
         "preferred_unit": "C",
-        "confidence": "heuristic",
+        "confidence": "mapped",
         "aliases": [
-          "Error_Water_Temp"
+          "Water_Temp"
         ]
       }
     },
@@ -1882,17 +1882,17 @@
       }
     },
     {
-      "name": "Gear_Shift_Volts",
+      "name": "Gear_Position",
       "decode": {
         "start_bit": 32,
-        "bit_length": 16,
+        "bit_length": 8,
         "byte_order": "little_endian",
         "signed": false,
         "factor": 1.0,
         "offset": 0.0,
         "minimum": 0.0,
-        "maximum": 65535.0,
-        "unit": "mV",
+        "maximum": 255.0,
+        "unit": "gear",
         "mux": null
       },
       "raw": {
@@ -1904,18 +1904,18 @@
       "acquisition": {
         "type": "can_frame",
         "bus": "can0",
-        "frame_id": 1689,
-        "frame_id_hex": "0x699",
-        "frame_name": "MSG_699"
+        "frame_id": 1793,
+        "frame_id_hex": "0x701",
+        "frame_name": "MSG_701"
       },
       "canonical": {
         "id": "transmission.gear.selected",
         "label": "Selected gear",
         "quantity": "gear",
         "preferred_unit": "gear",
-        "confidence": "heuristic",
+        "confidence": "mapped",
         "aliases": [
-          "Gear_Shift_Volts"
+          "Gear_Position"
         ]
       }
     },

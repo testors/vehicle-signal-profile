@@ -2760,40 +2760,40 @@
       }
     },
     {
-      "name": "ECU_DriveshaRPM",
+      "name": "ECU_RPM",
       "decode": {
-        "start_bit": 55,
+        "start_bit": 7,
         "bit_length": 16,
         "byte_order": "big_endian",
         "signed": false,
-        "factor": 5.99998800002,
+        "factor": 1.0,
         "offset": 0.0,
         "minimum": 0.0,
-        "maximum": 393209.2135813107,
-        "unit": "deg/s",
+        "maximum": 65535.0,
+        "unit": "rpm",
         "mux": null
       },
       "raw": {
         "cflag": 0,
-        "canp_start_bit": 56,
+        "canp_start_bit": 8,
         "signed_known": false,
         "signed_reason": "heuristic:unsigned_default"
       },
       "acquisition": {
         "type": "can_frame",
         "bus": "can0",
-        "frame_id": 997,
-        "frame_id_hex": "0x3E5",
-        "frame_name": "MSG_3E5"
+        "frame_id": 864,
+        "frame_id_hex": "0x360",
+        "frame_name": "MSG_360"
       },
       "canonical": {
         "id": "engine.speed",
         "label": "Engine speed",
         "quantity": "rotational_speed",
         "preferred_unit": "rpm",
-        "confidence": "heuristic",
+        "confidence": "mapped",
         "aliases": [
-          "ECU_DriveshaRPM"
+          "ECU_RPM"
         ]
       }
     },
@@ -3216,31 +3216,31 @@
       }
     },
     {
-      "name": "ECU_GearOilTemp",
+      "name": "ECU_Gear_2",
       "decode": {
-        "start_bit": 7,
-        "bit_length": 16,
+        "start_bit": 63,
+        "bit_length": 8,
         "byte_order": "big_endian",
         "signed": false,
-        "factor": 0.1,
-        "offset": -273.15,
-        "minimum": -273.15,
-        "maximum": 6280.35,
-        "unit": "C",
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 255.0,
+        "unit": "gear",
         "mux": null
       },
       "raw": {
         "cflag": 0,
-        "canp_start_bit": 8,
+        "canp_start_bit": 56,
         "signed_known": false,
         "signed_reason": "heuristic:unsigned_default"
       },
       "acquisition": {
         "type": "can_frame",
         "bus": "can0",
-        "frame_id": 993,
-        "frame_id_hex": "0x3E1",
-        "frame_name": "MSG_3E1"
+        "frame_id": 1136,
+        "frame_id_hex": "0x470",
+        "frame_name": "MSG_470"
       },
       "canonical": {
         "id": "transmission.gear.selected",
@@ -3249,7 +3249,7 @@
         "preferred_unit": "gear",
         "confidence": "heuristic",
         "aliases": [
-          "ECU_GearOilTemp"
+          "ECU_Gear_2"
         ]
       }
     },
