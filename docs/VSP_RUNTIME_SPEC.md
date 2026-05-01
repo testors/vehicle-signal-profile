@@ -207,7 +207,8 @@ Build-time composition follows these runtime-visible rules:
   `applicability` scope.
 - Generation, platform, year, market, trim, and powertrain boundaries remain
   profile-selection boundaries unless the generated profile already represents
-  a compatible merged scope.
+  a compatible merged scope. Revision or bitrate-like source suffixes may be
+  collapsed by the generator when the signal layouts prove duplicate coverage.
 - Conflict resolution must not collapse acquisition modes. If the same
   canonical ID appears in both CAN and diagnostic acquisition modes, both can
   be present and runtime code should choose by `signals[].acquisition.type`.
