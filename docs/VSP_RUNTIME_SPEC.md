@@ -200,6 +200,9 @@ when build-time evidence shows they share a compatible vehicle scope.
 
 Build-time composition follows these runtime-visible rules:
 
+- Source labels may be corrected before publication when reviewed build
+  evidence shows a supplier or protocol namespace was parsed as the vehicle
+  manufacturer.
 - Same-scope sources can be merged so both acquisition paths stay available.
 - Reviewed alias/supplement evidence or strict compatibility checks may add
   base-model passive CAN definitions to a trim-specific OBD-focused profile,
