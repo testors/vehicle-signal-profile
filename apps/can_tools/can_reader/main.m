@@ -3282,7 +3282,7 @@ typedef struct {
     const char *payload_hex;
 } aim992_fastlog_request_t;
 
-static const aim992_fastlog_request_t s_aim992_fastlog_requests[] = {
+static const aim992_fastlog_request_t s_aim992_fastlog_raw_requests[] = {
     { "RPM",          0x7DF, "02010C5555555555" },
     { "THROTTLE_POS", 0x7DF, "0201115555555555" },
     { "ACCEL_POS",    0x7DF, "0201495555555555" },
@@ -3291,8 +3291,17 @@ static const aim992_fastlog_request_t s_aim992_fastlog_requests[] = {
     { "BRAKE_PRESS",  0x713, "03222B21AAAAAAAA" },
 };
 
-static const int s_aim992_fastlog_request_count =
-    sizeof(s_aim992_fastlog_requests) / sizeof(s_aim992_fastlog_requests[0]);
+static const int s_aim992_fastlog_raw_request_count =
+    sizeof(s_aim992_fastlog_raw_requests) / sizeof(s_aim992_fastlog_raw_requests[0]);
+
+static bool cli_contains_case_insensitive(const char *s, const char *needle) {
+    if (!s || !needle || !*needle) return false;
+    size_t needle_len = strlen(needle);
+    for (const char *p = s; *p; p++) {
+        if (strncasecmp(p, needle, needle_len) == 0) return true;
+    }
+    return false;
+}
 
 static bool cli_send_required_command(const char *cmd) {
     char resp[512] = "";
@@ -3311,10 +3320,19 @@ static void cli_send_best_effort_command(const char *cmd) {
     [g_ble sendCommand:cmd response:resp maxLen:sizeof(resp)];
 }
 
+static void cli_p992_fastlog_cleanup(void) {
+    cli_send_best_effort_command("STPPMC");
+    cli_send_best_effort_command("STCMM 0");
+}
+
 static int cli_p992_fastlog_write_json(const char *out_path,
                                        const char *device_name,
                                        int seconds,
-                                       int period_ms) {
+                                       int period_ms,
+                                       const char *adapter_mode,
+                                       const char *monitor_cmd,
+                                       const aim992_fastlog_request_t requests[],
+                                       int request_count) {
     FILE *json_out = stdout;
     if (out_path && *out_path) {
         json_out = fopen(out_path, "w");
@@ -3324,12 +3342,16 @@ static int cli_p992_fastlog_write_json(const char *out_path,
         }
     }
 
-    fprintf(json_out, "{\"profile\":\"p992\",\"mode\":\"fastlog_periodic\",\"device\":");
+    fprintf(json_out, "{\"profile\":\"p992\",\"mode\":\"fastlog_periodic\",\"adapter_mode\":");
+    json_print_string(json_out, adapter_mode);
+    fprintf(json_out, ",\"device\":");
     json_print_string(json_out, device_name);
     fprintf(json_out, ",\"duration_s\":%d,\"period_ms\":%d", seconds, period_ms);
+    fprintf(json_out, ",\"monitor_command\":");
+    json_print_string(json_out, monitor_cmd);
     fprintf(json_out, ",\"schedule\":[");
-    for (int i = 0; i < s_aim992_fastlog_request_count; i++) {
-        const aim992_fastlog_request_t *req = &s_aim992_fastlog_requests[i];
+    for (int i = 0; i < request_count; i++) {
+        const aim992_fastlog_request_t *req = &requests[i];
         if (i > 0) fprintf(json_out, ",");
         fprintf(json_out, "{\"name\":");
         json_print_string(json_out, req->name);
@@ -3367,14 +3389,26 @@ static int cli_p992_fastlog_write_json(const char *out_path,
 static int cli_p992_fastlog(const char *device,
                             int seconds,
                             int period_ms,
+                            const char *monitor_cmd,
                             const char *out_path) {
     if (seconds <= 0) seconds = 10;
     if (period_ms < 20) period_ms = 20;
 
     int matchIdx = cli_ble_connect(device);
+    const char *connected_name = g_ble.discoveredNames[matchIdx].UTF8String;
+    bool use_vlinker = cli_contains_case_insensitive(device, "vlinker") ||
+                       cli_contains_case_insensitive(connected_name, "vlinker");
+    if (use_vlinker) {
+        fprintf(stderr, "[ERROR] vLinker periodic fastlog is unsupported: "
+                "ATMA/STM/STMA monitoring mode is receive-only and disables PM transmissions\n");
+        [g_ble disconnect];
+        return 1;
+    }
+    const char *adapter_mode = "stn_raw_periodic";
+    const aim992_fastlog_request_t *requests = s_aim992_fastlog_raw_requests;
+    int request_count = s_aim992_fastlog_raw_request_count;
     char resp[512] = "";
 
-    cli_log("Initializing STN periodic CAN scheduler...");
     const char *init_cmds[] = {
         "ATZ", "ATE0", "ATL0", "ATS1", "ATH1", "ATCAF0",
     };
@@ -3384,6 +3418,7 @@ static int cli_p992_fastlog(const char *device,
     }
 
     char sti_resp[256] = "";
+    g_stn_detected = false;
     if ([g_ble sendCommand:"STI" response:sti_resp maxLen:sizeof(sti_resp)] &&
         stn2255_detect(resp, sti_resp, &g_stn_info)) {
         g_stn_detected = true;
@@ -3395,8 +3430,9 @@ static int cli_p992_fastlog(const char *device,
         return 1;
     }
 
-    /* Use STN raw CAN 11-bit 500k and schedule full 8-byte CAN frames, matching
-       AiM's observed bus traffic. */
+    cli_log("Initializing %s CAN scheduler...", adapter_mode);
+    /* Use STN raw CAN 11-bit 500k and schedule full 8-byte CAN frames,
+       matching AiM's observed bus traffic. */
     if (!cli_send_required_command("STPPMC") ||
         !cli_send_required_command("STCFCPC") ||
         !cli_send_required_command("STP 31") ||
@@ -3406,6 +3442,7 @@ static int cli_p992_fastlog(const char *device,
         !cli_send_required_command("STCSEGR 0") ||
         !cli_send_required_command("STCSEGT 0") ||
         !cli_send_required_command("STFAC")) {
+        cli_p992_fastlog_cleanup();
         [g_ble disconnect];
         return 1;
     }
@@ -3415,28 +3452,28 @@ static int cli_p992_fastlog(const char *device,
         char filter_cmd[32];
         snprintf(filter_cmd, sizeof(filter_cmd), "STFAP %03X,7FF", pass_ids[i]);
         if (!cli_send_required_command(filter_cmd)) {
-            cli_send_best_effort_command("STPPMC");
+            cli_p992_fastlog_cleanup();
             [g_ble disconnect];
             return 1;
         }
     }
 
-    for (int i = 0; i < s_aim992_fastlog_request_count; i++) {
-        const aim992_fastlog_request_t *req = &s_aim992_fastlog_requests[i];
+    for (int i = 0; i < request_count; i++) {
+        const aim992_fastlog_request_t *req = &requests[i];
         char cmd[96];
         snprintf(cmd, sizeof(cmd), "STPPMA %d, %03X, %s",
                  period_ms, req->tx_id, req->payload_hex);
         if (!cli_send_required_command(cmd)) {
-            cli_send_best_effort_command("STPPMC");
+            cli_p992_fastlog_cleanup();
             [g_ble disconnect];
             return 1;
         }
         cli_log("Periodic %s: %s", req->name, cmd);
         run_loop_for((double)period_ms / 1000.0 /
-                     (double)s_aim992_fastlog_request_count);
+                     (double)request_count);
     }
 
-    cli_log("Starting filtered raw monitor (STM) for %d seconds...", seconds);
+    cli_log("Starting raw monitor (%s) for %d seconds...", monitor_cmd, seconds);
     g_ble->_canLineLen = 0;
     g_ble.canMonitorActive = YES;
     g_cli_can_frame_count = 0;
@@ -3444,7 +3481,9 @@ static int cli_p992_fastlog(const char *device,
     g_ble->_responseLen = 0;
     g_ble->_responseReady = NO;
 
-    [g_ble sendRawString:"STM\r"];
+    char monitor_with_cr[16];
+    snprintf(monitor_with_cr, sizeof(monitor_with_cr), "%s\r", monitor_cmd);
+    [g_ble sendRawString:monitor_with_cr];
 
     NSDate *endTime = [NSDate dateWithTimeIntervalSinceNow:seconds];
     while ([[NSDate date] compare:endTime] == NSOrderedAscending &&
@@ -3460,13 +3499,16 @@ static int cli_p992_fastlog(const char *device,
     run_loop_for(0.2);
 
     cli_log("Fastlog stopped. Frames: %d", g_cli_can_frame_count);
-    cli_send_best_effort_command("STPPMC");
-    cli_send_best_effort_command("STCMM 0");
+    cli_p992_fastlog_cleanup();
 
     int ret = cli_p992_fastlog_write_json(out_path,
-                                          g_ble.discoveredNames[matchIdx].UTF8String,
+                                          connected_name,
                                           seconds,
-                                          period_ms);
+                                          period_ms,
+                                          adapter_mode,
+                                          monitor_cmd,
+                                          requests,
+                                          request_count);
     [g_ble disconnect];
     g_interrupt = NO;
     return ret;
@@ -3535,12 +3577,13 @@ static int cli_p992(int argc, const char *argv[]) {
 
     if (strcmp(subcmd, "fastlog") == 0) {
         if (argc < 4) {
-            fprintf(stderr, "[ERROR] Usage: p992 fastlog <device> [seconds] [--period-ms N] [--out FILE]\n");
+            fprintf(stderr, "[ERROR] Usage: p992 fastlog <device> [seconds] [--period-ms N] [--monitor-cmd STM|STMA|ATMA] [--out FILE]\n");
             return 1;
         }
 
         int seconds = 10;
         int period_ms = 166;
+        const char *monitor_cmd = "STM";
         const char *out_path = NULL;
         int arg_start = 4;
 
@@ -3562,6 +3605,14 @@ static int cli_p992(int argc, const char *argv[]) {
                 period_ms = atoi(argv[++i]);
             } else if (strncmp(argv[i], "--period-ms=", 12) == 0) {
                 period_ms = atoi(argv[i] + 12);
+            } else if (strcmp(argv[i], "--monitor-cmd") == 0) {
+                if (i + 1 >= argc) {
+                    fprintf(stderr, "[ERROR] --monitor-cmd requires a value\n");
+                    return 1;
+                }
+                monitor_cmd = argv[++i];
+            } else if (strncmp(argv[i], "--monitor-cmd=", 14) == 0) {
+                monitor_cmd = argv[i] + 14;
             } else if (strcmp(argv[i], "--out") == 0) {
                 if (i + 1 >= argc) {
                     fprintf(stderr, "[ERROR] --out requires a file path\n");
@@ -3576,7 +3627,14 @@ static int cli_p992(int argc, const char *argv[]) {
             }
         }
 
-        return cli_p992_fastlog(argv[3], seconds, period_ms, out_path);
+        if (strcasecmp(monitor_cmd, "STM") != 0 &&
+            strcasecmp(monitor_cmd, "STMA") != 0 &&
+            strcasecmp(monitor_cmd, "ATMA") != 0) {
+            fprintf(stderr, "[ERROR] --monitor-cmd must be STM, STMA, or ATMA\n");
+            return 1;
+        }
+
+        return cli_p992_fastlog(argv[3], seconds, period_ms, monitor_cmd, out_path);
     }
 
     if (strcmp(subcmd, "debug") == 0) {
@@ -5876,7 +5934,7 @@ static void cli_print_usage(void) {
     fprintf(stderr, "  macos_obd_reader p992 list                           List 992 XML channels + mappings\n");
     fprintf(stderr, "  macos_obd_reader p992 read <device> [channel...]     Read 992 profile channels once\n");
     fprintf(stderr, "  macos_obd_reader p992 watch <device> [...]           Stream 992 profile channels as NDJSON\n");
-    fprintf(stderr, "  macos_obd_reader p992 fastlog <device> [...]         STN periodic-message fast logger\n");
+    fprintf(stderr, "  macos_obd_reader p992 fastlog <device> [...]         Periodic-message fast logger\n");
     fprintf(stderr, "  macos_obd_reader p992 debug <device>                 Probe 992 routes and raw responses\n");
     fprintf(stderr, "  macos_obd_reader p992 bin-probe <device>             Probe exact AiM BIN-tail request containers\n");
     fprintf(stderr, "  macos_obd_reader p992 scan-did <device> [DID] [...]  Scan 0x700..0x7EF tx IDs for a DID\n");

@@ -26,6 +26,10 @@ set(COMMON_SOURCES
     common/stn2255.c
 )
 
+set(OBD_ADAPTER_SOURCES
+    common/obd_adapter.m
+)
+
 # --- can_reader ---
 add_executable(can_reader
     can_reader/main.m
@@ -52,7 +56,20 @@ target_link_libraries(can_discover
     m
 )
 
+# --- vsp_probe ---
+add_executable(vsp_probe
+    vsp_probe/main.m
+    ${COMMON_SOURCES}
+    ${OBD_ADAPTER_SOURCES}
+)
+target_link_libraries(vsp_probe
+    "-framework CoreBluetooth"
+    "-framework IOBluetooth"
+    "-framework Foundation"
+    m
+)
+
 message(STATUS "CAN Tools Build Configuration")
 message(STATUS "  Build type: ${CMAKE_BUILD_TYPE}")
 message(STATUS "  C Compiler: ${CMAKE_C_COMPILER}")
-message(STATUS "  Targets: can_discover_core, can_reader, can_discover")
+message(STATUS "  Targets: can_discover_core, can_reader, can_discover, vsp_probe")

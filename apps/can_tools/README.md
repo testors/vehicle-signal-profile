@@ -8,8 +8,9 @@ BLE/Classic BT OBD 어댑터를 통한 CAN 버스 도구 모음. macOS에서 동
 |------|------|
 | **can_reader** | OBD-II PID 조회, CAN 모니터링, 버스 감지, 시그널 탐색 |
 | **can_discover** | PT-CAN 시그널 자동 탐색 전용 (경량, 대화형) |
+| **vsp_probe** | VSP 프로파일의 CAN/OBD 시그널을 목표 Hz로 읽을 수 있는지 검증 |
 
-`can_reader`는 D-CAN/PT-CAN 양쪽을 지원하는 다목적 도구이고, `can_discover`는 PT-CAN 시그널 탐색에 특화된 단일 목적 도구이다. `can_reader discover` 명령과 `can_discover`는 동일한 탐색 로직(`can_discover.c`)을 공유한다.
+`can_reader`는 D-CAN/PT-CAN 양쪽을 지원하는 다목적 도구이고, `can_discover`는 PT-CAN 시그널 탐색에 특화된 단일 목적 도구이다. `vsp_probe`는 `../vehicle-signal-profile` 같은 VSP 프로파일을 런타임 검증하는 별도 실행파일이다. `can_reader discover` 명령과 `can_discover`는 동일한 탐색 로직(`can_discover.c`)을 공유한다.
 
 ## 빌드
 
@@ -25,6 +26,27 @@ mkdir -p build && cd build && cmake .. && make
 
 빌드 후 `build/libcan_discover_core.a`가 함께 생성된다. 다른 앱에서 탐색 엔진만 쓰고 싶으면
 `common/can_discover.h`를 포함해 `disc_analyze_with_raw()`와 `disc_render_draft_dbc()`를 직접 호출하면 된다.
+
+## vsp_probe
+
+VSP의 `signals[].canonical.id`와 `signals[].acquisition`을 기준으로 CAN frame 또는 diagnostic query를 선택하고, 지정한 목표 Hz를 만족하는지 JSON으로 출력한다.
+
+기본 검증 대상은 rpm/gear/steering/throttle/brake 의미군이다:
+
+```bash
+# 하드웨어 없이 선택 계획만 확인
+./build/vsp_probe ../vehicle-signal-profile/profiles/porsche__911_gt3__992.vsp --plan
+
+# CAN acquisition만 5Hz 목표로 10초 검증
+./build/vsp_probe ../vehicle-signal-profile/profiles/porsche__911_gt3__992.vsp \
+  --device vLinker --mode can --hz 5 --seconds 10
+
+# OBD/UDS acquisition만 5Hz 목표로 검증
+./build/vsp_probe ../vehicle-signal-profile/profiles/porsche__911_gt3__992.vsp \
+  --device vLinker --mode obd --hz 5 --seconds 10
+```
+
+`--mode auto`는 CAN phase와 OBD phase를 순차 실행한다. `--signals`에는 `rpm,gear,steering,throttle,brake` 같은 의미군, canonical id, 또는 VSP signal name을 지정할 수 있다. STN/OBDLink 계열은 raw periodic scheduler를 사용한다. vLinker 계열은 제조사 확인상 `ATMA`/`STM`/`STMA` monitor mode에서 버스를 silent로 유지하며 periodic message(PM)도 송신하지 않으므로, auto에서는 poll 방식으로 fallback한다.
 
 ## can_reader
 
@@ -178,10 +200,13 @@ can_tools/
 ├── common/              # 공유 라이브러리
 │   ├── elm327.c/h       # ELM327 프로토콜 핸들러
 │   ├── stn2255.c/h      # STN2255 확장 (배치 쿼리, STMA 등)
+│   ├── obd_adapter.m/h  # BLE/Classic BT OBD 어댑터 연결
 │   └── can_discover.c/h # PT-CAN 시그널 자동 탐색 엔진
 ├── can_reader/          # 다목적 CAN 도구
 │   └── main.m
 ├── can_discover/        # 시그널 탐색 전용 도구
+│   └── main.m
+├── vsp_probe/           # VSP acquisition Hz 검증 도구
 │   └── main.m
 ├── CMakeLists.txt
 └── build.sh
