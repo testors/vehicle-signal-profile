@@ -243,6 +243,37 @@ def dbc_signal_line(signal: dict[str, Any], name: str) -> str:
     )
 
 
+def dbc_muxor_signal_line(mux: dict[str, Any], name: str) -> str:
+    start_bit = int(mux.get("start_bit") or 0)
+    bit_length = int(mux.get("bit_length") or 1)
+    maximum = (1 << bit_length) - 1 if 0 < bit_length < 64 else 0
+    return (
+        f" SG_ {name} M : {start_bit}|{bit_length}@1+ "
+        f"(1,0) [0|{maximum}] \"\" Vector__XXX"
+    )
+
+
+def synthetic_muxors(signals: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    has_muxor = any(
+        isinstance((signal.get("decode") or {}).get("mux"), dict)
+        and (signal.get("decode") or {})["mux"].get("role") == "multiplexor"
+        for signal in signals
+    )
+    if has_muxor:
+        return []
+
+    muxors: dict[tuple[int, int], dict[str, Any]] = {}
+    for signal in signals:
+        mux = (signal.get("decode") or {}).get("mux")
+        if not isinstance(mux, dict) or "value" not in mux:
+            continue
+        if mux.get("start_bit") is None or mux.get("bit_length") is None:
+            continue
+        key = (int(mux["start_bit"]), int(mux["bit_length"]))
+        muxors.setdefault(key, mux)
+    return [muxors[key] for key in sorted(muxors)]
+
+
 def dbc_frame_id(frame: dict[str, Any]) -> int:
     frame_id = int(frame.get("frame_id") or 0)
     if frame.get("id_format") == "extended29" or frame_id > 0x7FF:
@@ -281,6 +312,15 @@ def profile_to_dbc(profile: dict[str, Any], *, include_diagnostic_responses: boo
         frame_name = dbc_identifier(frame.get("name"), f"FRAME_{int(frame.get('frame_id') or 0):X}")
         lines.append(f"BO_ {dbc_frame_id(frame)} {frame_name}: {int(frame.get('dlc') or 8)} Vector__XXX")
         used_names: set[str] = set()
+        for index, mux in enumerate(synthetic_muxors(frame.get("signals") or []), start=1):
+            base_name = dbc_identifier(f"{frame_name}_MUX" if index == 1 else f"{frame_name}_MUX_{index}", "MUX")
+            mux_name = base_name
+            suffix = 2
+            while mux_name in used_names:
+                mux_name = dbc_identifier(f"{base_name}_{suffix}", "MUX")
+                suffix += 1
+            used_names.add(mux_name)
+            lines.append(dbc_muxor_signal_line(mux, mux_name))
         for signal in frame.get("signals") or []:
             base_name = dbc_identifier(signal.get("name"), "SIGNAL")
             signal_name = base_name
