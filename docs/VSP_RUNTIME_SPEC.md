@@ -121,6 +121,42 @@ Rules:
 - `mux` is optional. When present, the signal is valid only when the mux field
   equals `mux.value`.
 
+### CAN Bit Numbering
+
+For passive CAN layouts, `start_bit` preserves the DBC bit numbering used by
+the public conversion tools. It is not a byte offset. Bits inside each byte
+are numbered 0 (least significant) through 7 (most significant).
+
+- `little_endian`: `start_bit` is the least significant signal bit. Advance
+  to `bit + 1` for each more significant bit.
+- `big_endian`: `start_bit` is the most significant signal bit (DBC Motorola
+  sawtooth numbering). Advance to `bit - 1`, except at bit 0 of a byte, where
+  the next bit is `bit + 15`.
+
+A decoder using contiguous network-MSB0 coordinates must convert a Motorola
+start bit with `8 * (start_bit / 8) + 7 - (start_bit % 8)`, using integer
+division. Copying `start_bit` unchanged into a network-MSB0 decoder is incorrect.
+The bit length and the payload bytes do not change during this conversion.
+Reject a layout if any addressed bit lies outside the declared frame payload.
+
+Examples, before scaling or signed interpretation:
+
+| Payload bytes | Byte order | Start bit | Bit length | Unsigned raw value |
+| --- | --- | --- | --- | --- |
+| `12 34` | `little_endian` | 4 | 12 | `0x341` |
+| `12 34` | `big_endian` | 7 | 16 | `0x1234` |
+| `01 80` | `big_endian` | 0 | 8 | `0xC0` |
+
+For signed integers, apply two's-complement interpretation at `bit_length`
+before applying factor and offset. For example, little-endian `9C FF`,
+start bit 0, length 16, signed, represents -100 before scaling.
+
+These examples specify decoding behavior, not evidence that any vehicle's
+published signal layout or scale has been validated on hardware. Likewise,
+canonical-name mapping confidence is not a vehicle validation status. Consumers
+must not arbitrarily select the first of several channels with the same
+canonical ID when their layouts differ.
+
 ## Diagnostic Queries
 
 Each diagnostic query has a stable `id` referenced by diagnostic signals:
