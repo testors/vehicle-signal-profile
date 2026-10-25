@@ -313,25 +313,11 @@
             "signed": false,
             "factor": 0.1,
             "offset": 0.0,
-            "minimum": 0.0,
+            "minimum": -0.0,
             "maximum": 0.0,
             "unit": "deg",
-            "mux": null
-          }
-        },
-        {
-          "name": "Steering_Direction",
-          "decode": {
-            "start_bit": 21,
-            "bit_length": 1,
-            "byte_order": "little_endian",
-            "signed": false,
-            "factor": 1.0,
-            "offset": 0.0,
-            "minimum": 0.0,
-            "maximum": 0.0,
-            "unit": "",
-            "mux": null
+            "mux": null,
+            "sign_bit": 21
           }
         }
       ]
@@ -451,10 +437,11 @@
         "signed": false,
         "factor": 0.1,
         "offset": 0.0,
-        "minimum": 0.0,
+        "minimum": -0.0,
         "maximum": 0.0,
         "unit": "deg",
-        "mux": null
+        "mux": null,
+        "sign_bit": 21
       },
       "canonical": {
         "id": "steering.wheel.angle",
@@ -464,38 +451,6 @@
         "confidence": "mapped",
         "aliases": [
           "Steering_Angle"
-        ]
-      }
-    },
-    {
-      "name": "Steering_Direction",
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1317,
-        "frame_id_hex": "0x525",
-        "frame_name": "MSG_525"
-      },
-      "decode": {
-        "start_bit": 21,
-        "bit_length": 1,
-        "byte_order": "little_endian",
-        "signed": false,
-        "factor": 1.0,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 0.0,
-        "unit": "",
-        "mux": null
-      },
-      "canonical": {
-        "id": "steering.wheel.direction",
-        "label": "Steering wheel direction",
-        "quantity": "state",
-        "preferred_unit": "state",
-        "confidence": "mapped",
-        "aliases": [
-          "Steering_Direction"
         ]
       }
     },
