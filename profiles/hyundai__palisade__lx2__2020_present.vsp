@@ -668,38 +668,6 @@
       }
     },
     {
-      "name": "Coolant_Temperature",
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1366,
-        "frame_id_hex": "0x556",
-        "frame_name": "MSG_556"
-      },
-      "decode": {
-        "start_bit": 8,
-        "bit_length": 8,
-        "byte_order": "little_endian",
-        "signed": false,
-        "factor": 1.0,
-        "offset": -40.0,
-        "minimum": -40.0,
-        "maximum": 215.0,
-        "unit": "C",
-        "mux": null
-      },
-      "canonical": {
-        "id": "engine.coolant.temperature",
-        "label": "Engine coolant temperature",
-        "quantity": "temperature",
-        "preferred_unit": "C",
-        "confidence": "mapped",
-        "aliases": [
-          "Coolant_Temperature"
-        ]
-      }
-    },
-    {
       "name": "Engine_Speed",
       "acquisition": {
         "type": "can_frame",
@@ -764,23 +732,23 @@
       }
     },
     {
-      "name": "Intake_Air_Temperature",
+      "name": "Air_Temperature",
       "acquisition": {
         "type": "can_frame",
         "bus": "can0",
-        "frame_id": 1351,
-        "frame_id_hex": "0x547",
-        "frame_name": "MSG_547"
+        "frame_id": 68,
+        "frame_id_hex": "0x44",
+        "frame_name": "MSG_044"
       },
       "decode": {
-        "start_bit": 16,
+        "start_bit": 32,
         "bit_length": 8,
         "byte_order": "little_endian",
         "signed": false,
-        "factor": 0.75,
-        "offset": -48.0,
-        "minimum": -48.0,
-        "maximum": 143.25,
+        "factor": 1.0,
+        "offset": -42.0,
+        "minimum": -42.0,
+        "maximum": 213.0,
         "unit": "C",
         "mux": null
       },
@@ -791,7 +759,7 @@
         "preferred_unit": "C",
         "confidence": "mapped",
         "aliases": [
-          "Intake_Air_Temperature"
+          "Air_Temperature"
         ]
       }
     },
@@ -1176,6 +1144,70 @@
         "confidence": "mapped",
         "aliases": [
           "Wheel_Speed_RR_kph"
+        ]
+      }
+    },
+    {
+      "name": "Coolant_Temperature",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1366,
+        "frame_id_hex": "0x556",
+        "frame_name": "MSG_556"
+      },
+      "decode": {
+        "start_bit": 8,
+        "bit_length": 8,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": -40.0,
+        "minimum": -40.0,
+        "maximum": 215.0,
+        "unit": "C",
+        "mux": null
+      },
+      "canonical": {
+        "id": "engine.coolant.temperature",
+        "label": "Engine coolant temperature",
+        "quantity": "temperature",
+        "preferred_unit": "C",
+        "confidence": "mapped",
+        "aliases": [
+          "Coolant_Temperature"
+        ]
+      }
+    },
+    {
+      "name": "Intake_Air_Temperature",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1351,
+        "frame_id_hex": "0x547",
+        "frame_name": "MSG_547"
+      },
+      "decode": {
+        "start_bit": 16,
+        "bit_length": 8,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 0.75,
+        "offset": -48.0,
+        "minimum": -48.0,
+        "maximum": 143.25,
+        "unit": "C",
+        "mux": null
+      },
+      "canonical": {
+        "id": "intake_air.temperature",
+        "label": "Intake air temperature",
+        "quantity": "temperature",
+        "preferred_unit": "C",
+        "confidence": "mapped",
+        "aliases": [
+          "Intake_Air_Temperature"
         ]
       }
     }

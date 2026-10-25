@@ -47,7 +47,7 @@
         {
           "name": "Throttle_Position",
           "decode": {
-            "start_bit": 32,
+            "start_bit": 31,
             "bit_length": 8,
             "byte_order": "big_endian",
             "signed": false,
@@ -227,7 +227,7 @@
         {
           "name": "Brake_Position",
           "decode": {
-            "start_bit": 16,
+            "start_bit": 41,
             "bit_length": 2,
             "byte_order": "big_endian",
             "signed": false,
@@ -260,7 +260,7 @@
             "offset": 0.0,
             "minimum": -20.47,
             "maximum": 20.47,
-            "unit": "��",
+            "unit": "deg",
             "mux": null
           }
         },
@@ -332,7 +332,7 @@
         {
           "name": "Coolant_Temperature",
           "decode": {
-            "start_bit": 56,
+            "start_bit": 7,
             "bit_length": 8,
             "byte_order": "big_endian",
             "signed": false,
@@ -347,7 +347,7 @@
         {
           "name": "Manifold_Pressure",
           "decode": {
-            "start_bit": 32,
+            "start_bit": 31,
             "bit_length": 8,
             "byte_order": "big_endian",
             "signed": false,
@@ -362,7 +362,7 @@
         {
           "name": "Oil_Temperature",
           "decode": {
-            "start_bit": 48,
+            "start_bit": 15,
             "bit_length": 8,
             "byte_order": "big_endian",
             "signed": false,
@@ -387,7 +387,7 @@
         {
           "name": "Brake_Pressure___Front_Left",
           "decode": {
-            "start_bit": 56,
+            "start_bit": 7,
             "bit_length": 8,
             "byte_order": "big_endian",
             "signed": false,
@@ -402,7 +402,7 @@
         {
           "name": "Brake_Pressure___Front_Right",
           "decode": {
-            "start_bit": 48,
+            "start_bit": 15,
             "bit_length": 8,
             "byte_order": "big_endian",
             "signed": false,
@@ -417,7 +417,7 @@
         {
           "name": "Brake_Pressure___Rear_Left",
           "decode": {
-            "start_bit": 40,
+            "start_bit": 23,
             "bit_length": 8,
             "byte_order": "big_endian",
             "signed": false,
@@ -432,7 +432,7 @@
         {
           "name": "Brake_Pressure___Rear_Right",
           "decode": {
-            "start_bit": 32,
+            "start_bit": 31,
             "bit_length": 8,
             "byte_order": "big_endian",
             "signed": false,
@@ -484,7 +484,7 @@
         "frame_name": "MSG_19E"
       },
       "decode": {
-        "start_bit": 16,
+        "start_bit": 41,
         "bit_length": 2,
         "byte_order": "big_endian",
         "signed": false,
@@ -507,38 +507,6 @@
       }
     },
     {
-      "name": "Brake_Pressure___Front_Right",
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 690,
-        "frame_id_hex": "0x2B2",
-        "frame_name": "MSG_2B2"
-      },
-      "decode": {
-        "start_bit": 48,
-        "bit_length": 8,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 1.0,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 255.0,
-        "unit": "",
-        "mux": null
-      },
-      "canonical": {
-        "id": "brake.pressure",
-        "label": "Brake pressure",
-        "quantity": "pressure",
-        "preferred_unit": "bar",
-        "confidence": "heuristic",
-        "aliases": [
-          "Brake_Pressure___Front_Right"
-        ]
-      }
-    },
-    {
       "name": "Coolant_Temperature",
       "acquisition": {
         "type": "can_frame",
@@ -548,7 +516,7 @@
         "frame_name": "MSG_1D0"
       },
       "decode": {
-        "start_bit": 56,
+        "start_bit": 7,
         "bit_length": 8,
         "byte_order": "big_endian",
         "signed": false,
@@ -580,7 +548,7 @@
         "frame_name": "MSG_1D0"
       },
       "decode": {
-        "start_bit": 48,
+        "start_bit": 15,
         "bit_length": 8,
         "byte_order": "big_endian",
         "signed": false,
@@ -644,7 +612,7 @@
         "frame_name": "MSG_1D0"
       },
       "decode": {
-        "start_bit": 32,
+        "start_bit": 31,
         "bit_length": 8,
         "byte_order": "big_endian",
         "signed": false,
@@ -708,7 +676,7 @@
         "frame_name": "MSG_0AA"
       },
       "decode": {
-        "start_bit": 32,
+        "start_bit": 31,
         "bit_length": 8,
         "byte_order": "big_endian",
         "signed": false,
@@ -987,6 +955,94 @@
       }
     },
     {
+      "name": "Brake_Pressure___Front_Left",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 690,
+        "frame_id_hex": "0x2B2",
+        "frame_name": "MSG_2B2"
+      },
+      "decode": {
+        "start_bit": 7,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 255.0,
+        "unit": "",
+        "mux": null
+      }
+    },
+    {
+      "name": "Brake_Pressure___Front_Right",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 690,
+        "frame_id_hex": "0x2B2",
+        "frame_name": "MSG_2B2"
+      },
+      "decode": {
+        "start_bit": 15,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 255.0,
+        "unit": "",
+        "mux": null
+      }
+    },
+    {
+      "name": "Brake_Pressure___Rear_Left",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 690,
+        "frame_id_hex": "0x2B2",
+        "frame_name": "MSG_2B2"
+      },
+      "decode": {
+        "start_bit": 23,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 255.0,
+        "unit": "",
+        "mux": null
+      }
+    },
+    {
+      "name": "Brake_Pressure___Rear_Right",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 690,
+        "frame_id_hex": "0x2B2",
+        "frame_name": "MSG_2B2"
+      },
+      "decode": {
+        "start_bit": 31,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 255.0,
+        "unit": "",
+        "mux": null
+      }
+    },
+    {
       "name": "Gyroscope",
       "acquisition": {
         "type": "can_frame",
@@ -1004,7 +1060,7 @@
         "offset": 0.0,
         "minimum": -20.47,
         "maximum": 20.47,
-        "unit": "��",
+        "unit": "deg",
         "mux": null
       }
     }

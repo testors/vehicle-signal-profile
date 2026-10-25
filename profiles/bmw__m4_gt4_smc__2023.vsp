@@ -221,8 +221,8 @@
       "raw": {
         "cflag": 5,
         "canp_start_bit": 0,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
@@ -259,8 +259,8 @@
       "raw": {
         "cflag": 5,
         "canp_start_bit": 0,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
@@ -277,6 +277,44 @@
         "confidence": "heuristic",
         "aliases": [
           "Team_RPM"
+        ]
+      }
+    },
+    {
+      "name": "Team_Steering",
+      "decode": {
+        "start_bit": 40,
+        "bit_length": 16,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": -0.1,
+        "offset": -2000.0,
+        "minimum": -8553.5,
+        "maximum": -2000.0,
+        "unit": "deg",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 5,
+        "canp_start_bit": 40,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1794,
+        "frame_id_hex": "0x702",
+        "frame_name": "MSG_702"
+      },
+      "canonical": {
+        "id": "steering.wheel.angle",
+        "label": "Steering wheel angle",
+        "quantity": "angle",
+        "preferred_unit": "deg",
+        "confidence": "heuristic",
+        "aliases": [
+          "Team_Steering"
         ]
       }
     },
@@ -332,8 +370,8 @@
       "raw": {
         "cflag": 5,
         "canp_start_bit": 12,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
@@ -370,8 +408,8 @@
       "raw": {
         "cflag": 5,
         "canp_start_bit": 16,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
@@ -408,8 +446,8 @@
       "raw": {
         "cflag": 5,
         "canp_start_bit": 8,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
@@ -436,36 +474,8 @@
       "raw": {
         "cflag": 5,
         "canp_start_bit": 20,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1794,
-        "frame_id_hex": "0x702",
-        "frame_name": "MSG_702"
-      }
-    },
-    {
-      "name": "Team_Steering",
-      "decode": {
-        "start_bit": 40,
-        "bit_length": 16,
-        "byte_order": "little_endian",
-        "signed": false,
-        "factor": -0.1,
-        "offset": -2000.0,
-        "minimum": -8553.5,
-        "maximum": -2000.0,
-        "unit": "deg",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 5,
-        "canp_start_bit": 40,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",

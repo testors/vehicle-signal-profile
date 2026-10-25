@@ -183,10 +183,10 @@
         "mux": null
       },
       "canonical": {
-        "id": "brake.pedal.position",
-        "label": "Brake pedal position",
-        "quantity": "position",
-        "preferred_unit": "%",
+        "id": "brake.switch",
+        "label": "Brake switch",
+        "quantity": "state",
+        "preferred_unit": "bool",
         "confidence": "mapped",
         "aliases": [
           "Brake_Position"
@@ -226,6 +226,38 @@
       }
     },
     {
+      "name": "Gear",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1087,
+        "frame_id_hex": "0x43F",
+        "frame_name": "MSG_43F"
+      },
+      "decode": {
+        "start_bit": 48,
+        "bit_length": 8,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 16.0,
+        "unit": "",
+        "mux": null
+      },
+      "canonical": {
+        "id": "transmission.gear.selected",
+        "label": "Selected gear",
+        "quantity": "gear",
+        "preferred_unit": "gear",
+        "confidence": "mapped",
+        "aliases": [
+          "Gear"
+        ]
+      }
+    },
+    {
       "name": "Gear_Switch",
       "acquisition": {
         "type": "can_frame",
@@ -245,16 +277,6 @@
         "maximum": 8.0,
         "unit": "",
         "mux": null
-      },
-      "canonical": {
-        "id": "transmission.gear.selected",
-        "label": "Selected gear",
-        "quantity": "gear",
-        "preferred_unit": "gear",
-        "confidence": "heuristic",
-        "aliases": [
-          "Gear_Switch"
-        ]
       }
     }
   ]

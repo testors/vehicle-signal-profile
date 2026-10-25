@@ -135,7 +135,7 @@ Rules:
   Raw codes without an entry decode normally. `raw` values are unique and
   inside the field's raw range.
 - `mux` is optional. When present, the signal is valid only when the mux field
-  equals `mux.value`.
+  equals `mux.value`. See [Mux Objects](#mux-objects).
 
 Value table example (BMW F-series 0x3F9 gear nibble):
 
@@ -150,6 +150,48 @@ Value table example (BMW F-series 0x3F9 gear nibble):
 
 Gear signals follow the numeric convention in
 [CANONICAL_SIGNAL_IDS.md](CANONICAL_SIGNAL_IDS.md#gear-values).
+
+## Mux Objects
+
+```json
+"mux": {"value": 16652, "start_bit": 15, "bit_length": 16, "byte_order": "big_endian"}
+```
+
+- The mux field is an unsigned bit field of the same payload as the signal.
+  `start_bit`, `bit_length` and `byte_order` follow the `decode` rules exactly
+  (`start_bit` is the LSB for `little_endian` and the MSB for `big_endian`).
+- `byte_order` may be absent in older profiles; treat it as `little_endian`.
+- Decode the mux field first; skip the frame for this signal unless it equals
+  `value`.
+- A profile converted from a DBC can instead carry `{"value": n}` alone. The
+  mux field is then the signal of the same frame whose `decode.mux` is
+  `{"role": "multiplexor"}`.
+
+## Diagnostic Response Frames
+
+Diagnostic response layouts are per CAN frame. Decode every received frame on
+`response_frame_id` on its own, with byte 0 being the first byte of the CAN
+payload: the ISO-TP PCI byte(s) are part of the layout and responses are not
+reassembled first.
+
+- Single frame: `04 41 0C 1A F8` has the Mode 01 mux `41 0C` in bytes 1-2
+  (`start_bit` 15, 16 bits, big-endian) and the value in bytes 3-4.
+- Multi-frame: each frame is matched by its own mux. A consecutive frame is
+  usually selected by its sequence byte (`0x21`, `0x22`, ...) in byte 0; a first
+  frame `10 09 62 2B 21 ..` by the response SID and DID in bytes 2-4.
+
+Send the profile's `flow_control` query when a multi-frame response needs it.
+Without flow control an ECU sends only the first frame; some profiles read
+their value from that frame alone.
+
+## CAN ID Masks
+
+`can_frames[].frame_id_mask` is optional (`frame_id_mask_hex` is the same value
+in hex). When present, a received frame belongs to this layout when
+`(received_id & frame_id_mask) == (frame_id & frame_id_mask)`. Some devices
+put a node or sequence number in the low ID bits. Signals reference the frame by
+`frame_id`; look up the mask in `can_frames[]`. Without a mask, the full ID must
+match.
 
 ## Diagnostic Queries
 
@@ -221,6 +263,10 @@ separate profile.
 Profile filenames and applicability are generation/scope-specific. Do not infer
 that a base-model profile applies to another generation or trim unless the
 selected `.vsp` already includes those channels.
+
+The filename also shows the acquisition modes: `<name>__obd.vsp` has only
+diagnostic-query signals, `<name>__can_obd.vsp` has both passive CAN and
+diagnostic-query signals, and a name without either suffix is passive CAN only.
 
 ## Generated Profile Composition
 

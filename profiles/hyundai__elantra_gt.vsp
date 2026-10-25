@@ -242,7 +242,7 @@
         {
           "name": "Throttle_Position",
           "decode": {
-            "start_bit": 16,
+            "start_bit": 47,
             "bit_length": 8,
             "byte_order": "big_endian",
             "signed": false,
@@ -307,7 +307,7 @@
         {
           "name": "Gear",
           "decode": {
-            "start_bit": 56,
+            "start_bit": 2,
             "bit_length": 3,
             "byte_order": "big_endian",
             "signed": false,
@@ -332,7 +332,7 @@
         {
           "name": "Full_Beam",
           "decode": {
-            "start_bit": 24,
+            "start_bit": 32,
             "bit_length": 1,
             "byte_order": "big_endian",
             "signed": false,
@@ -347,7 +347,7 @@
         {
           "name": "Handbrake",
           "decode": {
-            "start_bit": 4,
+            "start_bit": 60,
             "bit_length": 1,
             "byte_order": "big_endian",
             "signed": false,
@@ -362,7 +362,7 @@
         {
           "name": "Headlights",
           "decode": {
-            "start_bit": 29,
+            "start_bit": 39,
             "bit_length": 3,
             "byte_order": "big_endian",
             "signed": false,
@@ -377,7 +377,7 @@
         {
           "name": "Indicator_Left",
           "decode": {
-            "start_bit": 43,
+            "start_bit": 19,
             "bit_length": 1,
             "byte_order": "big_endian",
             "signed": false,
@@ -392,7 +392,7 @@
         {
           "name": "Indicator_Right",
           "decode": {
-            "start_bit": 6,
+            "start_bit": 62,
             "bit_length": 1,
             "byte_order": "big_endian",
             "signed": false,
@@ -417,7 +417,7 @@
         {
           "name": "Battery_Voltage",
           "decode": {
-            "start_bit": 32,
+            "start_bit": 31,
             "bit_length": 8,
             "byte_order": "big_endian",
             "signed": false,
@@ -476,7 +476,7 @@
         "frame_name": "MSG_545"
       },
       "decode": {
-        "start_bit": 32,
+        "start_bit": 31,
         "bit_length": 8,
         "byte_order": "big_endian",
         "signed": false,
@@ -520,10 +520,10 @@
         "mux": null
       },
       "canonical": {
-        "id": "brake.pedal.position",
-        "label": "Brake pedal position",
-        "quantity": "position",
-        "preferred_unit": "%",
+        "id": "brake.switch",
+        "label": "Brake switch",
+        "quantity": "state",
+        "preferred_unit": "bool",
         "confidence": "mapped",
         "aliases": [
           "Brake_Position"
@@ -572,7 +572,7 @@
         "frame_name": "MSG_541"
       },
       "decode": {
-        "start_bit": 29,
+        "start_bit": 39,
         "bit_length": 3,
         "byte_order": "big_endian",
         "signed": false,
@@ -604,7 +604,7 @@
         "frame_name": "MSG_541"
       },
       "decode": {
-        "start_bit": 24,
+        "start_bit": 32,
         "bit_length": 1,
         "byte_order": "big_endian",
         "signed": false,
@@ -636,7 +636,7 @@
         "frame_name": "MSG_541"
       },
       "decode": {
-        "start_bit": 43,
+        "start_bit": 19,
         "bit_length": 1,
         "byte_order": "big_endian",
         "signed": false,
@@ -668,7 +668,7 @@
         "frame_name": "MSG_541"
       },
       "decode": {
-        "start_bit": 6,
+        "start_bit": 62,
         "bit_length": 1,
         "byte_order": "big_endian",
         "signed": false,
@@ -700,7 +700,7 @@
         "frame_name": "MSG_541"
       },
       "decode": {
-        "start_bit": 4,
+        "start_bit": 60,
         "bit_length": 1,
         "byte_order": "big_endian",
         "signed": false,
@@ -764,7 +764,7 @@
         "frame_name": "MSG_329"
       },
       "decode": {
-        "start_bit": 16,
+        "start_bit": 47,
         "bit_length": 8,
         "byte_order": "big_endian",
         "signed": false,
@@ -796,7 +796,7 @@
         "frame_name": "MSG_43F"
       },
       "decode": {
-        "start_bit": 56,
+        "start_bit": 2,
         "bit_length": 3,
         "byte_order": "big_endian",
         "signed": false,
@@ -836,6 +836,38 @@
         "offset": 0.0,
         "minimum": 0.0,
         "maximum": 300.0,
+        "unit": "km/h",
+        "mux": null
+      },
+      "canonical": {
+        "id": "wheel.speed.front_left",
+        "label": "Front-left wheel speed",
+        "quantity": "speed",
+        "preferred_unit": "km/h",
+        "confidence": "mapped",
+        "aliases": [
+          "Wheel_Speed_FL_kph"
+        ]
+      }
+    },
+    {
+      "name": "Wheel_Speed_FL_kph",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 497,
+        "frame_id_hex": "0x1F1",
+        "frame_name": "MSG_1F1"
+      },
+      "decode": {
+        "start_bit": 16,
+        "bit_length": 12,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 255.0,
         "unit": "km/h",
         "mux": null
       },

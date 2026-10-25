@@ -32,7 +32,7 @@
         {
           "name": "Wheel_Speed_1_kph",
           "decode": {
-            "start_bit": 48,
+            "start_bit": 4,
             "bit_length": 13,
             "byte_order": "big_endian",
             "signed": false,
@@ -47,7 +47,7 @@
         {
           "name": "Wheel_Speed_1_mph",
           "decode": {
-            "start_bit": 48,
+            "start_bit": 4,
             "bit_length": 13,
             "byte_order": "big_endian",
             "signed": false,
@@ -62,7 +62,7 @@
         {
           "name": "Wheel_Speed_2_kph",
           "decode": {
-            "start_bit": 32,
+            "start_bit": 20,
             "bit_length": 13,
             "byte_order": "big_endian",
             "signed": false,
@@ -77,7 +77,7 @@
         {
           "name": "Wheel_Speed_2_mph",
           "decode": {
-            "start_bit": 32,
+            "start_bit": 20,
             "bit_length": 13,
             "byte_order": "big_endian",
             "signed": false,
@@ -92,7 +92,7 @@
         {
           "name": "Wheel_Speed_3_kph",
           "decode": {
-            "start_bit": 16,
+            "start_bit": 36,
             "bit_length": 13,
             "byte_order": "big_endian",
             "signed": false,
@@ -107,7 +107,7 @@
         {
           "name": "Wheel_Speed_3_mph",
           "decode": {
-            "start_bit": 16,
+            "start_bit": 36,
             "bit_length": 13,
             "byte_order": "big_endian",
             "signed": false,
@@ -122,7 +122,7 @@
         {
           "name": "Wheel_Speed_4_kph",
           "decode": {
-            "start_bit": 0,
+            "start_bit": 52,
             "bit_length": 13,
             "byte_order": "big_endian",
             "signed": false,
@@ -137,7 +137,7 @@
         {
           "name": "Wheel_Speed_4_mph",
           "decode": {
-            "start_bit": 0,
+            "start_bit": 52,
             "bit_length": 13,
             "byte_order": "big_endian",
             "signed": false,
@@ -177,7 +177,7 @@
         {
           "name": "Engine_Speed",
           "decode": {
-            "start_bit": 32,
+            "start_bit": 21,
             "bit_length": 14,
             "byte_order": "big_endian",
             "signed": false,
@@ -236,7 +236,7 @@
         "frame_name": "MSG_8618A001"
       },
       "decode": {
-        "start_bit": 32,
+        "start_bit": 21,
         "bit_length": 14,
         "byte_order": "big_endian",
         "signed": false,
@@ -259,6 +259,38 @@
       }
     },
     {
+      "name": "Wheel_Speed_4_kph",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 35168262,
+        "frame_id_hex": "0x218A006",
+        "frame_name": "MSG_8218A006"
+      },
+      "decode": {
+        "start_bit": 52,
+        "bit_length": 13,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.07084,
+        "offset": 0.0,
+        "minimum": 3.22,
+        "maximum": 322.0,
+        "unit": "km/h",
+        "mux": null
+      },
+      "canonical": {
+        "id": "wheel.speed",
+        "label": "Wheel speed",
+        "quantity": "speed",
+        "preferred_unit": "km/h",
+        "confidence": "mapped",
+        "aliases": [
+          "Wheel_Speed_4_kph"
+        ]
+      }
+    },
+    {
       "name": "Wheel_Speed_3_kph",
       "acquisition": {
         "type": "can_frame",
@@ -268,7 +300,7 @@
         "frame_name": "MSG_8218A006"
       },
       "decode": {
-        "start_bit": 16,
+        "start_bit": 36,
         "bit_length": 13,
         "byte_order": "big_endian",
         "signed": false,
@@ -287,6 +319,70 @@
         "confidence": "mapped",
         "aliases": [
           "Wheel_Speed_3_kph"
+        ]
+      }
+    },
+    {
+      "name": "Wheel_Speed_2_kph",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 35168262,
+        "frame_id_hex": "0x218A006",
+        "frame_name": "MSG_8218A006"
+      },
+      "decode": {
+        "start_bit": 20,
+        "bit_length": 13,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.07084,
+        "offset": 0.0,
+        "minimum": 3.22,
+        "maximum": 322.0,
+        "unit": "km/h",
+        "mux": null
+      },
+      "canonical": {
+        "id": "wheel.speed",
+        "label": "Wheel speed",
+        "quantity": "speed",
+        "preferred_unit": "km/h",
+        "confidence": "mapped",
+        "aliases": [
+          "Wheel_Speed_2_kph"
+        ]
+      }
+    },
+    {
+      "name": "Wheel_Speed_1_kph",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 35168262,
+        "frame_id_hex": "0x218A006",
+        "frame_name": "MSG_8218A006"
+      },
+      "decode": {
+        "start_bit": 4,
+        "bit_length": 13,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.07084,
+        "offset": 0.0,
+        "minimum": 3.22,
+        "maximum": 322.0,
+        "unit": "km/h",
+        "mux": null
+      },
+      "canonical": {
+        "id": "wheel.speed",
+        "label": "Wheel speed",
+        "quantity": "speed",
+        "preferred_unit": "km/h",
+        "confidence": "mapped",
+        "aliases": [
+          "Wheel_Speed_1_kph"
         ]
       }
     }

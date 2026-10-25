@@ -74,6 +74,10 @@ Runtime apps should start from top-level `signals[]` and choose channels by
 - `can_frame`: listen for the referenced CAN frame and decode it passively.
 - `diagnostic_query`: send the referenced query and decode the response frame.
 
+Profile file names show which modes a profile covers: `__obd.vsp` is
+diagnostic queries only, `__can_obd.vsp` is both, and no suffix is passive CAN
+only.
+
 A distributed profile may be composed from compatible DBC, XC1, and diagnostic
 evidence. Select the exact profile for the vehicle scope first; do not infer
 that a sibling base-model or trim profile applies unless those channels are

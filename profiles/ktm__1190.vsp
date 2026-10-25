@@ -75,11 +75,11 @@
             "start_bit": 7,
             "bit_length": 16,
             "byte_order": "big_endian",
-            "signed": false,
+            "signed": true,
             "factor": 0.15,
             "offset": 0.0,
-            "minimum": 0.0,
-            "maximum": 9830.25,
+            "minimum": -4915.2,
+            "maximum": 4915.05,
             "unit": "deg",
             "mux": null
           }
@@ -90,11 +90,11 @@
             "start_bit": 23,
             "bit_length": 16,
             "byte_order": "big_endian",
-            "signed": false,
+            "signed": true,
             "factor": 0.15,
             "offset": 0.0,
-            "minimum": 0.0,
-            "maximum": 9830.25,
+            "minimum": -4915.2,
+            "maximum": 4915.05,
             "unit": "deg",
             "mux": null
           }
@@ -388,11 +388,11 @@
             "start_bit": 39,
             "bit_length": 12,
             "byte_order": "big_endian",
-            "signed": false,
+            "signed": true,
             "factor": 1.0,
             "offset": 0.0,
-            "minimum": 0.0,
-            "maximum": 4095.0,
+            "minimum": -2048.0,
+            "maximum": 2047.0,
             "unit": "#",
             "mux": null
           }
@@ -403,11 +403,11 @@
             "start_bit": 7,
             "bit_length": 12,
             "byte_order": "big_endian",
-            "signed": false,
+            "signed": true,
             "factor": 1.0,
             "offset": 0.0,
-            "minimum": 0.0,
-            "maximum": 4095.0,
+            "minimum": -2048.0,
+            "maximum": 2047.0,
             "unit": "#",
             "mux": null
           }
@@ -418,11 +418,11 @@
             "start_bit": 23,
             "bit_length": 12,
             "byte_order": "big_endian",
-            "signed": false,
+            "signed": true,
             "factor": 1.0,
             "offset": 0.0,
-            "minimum": 0.0,
-            "maximum": 4095.0,
+            "minimum": -2048.0,
+            "maximum": 2047.0,
             "unit": "#",
             "mux": null
           }
@@ -433,11 +433,11 @@
             "start_bit": 55,
             "bit_length": 12,
             "byte_order": "big_endian",
-            "signed": false,
+            "signed": true,
             "factor": 1.0,
             "offset": 0.0,
-            "minimum": 0.0,
-            "maximum": 4095.0,
+            "minimum": -2048.0,
+            "maximum": 2047.0,
             "unit": "#",
             "mux": null
           }
@@ -498,11 +498,11 @@
             "start_bit": 15,
             "bit_length": 8,
             "byte_order": "big_endian",
-            "signed": false,
+            "signed": true,
             "factor": 1.0,
             "offset": -51.0,
-            "minimum": -51.0,
-            "maximum": 204.0,
+            "minimum": -179.0,
+            "maximum": 76.0,
             "unit": "C",
             "mux": null
           }
@@ -613,6 +613,44 @@
   "diagnostic_queries": [],
   "signals": [
     {
+      "name": "AbsMode",
+      "decode": {
+        "start_bit": 16,
+        "bit_length": 1,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "unit": "#",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 16,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 298,
+        "frame_id_hex": "0x12A",
+        "frame_name": "MSG_12A"
+      },
+      "canonical": {
+        "id": "abs.mode",
+        "label": "ABS mode",
+        "quantity": "state",
+        "preferred_unit": "state",
+        "confidence": "mapped",
+        "aliases": [
+          "AbsMode"
+        ]
+      }
+    },
+    {
       "name": "AbsState",
       "decode": {
         "start_bit": 9,
@@ -629,8 +667,8 @@
       "raw": {
         "cflag": 0,
         "canp_start_bit": 9,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
@@ -667,8 +705,8 @@
       "raw": {
         "cflag": 0,
         "canp_start_bit": 48,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
@@ -705,8 +743,8 @@
       "raw": {
         "cflag": 0,
         "canp_start_bit": 46,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
@@ -743,8 +781,8 @@
       "raw": {
         "cflag": 0,
         "canp_start_bit": 3,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
@@ -754,10 +792,10 @@
         "frame_name": "MSG_129"
       },
       "canonical": {
-        "id": "clutch.position",
-        "label": "Clutch position",
-        "quantity": "position",
-        "preferred_unit": "%",
+        "id": "clutch.switch",
+        "label": "Clutch switch",
+        "quantity": "state",
+        "preferred_unit": "bool",
         "confidence": "heuristic",
         "aliases": [
           "Clutch"
@@ -770,19 +808,19 @@
         "start_bit": 15,
         "bit_length": 8,
         "byte_order": "big_endian",
-        "signed": false,
+        "signed": true,
         "factor": 1.0,
         "offset": -51.0,
-        "minimum": -51.0,
-        "maximum": 204.0,
+        "minimum": -179.0,
+        "maximum": 76.0,
         "unit": "C",
         "mux": null
       },
       "raw": {
         "cflag": 0,
         "canp_start_bit": 8,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:signed"
       },
       "acquisition": {
         "type": "can_frame",
@@ -819,8 +857,8 @@
       "raw": {
         "cflag": 0,
         "canp_start_bit": 18,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
@@ -857,8 +895,8 @@
       "raw": {
         "cflag": 0,
         "canp_start_bit": 8,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
@@ -895,8 +933,8 @@
       "raw": {
         "cflag": 0,
         "canp_start_bit": 16,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
@@ -913,6 +951,82 @@
         "confidence": "heuristic",
         "aliases": [
           "HandTps"
+        ]
+      }
+    },
+    {
+      "name": "TPS2",
+      "decode": {
+        "start_bit": 23,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": true,
+        "factor": 0.15,
+        "offset": 0.0,
+        "minimum": -4915.2,
+        "maximum": 4915.05,
+        "unit": "deg",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 24,
+        "signed_known": true,
+        "signed_reason": "rawfmt:signed"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 289,
+        "frame_id_hex": "0x121",
+        "frame_name": "MSG_121"
+      },
+      "canonical": {
+        "id": "throttle.position",
+        "label": "Throttle position",
+        "quantity": "position",
+        "preferred_unit": "%",
+        "confidence": "heuristic",
+        "aliases": [
+          "TPS2"
+        ]
+      }
+    },
+    {
+      "name": "TPS1",
+      "decode": {
+        "start_bit": 7,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": true,
+        "factor": 0.15,
+        "offset": 0.0,
+        "minimum": -4915.2,
+        "maximum": 4915.05,
+        "unit": "deg",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 8,
+        "signed_known": true,
+        "signed_reason": "rawfmt:signed"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 289,
+        "frame_id_hex": "0x121",
+        "frame_name": "MSG_121"
+      },
+      "canonical": {
+        "id": "throttle.position",
+        "label": "Throttle position",
+        "quantity": "position",
+        "preferred_unit": "%",
+        "confidence": "heuristic",
+        "aliases": [
+          "TPS1"
         ]
       }
     },
@@ -981,8 +1095,8 @@
       "raw": {
         "cflag": 0,
         "canp_start_bit": 4,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
@@ -1019,8 +1133,8 @@
       "raw": {
         "cflag": 0,
         "canp_start_bit": 56,
-        "signed_known": false,
-        "signed_reason": "heuristic:signed_motion"
+        "signed_known": true,
+        "signed_reason": "rawfmt:signed"
       },
       "acquisition": {
         "type": "can_frame",
@@ -1057,8 +1171,8 @@
       "raw": {
         "cflag": 0,
         "canp_start_bit": 24,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
@@ -1079,6 +1193,44 @@
       }
     },
     {
+      "name": "SpeedF",
+      "decode": {
+        "start_bit": 7,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.056,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 3669.96,
+        "unit": "km/h",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 8,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 299,
+        "frame_id_hex": "0x12B",
+        "frame_name": "MSG_12B"
+      },
+      "canonical": {
+        "id": "vehicle.speed",
+        "label": "Vehicle speed",
+        "quantity": "speed",
+        "preferred_unit": "km/h",
+        "confidence": "heuristic",
+        "aliases": [
+          "SpeedF"
+        ]
+      }
+    },
+    {
       "name": "AbsIF",
       "decode": {
         "start_bit": 7,
@@ -1095,8 +1247,8 @@
       "raw": {
         "cflag": 0,
         "canp_start_bit": 7,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
@@ -1123,8 +1275,8 @@
       "raw": {
         "cflag": 0,
         "canp_start_bit": 6,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
@@ -1151,8 +1303,8 @@
       "raw": {
         "cflag": 0,
         "canp_start_bit": 8,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
@@ -1168,19 +1320,19 @@
         "start_bit": 39,
         "bit_length": 12,
         "byte_order": "big_endian",
-        "signed": false,
+        "signed": true,
         "factor": 1.0,
         "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 4095.0,
+        "minimum": -2048.0,
+        "maximum": 2047.0,
         "unit": "#",
         "mux": null
       },
       "raw": {
         "cflag": 0,
         "canp_start_bit": 44,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:signed"
       },
       "acquisition": {
         "type": "can_frame",
@@ -1196,19 +1348,19 @@
         "start_bit": 7,
         "bit_length": 12,
         "byte_order": "big_endian",
-        "signed": false,
+        "signed": true,
         "factor": 1.0,
         "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 4095.0,
+        "minimum": -2048.0,
+        "maximum": 2047.0,
         "unit": "#",
         "mux": null
       },
       "raw": {
         "cflag": 0,
         "canp_start_bit": 12,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:signed"
       },
       "acquisition": {
         "type": "can_frame",
@@ -1224,19 +1376,19 @@
         "start_bit": 23,
         "bit_length": 12,
         "byte_order": "big_endian",
-        "signed": false,
+        "signed": true,
         "factor": 1.0,
         "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 4095.0,
+        "minimum": -2048.0,
+        "maximum": 2047.0,
         "unit": "#",
         "mux": null
       },
       "raw": {
         "cflag": 0,
         "canp_start_bit": 28,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:signed"
       },
       "acquisition": {
         "type": "can_frame",
@@ -1252,19 +1404,19 @@
         "start_bit": 55,
         "bit_length": 12,
         "byte_order": "big_endian",
-        "signed": false,
+        "signed": true,
         "factor": 1.0,
         "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 4095.0,
+        "minimum": -2048.0,
+        "maximum": 2047.0,
         "unit": "#",
         "mux": null
       },
       "raw": {
         "cflag": 0,
         "canp_start_bit": 60,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:signed"
       },
       "acquisition": {
         "type": "can_frame",
@@ -1291,8 +1443,8 @@
       "raw": {
         "cflag": 0,
         "canp_start_bit": 32,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
@@ -1319,8 +1471,8 @@
       "raw": {
         "cflag": 0,
         "canp_start_bit": 5,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
@@ -1347,8 +1499,8 @@
       "raw": {
         "cflag": 0,
         "canp_start_bit": 16,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
@@ -1375,8 +1527,8 @@
       "raw": {
         "cflag": 0,
         "canp_start_bit": 1,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
@@ -1403,8 +1555,8 @@
       "raw": {
         "cflag": 0,
         "canp_start_bit": 11,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
@@ -1431,8 +1583,8 @@
       "raw": {
         "cflag": 0,
         "canp_start_bit": 12,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
@@ -1459,8 +1611,8 @@
       "raw": {
         "cflag": 0,
         "canp_start_bit": 17,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
@@ -1487,8 +1639,8 @@
       "raw": {
         "cflag": 0,
         "canp_start_bit": 16,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",

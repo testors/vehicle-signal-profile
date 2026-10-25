@@ -35,11 +35,11 @@
             "start_bit": 3,
             "bit_length": 12,
             "byte_order": "big_endian",
-            "signed": false,
+            "signed": true,
             "factor": 1.5,
             "offset": 0.0,
-            "minimum": 0.0,
-            "maximum": 6142.5,
+            "minimum": -3072.0,
+            "maximum": 3070.5,
             "unit": "deg",
             "mux": null
           }
@@ -85,11 +85,11 @@
             "start_bit": 39,
             "bit_length": 16,
             "byte_order": "big_endian",
-            "signed": false,
+            "signed": true,
             "factor": 0.0012,
             "offset": 0.0,
-            "minimum": 0.0,
-            "maximum": 78.642,
+            "minimum": -39.3216,
+            "maximum": 39.3204,
             "unit": "bar",
             "mux": null
           }
@@ -191,8 +191,8 @@
       "raw": {
         "cflag": 0,
         "canp_start_bit": 1,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
@@ -218,19 +218,19 @@
         "start_bit": 39,
         "bit_length": 16,
         "byte_order": "big_endian",
-        "signed": false,
+        "signed": true,
         "factor": 0.0012,
         "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 78.642,
+        "minimum": -39.3216,
+        "maximum": 39.3204,
         "unit": "bar",
         "mux": null
       },
       "raw": {
         "cflag": 0,
         "canp_start_bit": 40,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:signed"
       },
       "acquisition": {
         "type": "can_frame",
@@ -251,6 +251,44 @@
       }
     },
     {
+      "name": "BrakePr_02",
+      "decode": {
+        "start_bit": 39,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.1,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 25.5,
+        "unit": "bar",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 32,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1416,
+        "frame_id_hex": "0x588",
+        "frame_name": "MSG_588"
+      },
+      "canonical": {
+        "id": "brake.pressure",
+        "label": "Brake pressure",
+        "quantity": "pressure",
+        "preferred_unit": "bar",
+        "confidence": "heuristic",
+        "aliases": [
+          "BrakePr_02"
+        ]
+      }
+    },
+    {
       "name": "RPM",
       "decode": {
         "start_bit": 7,
@@ -267,8 +305,8 @@
       "raw": {
         "cflag": 0,
         "canp_start_bit": 8,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
@@ -294,19 +332,19 @@
         "start_bit": 3,
         "bit_length": 12,
         "byte_order": "big_endian",
-        "signed": false,
+        "signed": true,
         "factor": 1.5,
         "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 6142.5,
+        "minimum": -3072.0,
+        "maximum": 3070.5,
         "unit": "deg",
         "mux": null
       },
       "raw": {
         "cflag": 0,
         "canp_start_bit": 8,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:signed"
       },
       "acquisition": {
         "type": "can_frame",
@@ -343,8 +381,8 @@
       "raw": {
         "cflag": 0,
         "canp_start_bit": 0,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",

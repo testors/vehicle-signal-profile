@@ -270,11 +270,11 @@
             "start_bit": 15,
             "bit_length": 16,
             "byte_order": "big_endian",
-            "signed": false,
+            "signed": true,
             "factor": 0.004,
             "offset": -1.8,
-            "minimum": -1.8,
-            "maximum": 260.34,
+            "minimum": -132.872,
+            "maximum": 129.268,
             "unit": "g",
             "mux": null
           }
@@ -406,8 +406,8 @@
       "raw": {
         "cflag": 0,
         "canp_start_bit": 16,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
@@ -476,8 +476,8 @@
       "raw": {
         "cflag": 0,
         "canp_start_bit": 52,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
@@ -514,8 +514,8 @@
       "raw": {
         "cflag": 0,
         "canp_start_bit": 0,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
@@ -536,78 +536,40 @@
       }
     },
     {
-      "name": "OilPressSwitch",
+      "name": "RPM",
       "decode": {
-        "start_bit": 31,
-        "bit_length": 1,
-        "byte_order": "big_endian",
+        "start_bit": 24,
+        "bit_length": 12,
+        "byte_order": "little_endian",
         "signed": false,
-        "factor": 1.0,
+        "factor": 3.125,
         "offset": 0.0,
         "minimum": 0.0,
-        "maximum": 1.0,
-        "unit": "#",
+        "maximum": 12796.875,
+        "unit": "rpm",
         "mux": null
       },
       "raw": {
-        "cflag": 0,
-        "canp_start_bit": 31,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "cflag": 5,
+        "canp_start_bit": 24,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
         "bus": "can0",
-        "frame_id": 1573,
-        "frame_id_hex": "0x625",
-        "frame_name": "MSG_625"
+        "frame_id": 573,
+        "frame_id_hex": "0x23D",
+        "frame_name": "MSG_23D"
       },
       "canonical": {
-        "id": "engine.oil.pressure",
-        "label": "Engine oil pressure",
-        "quantity": "pressure",
-        "preferred_unit": "bar",
-        "confidence": "heuristic",
+        "id": "engine.speed",
+        "label": "Engine speed",
+        "quantity": "rotational_speed",
+        "preferred_unit": "rpm",
+        "confidence": "mapped",
         "aliases": [
-          "OilPressSwitch"
-        ]
-      }
-    },
-    {
-      "name": "OilTempAlarm",
-      "decode": {
-        "start_bit": 21,
-        "bit_length": 1,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 1.0,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "unit": "#",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 21,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 593,
-        "frame_id_hex": "0x251",
-        "frame_name": "MSG_251"
-      },
-      "canonical": {
-        "id": "engine.oil.temperature",
-        "label": "Engine oil temperature",
-        "quantity": "temperature",
-        "preferred_unit": "C",
-        "confidence": "heuristic",
-        "aliases": [
-          "OilTempAlarm"
+          "RPM"
         ]
       }
     },
@@ -644,44 +606,6 @@
       }
     },
     {
-      "name": "RPM",
-      "decode": {
-        "start_bit": 24,
-        "bit_length": 12,
-        "byte_order": "little_endian",
-        "signed": false,
-        "factor": 3.125,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 12796.875,
-        "unit": "rpm",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 5,
-        "canp_start_bit": 24,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 573,
-        "frame_id_hex": "0x23D",
-        "frame_name": "MSG_23D"
-      },
-      "canonical": {
-        "id": "engine.speed",
-        "label": "Engine speed",
-        "quantity": "rotational_speed",
-        "preferred_unit": "rpm",
-        "confidence": "mapped",
-        "aliases": [
-          "RPM"
-        ]
-      }
-    },
-    {
       "name": "SteeringAngle",
       "decode": {
         "start_bit": 0,
@@ -698,8 +622,8 @@
       "raw": {
         "cflag": 5,
         "canp_start_bit": 0,
-        "signed_known": false,
-        "signed_reason": "heuristic:signed_motion"
+        "signed_known": true,
+        "signed_reason": "rawfmt:signed"
       },
       "acquisition": {
         "type": "can_frame",
@@ -768,8 +692,8 @@
       "raw": {
         "cflag": 0,
         "canp_start_bit": 8,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
@@ -806,8 +730,8 @@
       "raw": {
         "cflag": 0,
         "canp_start_bit": 32,
-        "signed_known": false,
-        "signed_reason": "heuristic:signed_motion"
+        "signed_known": true,
+        "signed_reason": "rawfmt:signed"
       },
       "acquisition": {
         "type": "can_frame",
@@ -828,24 +752,80 @@
       }
     },
     {
+      "name": "OilPressSwitch",
+      "decode": {
+        "start_bit": 31,
+        "bit_length": 1,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "unit": "#",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 31,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1573,
+        "frame_id_hex": "0x625",
+        "frame_name": "MSG_625"
+      }
+    },
+    {
+      "name": "OilTempAlarm",
+      "decode": {
+        "start_bit": 21,
+        "bit_length": 1,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "unit": "#",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 21,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 593,
+        "frame_id_hex": "0x251",
+        "frame_name": "MSG_251"
+      }
+    },
+    {
       "name": "TransvAcc",
       "decode": {
         "start_bit": 15,
         "bit_length": 16,
         "byte_order": "big_endian",
-        "signed": false,
+        "signed": true,
         "factor": 0.004,
         "offset": -1.8,
-        "minimum": -1.8,
-        "maximum": 260.34,
+        "minimum": -132.872,
+        "maximum": 129.268,
         "unit": "g",
         "mux": null
       },
       "raw": {
         "cflag": 0,
         "canp_start_bit": 16,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:signed"
       },
       "acquisition": {
         "type": "can_frame",
@@ -872,8 +852,8 @@
       "raw": {
         "cflag": 0,
         "canp_start_bit": 24,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
@@ -900,8 +880,8 @@
       "raw": {
         "cflag": 0,
         "canp_start_bit": 8,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
@@ -928,8 +908,8 @@
       "raw": {
         "cflag": 0,
         "canp_start_bit": 24,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
@@ -956,8 +936,8 @@
       "raw": {
         "cflag": 0,
         "canp_start_bit": 8,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",

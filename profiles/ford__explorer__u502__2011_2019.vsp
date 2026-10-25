@@ -32,7 +32,7 @@
         {
           "name": "Brake_Position",
           "decode": {
-            "start_bit": 48,
+            "start_bit": 7,
             "bit_length": 16,
             "byte_order": "big_endian",
             "signed": false,
@@ -57,7 +57,7 @@
         {
           "name": "Steering_Angle",
           "decode": {
-            "start_bit": 48,
+            "start_bit": 7,
             "bit_length": 16,
             "byte_order": "big_endian",
             "signed": false,
@@ -82,7 +82,7 @@
         {
           "name": "Accelerator_Pedal_Position",
           "decode": {
-            "start_bit": 22,
+            "start_bit": 39,
             "bit_length": 10,
             "byte_order": "big_endian",
             "signed": false,
@@ -107,7 +107,7 @@
         {
           "name": "Accelerator_Pedal_Position",
           "decode": {
-            "start_bit": 48,
+            "start_bit": 5,
             "bit_length": 14,
             "byte_order": "big_endian",
             "signed": false,
@@ -122,7 +122,7 @@
         {
           "name": "Engine_Speed",
           "decode": {
-            "start_bit": 24,
+            "start_bit": 31,
             "bit_length": 16,
             "byte_order": "big_endian",
             "signed": false,
@@ -147,7 +147,7 @@
         {
           "name": "Wheel_Speed_FL_kph",
           "decode": {
-            "start_bit": 48,
+            "start_bit": 7,
             "bit_length": 16,
             "byte_order": "big_endian",
             "signed": false,
@@ -162,7 +162,7 @@
         {
           "name": "Wheel_Speed_FL_mph",
           "decode": {
-            "start_bit": 48,
+            "start_bit": 7,
             "bit_length": 16,
             "byte_order": "big_endian",
             "signed": false,
@@ -177,7 +177,7 @@
         {
           "name": "Wheel_Speed_FR_kph",
           "decode": {
-            "start_bit": 32,
+            "start_bit": 23,
             "bit_length": 16,
             "byte_order": "big_endian",
             "signed": false,
@@ -192,7 +192,7 @@
         {
           "name": "Wheel_Speed_FR_mph",
           "decode": {
-            "start_bit": 32,
+            "start_bit": 23,
             "bit_length": 16,
             "byte_order": "big_endian",
             "signed": false,
@@ -207,7 +207,7 @@
         {
           "name": "Wheel_Speed_RL_kph",
           "decode": {
-            "start_bit": 16,
+            "start_bit": 39,
             "bit_length": 16,
             "byte_order": "big_endian",
             "signed": false,
@@ -222,7 +222,7 @@
         {
           "name": "Wheel_Speed_RL_mph",
           "decode": {
-            "start_bit": 16,
+            "start_bit": 39,
             "bit_length": 16,
             "byte_order": "big_endian",
             "signed": false,
@@ -237,7 +237,7 @@
         {
           "name": "Wheel_Speed_RR_kph",
           "decode": {
-            "start_bit": 0,
+            "start_bit": 55,
             "bit_length": 16,
             "byte_order": "big_endian",
             "signed": false,
@@ -252,7 +252,7 @@
         {
           "name": "Wheel_Speed_RR_mph",
           "decode": {
-            "start_bit": 0,
+            "start_bit": 55,
             "bit_length": 16,
             "byte_order": "big_endian",
             "signed": false,
@@ -274,12 +274,44 @@
       "acquisition": {
         "type": "can_frame",
         "bus": "can0",
+        "frame_id": 513,
+        "frame_id_hex": "0x201",
+        "frame_name": "MSG_201"
+      },
+      "decode": {
+        "start_bit": 39,
+        "bit_length": 10,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.1,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 100.0,
+        "unit": "%",
+        "mux": null
+      },
+      "canonical": {
+        "id": "accelerator.pedal.position",
+        "label": "Accelerator pedal position",
+        "quantity": "position",
+        "preferred_unit": "%",
+        "confidence": "mapped",
+        "aliases": [
+          "Accelerator_Pedal_Position"
+        ]
+      }
+    },
+    {
+      "name": "Accelerator_Pedal_Position",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
         "frame_id": 516,
         "frame_id_hex": "0x204",
         "frame_name": "MSG_204"
       },
       "decode": {
-        "start_bit": 48,
+        "start_bit": 5,
         "bit_length": 14,
         "byte_order": "big_endian",
         "signed": false,
@@ -311,7 +343,7 @@
         "frame_name": "MSG_07D"
       },
       "decode": {
-        "start_bit": 48,
+        "start_bit": 7,
         "bit_length": 16,
         "byte_order": "big_endian",
         "signed": false,
@@ -343,7 +375,7 @@
         "frame_name": "MSG_204"
       },
       "decode": {
-        "start_bit": 24,
+        "start_bit": 31,
         "bit_length": 16,
         "byte_order": "big_endian",
         "signed": false,
@@ -375,7 +407,7 @@
         "frame_name": "MSG_085"
       },
       "decode": {
-        "start_bit": 48,
+        "start_bit": 7,
         "bit_length": 16,
         "byte_order": "big_endian",
         "signed": false,
@@ -407,7 +439,7 @@
         "frame_name": "MSG_217"
       },
       "decode": {
-        "start_bit": 48,
+        "start_bit": 7,
         "bit_length": 16,
         "byte_order": "big_endian",
         "signed": false,
@@ -439,7 +471,7 @@
         "frame_name": "MSG_217"
       },
       "decode": {
-        "start_bit": 32,
+        "start_bit": 23,
         "bit_length": 16,
         "byte_order": "big_endian",
         "signed": false,
@@ -471,7 +503,7 @@
         "frame_name": "MSG_217"
       },
       "decode": {
-        "start_bit": 16,
+        "start_bit": 39,
         "bit_length": 16,
         "byte_order": "big_endian",
         "signed": false,
@@ -503,7 +535,7 @@
         "frame_name": "MSG_217"
       },
       "decode": {
-        "start_bit": 0,
+        "start_bit": 55,
         "bit_length": 16,
         "byte_order": "big_endian",
         "signed": false,

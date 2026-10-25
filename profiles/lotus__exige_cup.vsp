@@ -197,7 +197,7 @@
         {
           "name": "Accelerator_Pedal_Position",
           "decode": {
-            "start_bit": 32,
+            "start_bit": 16,
             "bit_length": 9,
             "byte_order": "big_endian",
             "signed": false,
@@ -212,7 +212,7 @@
         {
           "name": "Brake_Position",
           "decode": {
-            "start_bit": 16,
+            "start_bit": 40,
             "bit_length": 1,
             "byte_order": "big_endian",
             "signed": false,
@@ -252,7 +252,7 @@
         {
           "name": "Coolant_Temperature",
           "decode": {
-            "start_bit": 16,
+            "start_bit": 47,
             "bit_length": 8,
             "byte_order": "big_endian",
             "signed": true,
@@ -279,7 +279,7 @@
         "frame_name": "MSG_114"
       },
       "decode": {
-        "start_bit": 32,
+        "start_bit": 16,
         "bit_length": 9,
         "byte_order": "big_endian",
         "signed": false,
@@ -311,7 +311,7 @@
         "frame_name": "MSG_114"
       },
       "decode": {
-        "start_bit": 16,
+        "start_bit": 40,
         "bit_length": 1,
         "byte_order": "big_endian",
         "signed": false,
@@ -323,10 +323,10 @@
         "mux": null
       },
       "canonical": {
-        "id": "brake.pedal.position",
-        "label": "Brake pedal position",
-        "quantity": "position",
-        "preferred_unit": "%",
+        "id": "brake.switch",
+        "label": "Brake switch",
+        "quantity": "state",
+        "preferred_unit": "bool",
         "confidence": "mapped",
         "aliases": [
           "Brake_Position"
@@ -343,7 +343,7 @@
         "frame_name": "MSG_400"
       },
       "decode": {
-        "start_bit": 16,
+        "start_bit": 47,
         "bit_length": 8,
         "byte_order": "big_endian",
         "signed": true,
@@ -458,6 +458,102 @@
         "confidence": "mapped",
         "aliases": [
           "Wheel_Speed_4_kph"
+        ]
+      }
+    },
+    {
+      "name": "Wheel_Speed_3_kph",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 164,
+        "frame_id_hex": "0xA4",
+        "frame_name": "MSG_0A4"
+      },
+      "decode": {
+        "start_bit": 0,
+        "bit_length": 14,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 0.067942,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 26376.63,
+        "unit": "km/h",
+        "mux": null
+      },
+      "canonical": {
+        "id": "wheel.speed",
+        "label": "Wheel speed",
+        "quantity": "speed",
+        "preferred_unit": "km/h",
+        "confidence": "mapped",
+        "aliases": [
+          "Wheel_Speed_3_kph"
+        ]
+      }
+    },
+    {
+      "name": "Wheel_Speed_2_kph",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 162,
+        "frame_id_hex": "0xA2",
+        "frame_name": "MSG_0A2"
+      },
+      "decode": {
+        "start_bit": 14,
+        "bit_length": 14,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 0.067942,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 322.0,
+        "unit": "km/h",
+        "mux": null
+      },
+      "canonical": {
+        "id": "wheel.speed",
+        "label": "Wheel speed",
+        "quantity": "speed",
+        "preferred_unit": "km/h",
+        "confidence": "mapped",
+        "aliases": [
+          "Wheel_Speed_2_kph"
+        ]
+      }
+    },
+    {
+      "name": "Wheel_Speed_1_kph",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 162,
+        "frame_id_hex": "0xA2",
+        "frame_name": "MSG_0A2"
+      },
+      "decode": {
+        "start_bit": 0,
+        "bit_length": 14,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 0.067942,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 322.0,
+        "unit": "km/h",
+        "mux": null
+      },
+      "canonical": {
+        "id": "wheel.speed",
+        "label": "Wheel speed",
+        "quantity": "speed",
+        "preferred_unit": "km/h",
+        "confidence": "mapped",
+        "aliases": [
+          "Wheel_Speed_1_kph"
         ]
       }
     }

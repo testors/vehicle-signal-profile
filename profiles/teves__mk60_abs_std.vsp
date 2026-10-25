@@ -34,7 +34,7 @@
           "decode": {
             "start_bit": 9,
             "bit_length": 1,
-            "byte_order": "big_endian",
+            "byte_order": "little_endian",
             "signed": false,
             "factor": 1.0,
             "offset": 0.0,
@@ -47,9 +47,9 @@
         {
           "name": "AVG_WHE_SPD",
           "decode": {
-            "start_bit": 7,
+            "start_bit": 11,
             "bit_length": 13,
-            "byte_order": "big_endian",
+            "byte_order": "little_endian",
             "signed": false,
             "factor": 0.0625,
             "offset": 0.0,
@@ -64,7 +64,7 @@
           "decode": {
             "start_bit": 4,
             "bit_length": 1,
-            "byte_order": "big_endian",
+            "byte_order": "little_endian",
             "signed": false,
             "factor": 1.0,
             "offset": 0.0,
@@ -89,7 +89,7 @@
           "decode": {
             "start_bit": 0,
             "bit_length": 13,
-            "byte_order": "big_endian",
+            "byte_order": "little_endian",
             "signed": false,
             "factor": 0.0625,
             "offset": 0.0,
@@ -102,9 +102,9 @@
         {
           "name": "WHE_SPD_FR",
           "decode": {
-            "start_bit": 12,
+            "start_bit": 16,
             "bit_length": 13,
-            "byte_order": "big_endian",
+            "byte_order": "little_endian",
             "signed": false,
             "factor": 0.0625,
             "offset": 0.0,
@@ -117,9 +117,9 @@
         {
           "name": "WHE_SPD_RL",
           "decode": {
-            "start_bit": 28,
+            "start_bit": 32,
             "bit_length": 13,
-            "byte_order": "big_endian",
+            "byte_order": "little_endian",
             "signed": false,
             "factor": 0.0625,
             "offset": 0.0,
@@ -132,9 +132,9 @@
         {
           "name": "WHE_SPD_RR",
           "decode": {
-            "start_bit": 44,
+            "start_bit": 48,
             "bit_length": 13,
-            "byte_order": "big_endian",
+            "byte_order": "little_endian",
             "signed": false,
             "factor": 0.0625,
             "offset": 0.0,
@@ -157,14 +157,14 @@
         {
           "name": "ACCX",
           "decode": {
-            "start_bit": 17,
+            "start_bit": 24,
             "bit_length": 10,
-            "byte_order": "big_endian",
-            "signed": true,
+            "byte_order": "little_endian",
+            "signed": false,
             "factor": 0.003125,
             "offset": -15.9687,
-            "minimum": -17.5687,
-            "maximum": -14.371825,
+            "minimum": -15.9687,
+            "maximum": -12.771825,
             "unit": "m/s2",
             "mux": null
           }
@@ -179,7 +179,7 @@
       "decode": {
         "start_bit": 4,
         "bit_length": 1,
-        "byte_order": "big_endian",
+        "byte_order": "little_endian",
         "signed": false,
         "factor": 1.0,
         "offset": 0.0,
@@ -191,8 +191,8 @@
       "raw": {
         "cflag": 1,
         "canp_start_bit": 4,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
@@ -217,7 +217,7 @@
       "decode": {
         "start_bit": 9,
         "bit_length": 1,
-        "byte_order": "big_endian",
+        "byte_order": "little_endian",
         "signed": false,
         "factor": 1.0,
         "offset": 0.0,
@@ -229,8 +229,8 @@
       "raw": {
         "cflag": 1,
         "canp_start_bit": 9,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
@@ -253,22 +253,22 @@
     {
       "name": "ACCX",
       "decode": {
-        "start_bit": 17,
+        "start_bit": 24,
         "bit_length": 10,
-        "byte_order": "big_endian",
-        "signed": true,
+        "byte_order": "little_endian",
+        "signed": false,
         "factor": 0.003125,
         "offset": -15.9687,
-        "minimum": -17.5687,
-        "maximum": -14.371825,
+        "minimum": -15.9687,
+        "maximum": -12.771825,
         "unit": "m/s2",
         "mux": null
       },
       "raw": {
         "cflag": 1,
         "canp_start_bit": 24,
-        "signed_known": false,
-        "signed_reason": "heuristic:signed_motion"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
@@ -293,7 +293,7 @@
       "decode": {
         "start_bit": 0,
         "bit_length": 13,
-        "byte_order": "big_endian",
+        "byte_order": "little_endian",
         "signed": false,
         "factor": 0.0625,
         "offset": 0.0,
@@ -305,8 +305,8 @@
       "raw": {
         "cflag": 1,
         "canp_start_bit": 0,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
@@ -329,9 +329,9 @@
     {
       "name": "WHE_SPD_FR",
       "decode": {
-        "start_bit": 12,
+        "start_bit": 16,
         "bit_length": 13,
-        "byte_order": "big_endian",
+        "byte_order": "little_endian",
         "signed": false,
         "factor": 0.0625,
         "offset": 0.0,
@@ -343,8 +343,8 @@
       "raw": {
         "cflag": 1,
         "canp_start_bit": 16,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
@@ -367,9 +367,9 @@
     {
       "name": "WHE_SPD_RL",
       "decode": {
-        "start_bit": 28,
+        "start_bit": 32,
         "bit_length": 13,
-        "byte_order": "big_endian",
+        "byte_order": "little_endian",
         "signed": false,
         "factor": 0.0625,
         "offset": 0.0,
@@ -381,8 +381,8 @@
       "raw": {
         "cflag": 1,
         "canp_start_bit": 32,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
@@ -405,9 +405,9 @@
     {
       "name": "WHE_SPD_RR",
       "decode": {
-        "start_bit": 44,
+        "start_bit": 48,
         "bit_length": 13,
-        "byte_order": "big_endian",
+        "byte_order": "little_endian",
         "signed": false,
         "factor": 0.0625,
         "offset": 0.0,
@@ -419,8 +419,8 @@
       "raw": {
         "cflag": 1,
         "canp_start_bit": 48,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
@@ -443,9 +443,9 @@
     {
       "name": "AVG_WHE_SPD",
       "decode": {
-        "start_bit": 7,
+        "start_bit": 11,
         "bit_length": 13,
-        "byte_order": "big_endian",
+        "byte_order": "little_endian",
         "signed": false,
         "factor": 0.0625,
         "offset": 0.0,
@@ -457,8 +457,8 @@
       "raw": {
         "cflag": 1,
         "canp_start_bit": 11,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",

@@ -142,9 +142,9 @@
         {
           "name": "Brake",
           "decode": {
-            "start_bit": 31,
+            "start_bit": 24,
             "bit_length": 8,
-            "byte_order": "big_endian",
+            "byte_order": "little_endian",
             "signed": false,
             "factor": 1.0,
             "offset": 0.0,
@@ -332,9 +332,9 @@
         {
           "name": "Gear",
           "decode": {
-            "start_bit": 55,
+            "start_bit": 48,
             "bit_length": 8,
-            "byte_order": "big_endian",
+            "byte_order": "little_endian",
             "signed": false,
             "factor": 1.0,
             "offset": 0.0,
@@ -360,11 +360,11 @@
             "start_bit": 39,
             "bit_length": 16,
             "byte_order": "big_endian",
-            "signed": false,
+            "signed": true,
             "factor": 0.1,
             "offset": 0.0,
-            "minimum": 0.0,
-            "maximum": 6553.5,
+            "minimum": -3276.8,
+            "maximum": 3276.7000000000003,
             "unit": "C",
             "mux": null
           }
@@ -397,9 +397,9 @@
         {
           "name": "Lambda",
           "decode": {
-            "start_bit": 55,
+            "start_bit": 48,
             "bit_length": 8,
-            "byte_order": "big_endian",
+            "byte_order": "little_endian",
             "signed": false,
             "factor": 0.01,
             "offset": 0.0,
@@ -412,9 +412,9 @@
         {
           "name": "Lambda_2",
           "decode": {
-            "start_bit": 63,
+            "start_bit": 56,
             "bit_length": 8,
-            "byte_order": "big_endian",
+            "byte_order": "little_endian",
             "signed": false,
             "factor": 0.01,
             "offset": 0.0,
@@ -437,9 +437,9 @@
         {
           "name": "Baro_press",
           "decode": {
-            "start_bit": 15,
+            "start_bit": 8,
             "bit_length": 8,
-            "byte_order": "big_endian",
+            "byte_order": "little_endian",
             "signed": false,
             "factor": 0.004,
             "offset": 0.1,
@@ -452,9 +452,9 @@
         {
           "name": "CAM_IN_L",
           "decode": {
-            "start_bit": 23,
+            "start_bit": 16,
             "bit_length": 8,
-            "byte_order": "big_endian",
+            "byte_order": "little_endian",
             "signed": false,
             "factor": 0.25,
             "offset": -31.0,
@@ -467,9 +467,9 @@
         {
           "name": "CAM_IN_R",
           "decode": {
-            "start_bit": 31,
+            "start_bit": 24,
             "bit_length": 8,
-            "byte_order": "big_endian",
+            "byte_order": "little_endian",
             "signed": false,
             "factor": 0.25,
             "offset": -31.0,
@@ -482,9 +482,9 @@
         {
           "name": "Fuel_press",
           "decode": {
-            "start_bit": 47,
+            "start_bit": 40,
             "bit_length": 8,
-            "byte_order": "big_endian",
+            "byte_order": "little_endian",
             "signed": false,
             "factor": 0.1,
             "offset": 0.0,
@@ -514,7 +514,7 @@
           "decode": {
             "start_bit": 39,
             "bit_length": 1,
-            "byte_order": "big_endian",
+            "byte_order": "little_endian",
             "signed": false,
             "factor": 1.0,
             "offset": 0.0,
@@ -527,9 +527,9 @@
         {
           "name": "Water_temp",
           "decode": {
-            "start_bit": 7,
+            "start_bit": 0,
             "bit_length": 8,
-            "byte_order": "big_endian",
+            "byte_order": "little_endian",
             "signed": false,
             "factor": 1.0,
             "offset": -40.0,
@@ -561,8 +561,8 @@
       "raw": {
         "cflag": 0,
         "canp_start_bit": 8,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
@@ -585,9 +585,9 @@
     {
       "name": "Baro_press",
       "decode": {
-        "start_bit": 15,
+        "start_bit": 8,
         "bit_length": 8,
-        "byte_order": "big_endian",
+        "byte_order": "little_endian",
         "signed": false,
         "factor": 0.004,
         "offset": 0.1,
@@ -599,8 +599,8 @@
       "raw": {
         "cflag": 1,
         "canp_start_bit": 8,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
@@ -637,8 +637,8 @@
       "raw": {
         "cflag": 0,
         "canp_start_bit": 24,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
@@ -675,8 +675,8 @@
       "raw": {
         "cflag": 0,
         "canp_start_bit": 40,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
@@ -699,9 +699,9 @@
     {
       "name": "Water_temp",
       "decode": {
-        "start_bit": 7,
+        "start_bit": 0,
         "bit_length": 8,
-        "byte_order": "big_endian",
+        "byte_order": "little_endian",
         "signed": false,
         "factor": 1.0,
         "offset": -40.0,
@@ -713,8 +713,8 @@
       "raw": {
         "cflag": 1,
         "canp_start_bit": 0,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
@@ -751,8 +751,8 @@
       "raw": {
         "cflag": 0,
         "canp_start_bit": 8,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
@@ -775,9 +775,9 @@
     {
       "name": "Lambda_2",
       "decode": {
-        "start_bit": 63,
+        "start_bit": 56,
         "bit_length": 8,
-        "byte_order": "big_endian",
+        "byte_order": "little_endian",
         "signed": false,
         "factor": 0.01,
         "offset": 0.0,
@@ -789,8 +789,8 @@
       "raw": {
         "cflag": 1,
         "canp_start_bit": 56,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
@@ -813,9 +813,9 @@
     {
       "name": "Lambda",
       "decode": {
-        "start_bit": 55,
+        "start_bit": 48,
         "bit_length": 8,
-        "byte_order": "big_endian",
+        "byte_order": "little_endian",
         "signed": false,
         "factor": 0.01,
         "offset": 0.0,
@@ -827,8 +827,8 @@
       "raw": {
         "cflag": 1,
         "canp_start_bit": 48,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
@@ -849,49 +849,11 @@
       }
     },
     {
-      "name": "Fuel_cons",
-      "decode": {
-        "start_bit": 39,
-        "bit_length": 16,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 0.1,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 6553.5,
-        "unit": "l",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 40,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1348,
-        "frame_id_hex": "0x544",
-        "frame_name": "MSG_544"
-      },
-      "canonical": {
-        "id": "fuel.consumption",
-        "label": "Fuel consumption",
-        "quantity": "consumption",
-        "preferred_unit": "L/h",
-        "confidence": "mapped",
-        "aliases": [
-          "Fuel_cons"
-        ]
-      }
-    },
-    {
       "name": "Fuel_press",
       "decode": {
-        "start_bit": 47,
+        "start_bit": 40,
         "bit_length": 8,
-        "byte_order": "big_endian",
+        "byte_order": "little_endian",
         "signed": false,
         "factor": 0.1,
         "offset": 0.0,
@@ -903,8 +865,8 @@
       "raw": {
         "cflag": 1,
         "canp_start_bit": 40,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
@@ -925,7 +887,7 @@
       }
     },
     {
-      "name": "Air_temp",
+      "name": "Fuel_cons",
       "decode": {
         "start_bit": 39,
         "bit_length": 16,
@@ -935,14 +897,52 @@
         "offset": 0.0,
         "minimum": 0.0,
         "maximum": 6553.5,
+        "unit": "l",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 40,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1348,
+        "frame_id_hex": "0x544",
+        "frame_name": "MSG_544"
+      },
+      "canonical": {
+        "id": "fuel.used",
+        "label": "Fuel used",
+        "quantity": "volume",
+        "preferred_unit": "L",
+        "confidence": "mapped",
+        "aliases": [
+          "Fuel_cons"
+        ]
+      }
+    },
+    {
+      "name": "Air_temp",
+      "decode": {
+        "start_bit": 39,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": true,
+        "factor": 0.1,
+        "offset": 0.0,
+        "minimum": -3276.8,
+        "maximum": 3276.7000000000003,
         "unit": "C",
         "mux": null
       },
       "raw": {
         "cflag": 0,
         "canp_start_bit": 40,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:signed"
       },
       "acquisition": {
         "type": "can_frame",
@@ -979,8 +979,8 @@
       "raw": {
         "cflag": 0,
         "canp_start_bit": 8,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
@@ -1017,8 +1017,8 @@
       "raw": {
         "cflag": 0,
         "canp_start_bit": 8,
-        "signed_known": false,
-        "signed_reason": "heuristic:signed_motion"
+        "signed_known": true,
+        "signed_reason": "rawfmt:signed"
       },
       "acquisition": {
         "type": "can_frame",
@@ -1055,8 +1055,8 @@
       "raw": {
         "cflag": 0,
         "canp_start_bit": 40,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
@@ -1077,11 +1077,49 @@
       }
     },
     {
+      "name": "TPS",
+      "decode": {
+        "start_bit": 23,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.1,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 6553.5,
+        "unit": "%",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 24,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1346,
+        "frame_id_hex": "0x542",
+        "frame_name": "MSG_542"
+      },
+      "canonical": {
+        "id": "throttle.position",
+        "label": "Throttle position",
+        "quantity": "position",
+        "preferred_unit": "%",
+        "confidence": "mapped",
+        "aliases": [
+          "TPS"
+        ]
+      }
+    },
+    {
       "name": "TC",
       "decode": {
         "start_bit": 39,
         "bit_length": 1,
-        "byte_order": "big_endian",
+        "byte_order": "little_endian",
         "signed": false,
         "factor": 1.0,
         "offset": 0.0,
@@ -1093,8 +1131,8 @@
       "raw": {
         "cflag": 1,
         "canp_start_bit": 39,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
@@ -1117,9 +1155,9 @@
     {
       "name": "Gear",
       "decode": {
-        "start_bit": 55,
+        "start_bit": 48,
         "bit_length": 8,
-        "byte_order": "big_endian",
+        "byte_order": "little_endian",
         "signed": false,
         "factor": 1.0,
         "offset": 0.0,
@@ -1131,8 +1169,8 @@
       "raw": {
         "cflag": 1,
         "canp_start_bit": 48,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
@@ -1169,8 +1207,8 @@
       "raw": {
         "cflag": 0,
         "canp_start_bit": 40,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
@@ -1207,8 +1245,8 @@
       "raw": {
         "cflag": 0,
         "canp_start_bit": 8,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
@@ -1245,8 +1283,8 @@
       "raw": {
         "cflag": 0,
         "canp_start_bit": 24,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
@@ -1283,8 +1321,8 @@
       "raw": {
         "cflag": 0,
         "canp_start_bit": 40,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
@@ -1321,8 +1359,8 @@
       "raw": {
         "cflag": 0,
         "canp_start_bit": 56,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
@@ -1345,9 +1383,9 @@
     {
       "name": "Brake",
       "decode": {
-        "start_bit": 31,
+        "start_bit": 24,
         "bit_length": 8,
-        "byte_order": "big_endian",
+        "byte_order": "little_endian",
         "signed": false,
         "factor": 1.0,
         "offset": 0.0,
@@ -1359,8 +1397,8 @@
       "raw": {
         "cflag": 1,
         "canp_start_bit": 24,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
@@ -1373,9 +1411,9 @@
     {
       "name": "CAM_IN_L",
       "decode": {
-        "start_bit": 23,
+        "start_bit": 16,
         "bit_length": 8,
-        "byte_order": "big_endian",
+        "byte_order": "little_endian",
         "signed": false,
         "factor": 0.25,
         "offset": -31.0,
@@ -1387,8 +1425,8 @@
       "raw": {
         "cflag": 1,
         "canp_start_bit": 16,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
@@ -1401,9 +1439,9 @@
     {
       "name": "CAM_IN_R",
       "decode": {
-        "start_bit": 31,
+        "start_bit": 24,
         "bit_length": 8,
-        "byte_order": "big_endian",
+        "byte_order": "little_endian",
         "signed": false,
         "factor": 0.25,
         "offset": -31.0,
@@ -1415,8 +1453,8 @@
       "raw": {
         "cflag": 1,
         "canp_start_bit": 24,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
@@ -1443,8 +1481,8 @@
       "raw": {
         "cflag": 0,
         "canp_start_bit": 24,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
@@ -1471,8 +1509,8 @@
       "raw": {
         "cflag": 0,
         "canp_start_bit": 40,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
@@ -1499,8 +1537,8 @@
       "raw": {
         "cflag": 0,
         "canp_start_bit": 56,
-        "signed_known": false,
-        "signed_reason": "heuristic:unsigned_default"
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",

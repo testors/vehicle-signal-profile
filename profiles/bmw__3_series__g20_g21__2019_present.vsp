@@ -107,7 +107,7 @@
         {
           "name": "Indicator_Left",
           "decode": {
-            "start_bit": 58,
+            "start_bit": 2,
             "bit_length": 1,
             "byte_order": "big_endian",
             "signed": false,
@@ -122,7 +122,7 @@
         {
           "name": "Indicator_Right",
           "decode": {
-            "start_bit": 56,
+            "start_bit": 0,
             "bit_length": 1,
             "byte_order": "big_endian",
             "signed": false,
@@ -302,7 +302,7 @@
         {
           "name": "Traction_Control_Mode",
           "decode": {
-            "start_bit": 40,
+            "start_bit": 18,
             "bit_length": 3,
             "byte_order": "big_endian",
             "signed": false,
@@ -327,7 +327,7 @@
         {
           "name": "Sport_Mode",
           "decode": {
-            "start_bit": 48,
+            "start_bit": 10,
             "bit_length": 3,
             "byte_order": "big_endian",
             "signed": false,
@@ -352,7 +352,7 @@
         {
           "name": "Gear_Switch",
           "decode": {
-            "start_bit": 45,
+            "start_bit": 23,
             "bit_length": 3,
             "byte_order": "big_endian",
             "signed": false,
@@ -475,7 +475,7 @@
         "frame_name": "MSG_1EE"
       },
       "decode": {
-        "start_bit": 58,
+        "start_bit": 2,
         "bit_length": 1,
         "byte_order": "big_endian",
         "signed": false,
@@ -507,7 +507,7 @@
         "frame_name": "MSG_1EE"
       },
       "decode": {
-        "start_bit": 56,
+        "start_bit": 0,
         "bit_length": 1,
         "byte_order": "big_endian",
         "signed": false,
@@ -571,7 +571,7 @@
         "frame_name": "MSG_31B"
       },
       "decode": {
-        "start_bit": 40,
+        "start_bit": 18,
         "bit_length": 3,
         "byte_order": "big_endian",
         "signed": false,
@@ -590,38 +590,6 @@
         "confidence": "mapped",
         "aliases": [
           "Traction_Control_Mode"
-        ]
-      }
-    },
-    {
-      "name": "Gear_Switch",
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1021,
-        "frame_id_hex": "0x3FD",
-        "frame_name": "MSG_3FD"
-      },
-      "decode": {
-        "start_bit": 45,
-        "bit_length": 3,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 1.0,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 7.0,
-        "unit": "",
-        "mux": null
-      },
-      "canonical": {
-        "id": "transmission.gear.selected",
-        "label": "Selected gear",
-        "quantity": "gear",
-        "preferred_unit": "gear",
-        "confidence": "heuristic",
-        "aliases": [
-          "Gear_Switch"
         ]
       }
     },
@@ -754,6 +722,28 @@
       }
     },
     {
+      "name": "Gear_Switch",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1021,
+        "frame_id_hex": "0x3FD",
+        "frame_name": "MSG_3FD"
+      },
+      "decode": {
+        "start_bit": 23,
+        "bit_length": 3,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 7.0,
+        "unit": "",
+        "mux": null
+      }
+    },
+    {
       "name": "Sport_Mode",
       "acquisition": {
         "type": "can_frame",
@@ -763,7 +753,7 @@
         "frame_name": "MSG_3D8"
       },
       "decode": {
-        "start_bit": 48,
+        "start_bit": 10,
         "bit_length": 3,
         "byte_order": "big_endian",
         "signed": false,

@@ -32,7 +32,7 @@
         {
           "name": "Full_Beam",
           "decode": {
-            "start_bit": 41,
+            "start_bit": 17,
             "bit_length": 1,
             "byte_order": "big_endian",
             "signed": false,
@@ -47,7 +47,7 @@
         {
           "name": "Headlights",
           "decode": {
-            "start_bit": 40,
+            "start_bit": 16,
             "bit_length": 1,
             "byte_order": "big_endian",
             "signed": false,
@@ -62,7 +62,7 @@
         {
           "name": "Indicator_Left",
           "decode": {
-            "start_bit": 22,
+            "start_bit": 46,
             "bit_length": 1,
             "byte_order": "big_endian",
             "signed": false,
@@ -77,7 +77,7 @@
         {
           "name": "Indicator_Right",
           "decode": {
-            "start_bit": 21,
+            "start_bit": 45,
             "bit_length": 1,
             "byte_order": "big_endian",
             "signed": false,
@@ -92,7 +92,7 @@
         {
           "name": "Side_Lights",
           "decode": {
-            "start_bit": 24,
+            "start_bit": 32,
             "bit_length": 1,
             "byte_order": "big_endian",
             "signed": false,
@@ -362,7 +362,7 @@
         {
           "name": "Gear",
           "decode": {
-            "start_bit": 56,
+            "start_bit": 2,
             "bit_length": 3,
             "byte_order": "big_endian",
             "signed": false,
@@ -459,6 +459,38 @@
       }
     },
     {
+      "name": "Brake_Position",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 809,
+        "frame_id_hex": "0x329",
+        "frame_name": "MSG_329"
+      },
+      "decode": {
+        "start_bit": 33,
+        "bit_length": 1,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "unit": "on/off",
+        "mux": null
+      },
+      "canonical": {
+        "id": "brake.switch",
+        "label": "Brake switch",
+        "quantity": "state",
+        "preferred_unit": "bool",
+        "confidence": "mapped",
+        "aliases": [
+          "Brake_Position"
+        ]
+      }
+    },
+    {
       "name": "Engine_Speed",
       "acquisition": {
         "type": "can_frame",
@@ -500,7 +532,7 @@
         "frame_name": "MSG_018"
       },
       "decode": {
-        "start_bit": 40,
+        "start_bit": 16,
         "bit_length": 1,
         "byte_order": "big_endian",
         "signed": false,
@@ -532,7 +564,7 @@
         "frame_name": "MSG_018"
       },
       "decode": {
-        "start_bit": 41,
+        "start_bit": 17,
         "bit_length": 1,
         "byte_order": "big_endian",
         "signed": false,
@@ -564,7 +596,7 @@
         "frame_name": "MSG_018"
       },
       "decode": {
-        "start_bit": 22,
+        "start_bit": 46,
         "bit_length": 1,
         "byte_order": "big_endian",
         "signed": false,
@@ -596,7 +628,7 @@
         "frame_name": "MSG_018"
       },
       "decode": {
-        "start_bit": 21,
+        "start_bit": 45,
         "bit_length": 1,
         "byte_order": "big_endian",
         "signed": false,
@@ -628,7 +660,7 @@
         "frame_name": "MSG_018"
       },
       "decode": {
-        "start_bit": 24,
+        "start_bit": 32,
         "bit_length": 1,
         "byte_order": "big_endian",
         "signed": false,
@@ -683,7 +715,7 @@
       }
     },
     {
-      "name": "Gear_Switch",
+      "name": "Gear",
       "acquisition": {
         "type": "can_frame",
         "bus": "can0",
@@ -692,14 +724,14 @@
         "frame_name": "MSG_43F"
       },
       "decode": {
-        "start_bit": 8,
-        "bit_length": 6,
-        "byte_order": "little_endian",
+        "start_bit": 2,
+        "bit_length": 3,
+        "byte_order": "big_endian",
         "signed": false,
         "factor": 1.0,
         "offset": 0.0,
         "minimum": 0.0,
-        "maximum": 63.0,
+        "maximum": 7.0,
         "unit": "",
         "mux": null
       },
@@ -708,9 +740,9 @@
         "label": "Selected gear",
         "quantity": "gear",
         "preferred_unit": "gear",
-        "confidence": "heuristic",
+        "confidence": "mapped",
         "aliases": [
-          "Gear_Switch"
+          "Gear"
         ]
       }
     },
@@ -840,6 +872,28 @@
         "aliases": [
           "Wheel_Speed_RR_kph"
         ]
+      }
+    },
+    {
+      "name": "Gear_Switch",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1087,
+        "frame_id_hex": "0x43F",
+        "frame_name": "MSG_43F"
+      },
+      "decode": {
+        "start_bit": 8,
+        "bit_length": 6,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 63.0,
+        "unit": "",
+        "mux": null
       }
     }
   ]

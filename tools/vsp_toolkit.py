@@ -342,9 +342,10 @@ def dbc_sign_signal_line(signal: dict[str, Any], name: str) -> str:
 def dbc_muxor_signal_line(mux: dict[str, Any], name: str) -> str:
     start_bit = int(mux.get("start_bit") or 0)
     bit_length = int(mux.get("bit_length") or 1)
+    order = 0 if mux.get("byte_order") == "big_endian" else 1
     maximum = (1 << bit_length) - 1 if 0 < bit_length < 64 else 0
     return (
-        f" SG_ {name} M : {start_bit}|{bit_length}@1+ "
+        f" SG_ {name} M : {start_bit}|{bit_length}@{order}+ "
         f"(1,0) [0|{maximum}] \"\" Vector__XXX"
     )
 
@@ -358,14 +359,14 @@ def synthetic_muxors(signals: list[dict[str, Any]]) -> list[dict[str, Any]]:
     if has_muxor:
         return []
 
-    muxors: dict[tuple[int, int], dict[str, Any]] = {}
+    muxors: dict[tuple[int, int, str], dict[str, Any]] = {}
     for signal in signals:
         mux = (signal.get("decode") or {}).get("mux")
         if not isinstance(mux, dict) or "value" not in mux:
             continue
         if mux.get("start_bit") is None or mux.get("bit_length") is None:
             continue
-        key = (int(mux["start_bit"]), int(mux["bit_length"]))
+        key = (int(mux["start_bit"]), int(mux["bit_length"]), str(mux.get("byte_order") or "little_endian"))
         muxors.setdefault(key, mux)
     return [muxors[key] for key in sorted(muxors)]
 
@@ -541,6 +542,47 @@ def signal_matches_frame(signal: dict[str, Any], frame: dict[str, Any]) -> bool:
     )
 
 
+MUX_BYTE_ORDERS = {"little_endian", "big_endian"}
+
+
+def validate_mux(label: str, decode: dict[str, Any], errors: list[str]) -> None:
+    mux = decode.get("mux")
+    if mux is None:
+        return
+    if not isinstance(mux, dict):
+        errors.append(f"{label}: mux must be an object or null")
+        return
+    if mux.get("role") == "multiplexor":
+        return
+    value = mux.get("value")
+    if not isinstance(value, int) or isinstance(value, bool) or value < 0:
+        errors.append(f"{label}: mux.value must be a non-negative integer")
+        return
+    if mux.get("byte_order") is not None and mux["byte_order"] not in MUX_BYTE_ORDERS:
+        errors.append(f"{label}: mux.byte_order must be little_endian or big_endian")
+    start_bit, bit_length = mux.get("start_bit"), mux.get("bit_length")
+    if start_bit is None and bit_length is None:
+        return  # DBC style: the frame's multiplexor signal carries the field
+    if not isinstance(start_bit, int) or not isinstance(bit_length, int) or not 0 <= start_bit < 512 or not 1 <= bit_length <= 64:
+        errors.append(f"{label}: mux.start_bit/bit_length must be integers (0-511, 1-64)")
+        return
+    if value >= 1 << bit_length:
+        errors.append(f"{label}: mux.value {value} does not fit in {bit_length} bits")
+
+
+def validate_frame_id_mask(frame: dict[str, Any], errors: list[str]) -> None:
+    mask = frame.get("frame_id_mask")
+    if mask is None:
+        return
+    label = f"frame {frame.get('name') or frame.get('frame_id')}"
+    width = 0x7FF if frame.get("id_format") == "standard11" else 0x1FFFFFFF
+    if not isinstance(mask, int) or isinstance(mask, bool) or mask <= 0 or mask & ~width:
+        errors.append(f"{label}: frame_id_mask must be a positive integer within the id width")
+        return
+    if frame.get("frame_id_mask_hex") is not None and frame["frame_id_mask_hex"] != f"0x{mask:X}":
+        errors.append(f"{label}: frame_id_mask_hex does not match frame_id_mask")
+
+
 def validate_profile(profile: dict[str, Any]) -> dict[str, Any]:
     errors: list[str] = []
     warnings: list[str] = []
@@ -566,10 +608,12 @@ def validate_profile(profile: dict[str, Any]) -> dict[str, Any]:
         if key in frames:
             errors.append(f"duplicate frame on {bus} id=0x{int(frame_id):X}")
         frames[key] = frame
+        validate_frame_id_mask(frame, errors)
         for frame_signal in frame.get("signals") or []:
             frame_label = f"frame {frame.get('name') or frame_id} signal {frame_signal.get('name') or '<unnamed>'}"
             validate_sign_bit(frame_label, frame_signal.get("decode") or {}, errors)
             validate_values(frame_label, frame_signal.get("decode") or {}, errors)
+            validate_mux(frame_label, frame_signal.get("decode") or {}, errors)
         expected_format = id_format(int(frame_id))
         if frame.get("id_format") and frame.get("id_format") != expected_format:
             errors.append(f"frame {frame.get('name') or frame_id}: id_format should be {expected_format}")
@@ -602,6 +646,7 @@ def validate_profile(profile: dict[str, Any]) -> dict[str, Any]:
         canonical = signal.get("canonical")
         validate_sign_bit(f"signal {name}", signal.get("decode") or {}, errors)
         validate_values(f"signal {name}", signal.get("decode") or {}, errors)
+        validate_mux(f"signal {name}", signal.get("decode") or {}, errors)
 
         if canonical is not None:
             if not isinstance(canonical, dict):

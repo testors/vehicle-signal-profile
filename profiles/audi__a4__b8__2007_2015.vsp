@@ -188,7 +188,7 @@
         {
           "name": "Clutch_Position",
           "decode": {
-            "start_bit": 25,
+            "start_bit": 33,
             "bit_length": 1,
             "byte_order": "big_endian",
             "signed": false,
@@ -218,7 +218,7 @@
         {
           "name": "Throttle_Position",
           "decode": {
-            "start_bit": 8,
+            "start_bit": 55,
             "bit_length": 8,
             "byte_order": "big_endian",
             "signed": false,
@@ -243,7 +243,7 @@
         {
           "name": "Brake_Position",
           "decode": {
-            "start_bit": 32,
+            "start_bit": 26,
             "bit_length": 3,
             "byte_order": "big_endian",
             "signed": false,
@@ -270,7 +270,7 @@
         "frame_name": "MSG_106"
       },
       "decode": {
-        "start_bit": 32,
+        "start_bit": 26,
         "bit_length": 3,
         "byte_order": "big_endian",
         "signed": false,
@@ -302,7 +302,7 @@
         "frame_name": "MSG_105"
       },
       "decode": {
-        "start_bit": 25,
+        "start_bit": 33,
         "bit_length": 1,
         "byte_order": "big_endian",
         "signed": false,
@@ -314,10 +314,10 @@
         "mux": null
       },
       "canonical": {
-        "id": "clutch.position",
-        "label": "Clutch position",
-        "quantity": "position",
-        "preferred_unit": "%",
+        "id": "clutch.switch",
+        "label": "Clutch switch",
+        "quantity": "state",
+        "preferred_unit": "bool",
         "confidence": "mapped",
         "aliases": [
           "Clutch_Position"
@@ -399,7 +399,7 @@
         "frame_name": "MSG_105"
       },
       "decode": {
-        "start_bit": 8,
+        "start_bit": 55,
         "bit_length": 8,
         "byte_order": "big_endian",
         "signed": false,
@@ -450,6 +450,102 @@
         "confidence": "mapped",
         "aliases": [
           "Wheel_Speed_4_kph"
+        ]
+      }
+    },
+    {
+      "name": "Wheel_Speed_3_kph",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 259,
+        "frame_id_hex": "0x103",
+        "frame_name": "MSG_103"
+      },
+      "decode": {
+        "start_bit": 40,
+        "bit_length": 12,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 0.0625,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 4095.0,
+        "unit": "km/h",
+        "mux": null
+      },
+      "canonical": {
+        "id": "wheel.speed",
+        "label": "Wheel speed",
+        "quantity": "speed",
+        "preferred_unit": "km/h",
+        "confidence": "mapped",
+        "aliases": [
+          "Wheel_Speed_3_kph"
+        ]
+      }
+    },
+    {
+      "name": "Wheel_Speed_2_kph",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 259,
+        "frame_id_hex": "0x103",
+        "frame_name": "MSG_103"
+      },
+      "decode": {
+        "start_bit": 28,
+        "bit_length": 12,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 0.0625,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 4095.0,
+        "unit": "km/h",
+        "mux": null
+      },
+      "canonical": {
+        "id": "wheel.speed",
+        "label": "Wheel speed",
+        "quantity": "speed",
+        "preferred_unit": "km/h",
+        "confidence": "mapped",
+        "aliases": [
+          "Wheel_Speed_2_kph"
+        ]
+      }
+    },
+    {
+      "name": "Wheel_Speed_1_kph",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 259,
+        "frame_id_hex": "0x103",
+        "frame_name": "MSG_103"
+      },
+      "decode": {
+        "start_bit": 16,
+        "bit_length": 12,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 0.0625,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 4095.0,
+        "unit": "km/h",
+        "mux": null
+      },
+      "canonical": {
+        "id": "wheel.speed",
+        "label": "Wheel speed",
+        "quantity": "speed",
+        "preferred_unit": "km/h",
+        "confidence": "mapped",
+        "aliases": [
+          "Wheel_Speed_1_kph"
         ]
       }
     }

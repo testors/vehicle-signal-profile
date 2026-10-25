@@ -624,6 +624,38 @@
       }
     },
     {
+      "name": "ELMCAN_ACTUAL_AFR",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 301989888,
+        "frame_id_hex": "0x12000000",
+        "frame_name": "REASM_ELECTROMOTIVE_CANBus"
+      },
+      "decode": {
+        "start_bit": 104,
+        "bit_length": 8,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 0.01,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 2.55,
+        "unit": "A/F",
+        "mux": null
+      },
+      "canonical": {
+        "id": "exhaust.air_fuel_ratio",
+        "label": "Air/fuel ratio",
+        "quantity": "ratio",
+        "preferred_unit": "ratio",
+        "confidence": "heuristic",
+        "aliases": [
+          "ELMCAN_ACTUAL_AFR"
+        ]
+      }
+    },
+    {
       "name": "ELMCAN_MAP",
       "acquisition": {
         "type": "can_frame",
@@ -652,38 +684,6 @@
         "confidence": "heuristic",
         "aliases": [
           "ELMCAN_MAP"
-        ]
-      }
-    },
-    {
-      "name": "ELMCAN_TPS",
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 301989888,
-        "frame_id_hex": "0x12000000",
-        "frame_name": "REASM_ELECTROMOTIVE_CANBus"
-      },
-      "decode": {
-        "start_bit": 24,
-        "bit_length": 8,
-        "byte_order": "little_endian",
-        "signed": false,
-        "factor": 19.6078431373,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 5000.0,
-        "unit": "mV",
-        "mux": null
-      },
-      "canonical": {
-        "id": "throttle.position",
-        "label": "Throttle position",
-        "quantity": "position",
-        "preferred_unit": "%",
-        "confidence": "heuristic",
-        "aliases": [
-          "ELMCAN_TPS"
         ]
       }
     },
@@ -1344,6 +1344,28 @@
         "minimum": 0.0,
         "maximum": 25.5,
         "unit": "km/h",
+        "mux": null
+      }
+    },
+    {
+      "name": "ELMCAN_TPS",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 301989888,
+        "frame_id_hex": "0x12000000",
+        "frame_name": "REASM_ELECTROMOTIVE_CANBus"
+      },
+      "decode": {
+        "start_bit": 24,
+        "bit_length": 8,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 19.6078431373,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 5000.0,
+        "unit": "mV",
         "mux": null
       }
     }

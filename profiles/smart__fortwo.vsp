@@ -55,7 +55,7 @@
             "offset": 0.0,
             "minimum": 0.0,
             "maximum": 0.0,
-            "unit": "deg/s",
+            "unit": "deg",
             "mux": null
           }
         }
@@ -72,7 +72,7 @@
         {
           "name": "Wheel_Speed_FL_kph",
           "decode": {
-            "start_bit": 0,
+            "start_bit": 55,
             "bit_length": 16,
             "byte_order": "big_endian",
             "signed": false,
@@ -87,7 +87,7 @@
         {
           "name": "Wheel_Speed_FL_mph",
           "decode": {
-            "start_bit": 0,
+            "start_bit": 55,
             "bit_length": 16,
             "byte_order": "big_endian",
             "signed": false,
@@ -102,7 +102,7 @@
         {
           "name": "Wheel_Speed_FR_kph",
           "decode": {
-            "start_bit": 16,
+            "start_bit": 39,
             "bit_length": 16,
             "byte_order": "big_endian",
             "signed": false,
@@ -117,7 +117,7 @@
         {
           "name": "Wheel_Speed_FR_mph",
           "decode": {
-            "start_bit": 16,
+            "start_bit": 39,
             "bit_length": 16,
             "byte_order": "big_endian",
             "signed": false,
@@ -142,7 +142,7 @@
         {
           "name": "Brake_Pressure",
           "decode": {
-            "start_bit": 32,
+            "start_bit": 19,
             "bit_length": 12,
             "byte_order": "big_endian",
             "signed": false,
@@ -157,7 +157,7 @@
         {
           "name": "Wheel_Speed_RL_kph",
           "decode": {
-            "start_bit": 0,
+            "start_bit": 55,
             "bit_length": 16,
             "byte_order": "big_endian",
             "signed": false,
@@ -172,7 +172,7 @@
         {
           "name": "Wheel_Speed_RL_mph",
           "decode": {
-            "start_bit": 0,
+            "start_bit": 55,
             "bit_length": 16,
             "byte_order": "big_endian",
             "signed": false,
@@ -187,7 +187,7 @@
         {
           "name": "Wheel_Speed_RR_kph",
           "decode": {
-            "start_bit": 16,
+            "start_bit": 39,
             "bit_length": 16,
             "byte_order": "big_endian",
             "signed": false,
@@ -202,7 +202,7 @@
         {
           "name": "Wheel_Speed_RR_mph",
           "decode": {
-            "start_bit": 16,
+            "start_bit": 39,
             "bit_length": 16,
             "byte_order": "big_endian",
             "signed": false,
@@ -227,7 +227,7 @@
         {
           "name": "Throttle_Position",
           "decode": {
-            "start_bit": 40,
+            "start_bit": 23,
             "bit_length": 8,
             "byte_order": "big_endian",
             "signed": false,
@@ -252,7 +252,7 @@
         {
           "name": "Engine_Speed",
           "decode": {
-            "start_bit": 32,
+            "start_bit": 23,
             "bit_length": 16,
             "byte_order": "big_endian",
             "signed": false,
@@ -277,7 +277,7 @@
         {
           "name": "Brake_Position",
           "decode": {
-            "start_bit": 48,
+            "start_bit": 8,
             "bit_length": 1,
             "byte_order": "big_endian",
             "signed": false,
@@ -302,7 +302,7 @@
         {
           "name": "Battery_Voltage",
           "decode": {
-            "start_bit": 16,
+            "start_bit": 47,
             "bit_length": 8,
             "byte_order": "big_endian",
             "signed": false,
@@ -327,7 +327,7 @@
         {
           "name": "Gear",
           "decode": {
-            "start_bit": 28,
+            "start_bit": 38,
             "bit_length": 3,
             "byte_order": "big_endian",
             "signed": false,
@@ -352,7 +352,7 @@
         {
           "name": "Indicator_Left",
           "decode": {
-            "start_bit": 49,
+            "start_bit": 9,
             "bit_length": 1,
             "byte_order": "big_endian",
             "signed": false,
@@ -367,7 +367,7 @@
         {
           "name": "Indicator_Right",
           "decode": {
-            "start_bit": 48,
+            "start_bit": 8,
             "bit_length": 1,
             "byte_order": "big_endian",
             "signed": false,
@@ -394,7 +394,7 @@
         "frame_name": "MSG_412"
       },
       "decode": {
-        "start_bit": 16,
+        "start_bit": 47,
         "bit_length": 8,
         "byte_order": "big_endian",
         "signed": false,
@@ -417,38 +417,6 @@
       }
     },
     {
-      "name": "Brake_Position",
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 768,
-        "frame_id_hex": "0x300",
-        "frame_name": "MSG_300"
-      },
-      "decode": {
-        "start_bit": 48,
-        "bit_length": 1,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 1.0,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 0.0,
-        "unit": "",
-        "mux": null
-      },
-      "canonical": {
-        "id": "brake.pedal.position",
-        "label": "Brake pedal position",
-        "quantity": "position",
-        "preferred_unit": "%",
-        "confidence": "mapped",
-        "aliases": [
-          "Brake_Position"
-        ]
-      }
-    },
-    {
       "name": "Brake_Pressure",
       "acquisition": {
         "type": "can_frame",
@@ -458,7 +426,7 @@
         "frame_name": "MSG_208"
       },
       "decode": {
-        "start_bit": 32,
+        "start_bit": 19,
         "bit_length": 12,
         "byte_order": "big_endian",
         "signed": false,
@@ -481,6 +449,38 @@
       }
     },
     {
+      "name": "Brake_Position",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 768,
+        "frame_id_hex": "0x300",
+        "frame_name": "MSG_300"
+      },
+      "decode": {
+        "start_bit": 8,
+        "bit_length": 1,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 0.0,
+        "unit": "",
+        "mux": null
+      },
+      "canonical": {
+        "id": "brake.switch",
+        "label": "Brake switch",
+        "quantity": "state",
+        "preferred_unit": "bool",
+        "confidence": "mapped",
+        "aliases": [
+          "Brake_Position"
+        ]
+      }
+    },
+    {
       "name": "Engine_Speed",
       "acquisition": {
         "type": "can_frame",
@@ -490,7 +490,7 @@
         "frame_name": "MSG_212"
       },
       "decode": {
-        "start_bit": 32,
+        "start_bit": 23,
         "bit_length": 16,
         "byte_order": "big_endian",
         "signed": false,
@@ -522,7 +522,7 @@
         "frame_name": "MSG_423"
       },
       "decode": {
-        "start_bit": 49,
+        "start_bit": 9,
         "bit_length": 1,
         "byte_order": "big_endian",
         "signed": false,
@@ -554,7 +554,7 @@
         "frame_name": "MSG_423"
       },
       "decode": {
-        "start_bit": 48,
+        "start_bit": 8,
         "bit_length": 1,
         "byte_order": "big_endian",
         "signed": false,
@@ -577,38 +577,6 @@
       }
     },
     {
-      "name": "Steering_Angle",
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 194,
-        "frame_id_hex": "0xC2",
-        "frame_name": "MSG_0C2"
-      },
-      "decode": {
-        "start_bit": 31,
-        "bit_length": 1,
-        "byte_order": "little_endian",
-        "signed": false,
-        "factor": 1.0,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 0.0,
-        "unit": "",
-        "mux": null
-      },
-      "canonical": {
-        "id": "steering.wheel.angle",
-        "label": "Steering wheel angle",
-        "quantity": "angle",
-        "preferred_unit": "deg",
-        "confidence": "mapped",
-        "aliases": [
-          "Steering_Angle"
-        ]
-      }
-    },
-    {
       "name": "Steering_Rate",
       "acquisition": {
         "type": "can_frame",
@@ -626,7 +594,7 @@
         "offset": 0.0,
         "minimum": 0.0,
         "maximum": 0.0,
-        "unit": "deg/s",
+        "unit": "deg",
         "mux": null
       },
       "canonical": {
@@ -650,7 +618,7 @@
         "frame_name": "MSG_210"
       },
       "decode": {
-        "start_bit": 40,
+        "start_bit": 23,
         "bit_length": 8,
         "byte_order": "big_endian",
         "signed": false,
@@ -682,7 +650,7 @@
         "frame_name": "MSG_418"
       },
       "decode": {
-        "start_bit": 28,
+        "start_bit": 38,
         "bit_length": 3,
         "byte_order": "big_endian",
         "signed": false,
@@ -714,7 +682,7 @@
         "frame_name": "MSG_200"
       },
       "decode": {
-        "start_bit": 0,
+        "start_bit": 55,
         "bit_length": 16,
         "byte_order": "big_endian",
         "signed": false,
@@ -746,7 +714,7 @@
         "frame_name": "MSG_200"
       },
       "decode": {
-        "start_bit": 16,
+        "start_bit": 39,
         "bit_length": 16,
         "byte_order": "big_endian",
         "signed": false,
@@ -778,7 +746,7 @@
         "frame_name": "MSG_208"
       },
       "decode": {
-        "start_bit": 0,
+        "start_bit": 55,
         "bit_length": 16,
         "byte_order": "big_endian",
         "signed": false,
@@ -810,7 +778,7 @@
         "frame_name": "MSG_208"
       },
       "decode": {
-        "start_bit": 16,
+        "start_bit": 39,
         "bit_length": 16,
         "byte_order": "big_endian",
         "signed": false,
@@ -830,6 +798,28 @@
         "aliases": [
           "Wheel_Speed_RR_kph"
         ]
+      }
+    },
+    {
+      "name": "Steering_Angle",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 194,
+        "frame_id_hex": "0xC2",
+        "frame_name": "MSG_0C2"
+      },
+      "decode": {
+        "start_bit": 31,
+        "bit_length": 1,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 0.0,
+        "unit": "",
+        "mux": null
       }
     }
   ]

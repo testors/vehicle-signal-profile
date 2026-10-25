@@ -97,7 +97,7 @@
         {
           "name": "Accelerator_Pedal_Position",
           "decode": {
-            "start_bit": 24,
+            "start_bit": 39,
             "bit_length": 8,
             "byte_order": "big_endian",
             "signed": false,
@@ -647,7 +647,7 @@
         {
           "name": "Steering_Angle",
           "decode": {
-            "start_bit": 48,
+            "start_bit": 7,
             "bit_length": 16,
             "byte_order": "big_endian",
             "signed": false,
@@ -682,6 +682,38 @@
         "offset": 0.0,
         "minimum": 0.0,
         "maximum": 102.0,
+        "unit": "%",
+        "mux": null
+      },
+      "canonical": {
+        "id": "accelerator.pedal.position",
+        "label": "Accelerator pedal position",
+        "quantity": "position",
+        "preferred_unit": "%",
+        "confidence": "mapped",
+        "aliases": [
+          "Accelerator_Pedal_Position"
+        ]
+      }
+    },
+    {
+      "name": "Accelerator_Pedal_Position",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 280,
+        "frame_id_hex": "0x118",
+        "frame_name": "MSG_118"
+      },
+      "decode": {
+        "start_bit": 39,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.4,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 100.0,
         "unit": "%",
         "mux": null
       },
@@ -746,6 +778,38 @@
         "offset": 0.0,
         "minimum": 0.0,
         "maximum": 127.875,
+        "unit": "%",
+        "mux": null
+      },
+      "canonical": {
+        "id": "brake.pedal.position",
+        "label": "Brake pedal position",
+        "quantity": "position",
+        "preferred_unit": "%",
+        "confidence": "mapped",
+        "aliases": [
+          "Brake_Position"
+        ]
+      }
+    },
+    {
+      "name": "Brake_Position",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 389,
+        "frame_id_hex": "0x185",
+        "frame_name": "MSG_185"
+      },
+      "decode": {
+        "start_bit": 36,
+        "bit_length": 12,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 0.08,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 100.0,
         "unit": "%",
         "mux": null
       },
@@ -930,7 +994,7 @@
         "frame_name": "MSG_488"
       },
       "decode": {
-        "start_bit": 48,
+        "start_bit": 7,
         "bit_length": 16,
         "byte_order": "big_endian",
         "signed": false,

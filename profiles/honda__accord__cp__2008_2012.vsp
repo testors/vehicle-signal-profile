@@ -32,7 +32,7 @@
         {
           "name": "Accelerator_Pedal_Position",
           "decode": {
-            "start_bit": 24,
+            "start_bit": 39,
             "bit_length": 8,
             "byte_order": "big_endian",
             "signed": false,
@@ -57,7 +57,7 @@
         {
           "name": "Engine_Speed",
           "decode": {
-            "start_bit": 32,
+            "start_bit": 23,
             "bit_length": 16,
             "byte_order": "big_endian",
             "signed": false,
@@ -82,7 +82,7 @@
         {
           "name": "Brake_Position",
           "decode": {
-            "start_bit": 24,
+            "start_bit": 32,
             "bit_length": 1,
             "byte_order": "big_endian",
             "signed": false,
@@ -107,7 +107,7 @@
         {
           "name": "Gear",
           "decode": {
-            "start_bit": 56,
+            "start_bit": 7,
             "bit_length": 8,
             "byte_order": "big_endian",
             "signed": false,
@@ -122,7 +122,7 @@
         {
           "name": "Gear_Requested",
           "decode": {
-            "start_bit": 48,
+            "start_bit": 15,
             "bit_length": 8,
             "byte_order": "big_endian",
             "signed": false,
@@ -137,7 +137,7 @@
         {
           "name": "Gear_Switch",
           "decode": {
-            "start_bit": 32,
+            "start_bit": 31,
             "bit_length": 8,
             "byte_order": "big_endian",
             "signed": false,
@@ -162,7 +162,7 @@
         {
           "name": "Brake_Position",
           "decode": {
-            "start_bit": 48,
+            "start_bit": 7,
             "bit_length": 16,
             "byte_order": "big_endian",
             "signed": false,
@@ -187,7 +187,7 @@
         {
           "name": "Steering_Angle",
           "decode": {
-            "start_bit": 32,
+            "start_bit": 23,
             "bit_length": 16,
             "byte_order": "big_endian",
             "signed": true,
@@ -214,7 +214,7 @@
         "frame_name": "MSG_136"
       },
       "decode": {
-        "start_bit": 24,
+        "start_bit": 39,
         "bit_length": 8,
         "byte_order": "big_endian",
         "signed": false,
@@ -246,7 +246,7 @@
         "frame_name": "MSG_1A4"
       },
       "decode": {
-        "start_bit": 48,
+        "start_bit": 7,
         "bit_length": 16,
         "byte_order": "big_endian",
         "signed": false,
@@ -269,6 +269,38 @@
       }
     },
     {
+      "name": "Brake_Position",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 380,
+        "frame_id_hex": "0x17C",
+        "frame_name": "MSG_17C"
+      },
+      "decode": {
+        "start_bit": 32,
+        "bit_length": 1,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "unit": "on/off",
+        "mux": null
+      },
+      "canonical": {
+        "id": "brake.switch",
+        "label": "Brake switch",
+        "quantity": "state",
+        "preferred_unit": "bool",
+        "confidence": "mapped",
+        "aliases": [
+          "Brake_Position"
+        ]
+      }
+    },
+    {
       "name": "Engine_Speed",
       "acquisition": {
         "type": "can_frame",
@@ -278,7 +310,7 @@
         "frame_name": "MSG_158"
       },
       "decode": {
-        "start_bit": 32,
+        "start_bit": 23,
         "bit_length": 16,
         "byte_order": "big_endian",
         "signed": false,
@@ -310,7 +342,7 @@
         "frame_name": "MSG_1B0"
       },
       "decode": {
-        "start_bit": 32,
+        "start_bit": 23,
         "bit_length": 16,
         "byte_order": "big_endian",
         "signed": true,
@@ -342,7 +374,7 @@
         "frame_name": "MSG_188"
       },
       "decode": {
-        "start_bit": 48,
+        "start_bit": 15,
         "bit_length": 8,
         "byte_order": "big_endian",
         "signed": false,
@@ -365,6 +397,38 @@
       }
     },
     {
+      "name": "Gear",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 392,
+        "frame_id_hex": "0x188",
+        "frame_name": "MSG_188"
+      },
+      "decode": {
+        "start_bit": 7,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 16.0,
+        "unit": "",
+        "mux": null
+      },
+      "canonical": {
+        "id": "transmission.gear.selected",
+        "label": "Selected gear",
+        "quantity": "gear",
+        "preferred_unit": "gear",
+        "confidence": "mapped",
+        "aliases": [
+          "Gear"
+        ]
+      }
+    },
+    {
       "name": "Gear_Switch",
       "acquisition": {
         "type": "can_frame",
@@ -374,7 +438,7 @@
         "frame_name": "MSG_188"
       },
       "decode": {
-        "start_bit": 32,
+        "start_bit": 31,
         "bit_length": 8,
         "byte_order": "big_endian",
         "signed": false,
@@ -384,16 +448,6 @@
         "maximum": 64.0,
         "unit": "",
         "mux": null
-      },
-      "canonical": {
-        "id": "transmission.gear.selected",
-        "label": "Selected gear",
-        "quantity": "gear",
-        "preferred_unit": "gear",
-        "confidence": "heuristic",
-        "aliases": [
-          "Gear_Switch"
-        ]
       }
     }
   ]

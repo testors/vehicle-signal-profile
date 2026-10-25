@@ -82,7 +82,7 @@
         {
           "name": "Engine_Mode",
           "decode": {
-            "start_bit": 43,
+            "start_bit": 20,
             "bit_length": 2,
             "byte_order": "big_endian",
             "signed": false,
@@ -97,7 +97,7 @@
         {
           "name": "Steering_Mode",
           "decode": {
-            "start_bit": 51,
+            "start_bit": 12,
             "bit_length": 2,
             "byte_order": "big_endian",
             "signed": false,
@@ -112,7 +112,7 @@
         {
           "name": "Suspension_Mode",
           "decode": {
-            "start_bit": 40,
+            "start_bit": 17,
             "bit_length": 2,
             "byte_order": "big_endian",
             "signed": false,
@@ -162,7 +162,7 @@
         {
           "name": "Gear",
           "decode": {
-            "start_bit": 16,
+            "start_bit": 43,
             "bit_length": 4,
             "byte_order": "big_endian",
             "signed": false,
@@ -187,7 +187,7 @@
         {
           "name": "Gear_Requested",
           "decode": {
-            "start_bit": 52,
+            "start_bit": 13,
             "bit_length": 2,
             "byte_order": "big_endian",
             "signed": false,
@@ -342,7 +342,7 @@
         {
           "name": "Seat_Belt___Driver",
           "decode": {
-            "start_bit": 40,
+            "start_bit": 16,
             "bit_length": 1,
             "byte_order": "big_endian",
             "signed": false,
@@ -392,7 +392,7 @@
         {
           "name": "Gear_Switch",
           "decode": {
-            "start_bit": 45,
+            "start_bit": 23,
             "bit_length": 3,
             "byte_order": "big_endian",
             "signed": false,
@@ -515,7 +515,7 @@
         "frame_name": "MSG_261"
       },
       "decode": {
-        "start_bit": 40,
+        "start_bit": 16,
         "bit_length": 1,
         "byte_order": "big_endian",
         "signed": false,
@@ -579,7 +579,7 @@
         "frame_name": "MSG_207"
       },
       "decode": {
-        "start_bit": 52,
+        "start_bit": 13,
         "bit_length": 2,
         "byte_order": "big_endian",
         "signed": false,
@@ -602,23 +602,23 @@
       }
     },
     {
-      "name": "Gear_Switch",
+      "name": "Gear",
       "acquisition": {
         "type": "can_frame",
         "bus": "can0",
-        "frame_id": 1021,
-        "frame_id_hex": "0x3FD",
-        "frame_name": "MSG_3FD"
+        "frame_id": 243,
+        "frame_id_hex": "0xF3",
+        "frame_name": "MSG_0F3"
       },
       "decode": {
-        "start_bit": 45,
-        "bit_length": 3,
+        "start_bit": 43,
+        "bit_length": 4,
         "byte_order": "big_endian",
         "signed": false,
         "factor": 1.0,
-        "offset": 0.0,
+        "offset": -4.0,
         "minimum": 0.0,
-        "maximum": 7.0,
+        "maximum": 15.0,
         "unit": "",
         "mux": null
       },
@@ -627,9 +627,9 @@
         "label": "Selected gear",
         "quantity": "gear",
         "preferred_unit": "gear",
-        "confidence": "heuristic",
+        "confidence": "mapped",
         "aliases": [
-          "Gear_Switch"
+          "Gear"
         ]
       }
     },
@@ -771,7 +771,7 @@
         "frame_name": "MSG_0DE"
       },
       "decode": {
-        "start_bit": 43,
+        "start_bit": 20,
         "bit_length": 2,
         "byte_order": "big_endian",
         "signed": false,
@@ -779,6 +779,28 @@
         "offset": 0.0,
         "minimum": 0.0,
         "maximum": 3.0,
+        "unit": "",
+        "mux": null
+      }
+    },
+    {
+      "name": "Gear_Switch",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1021,
+        "frame_id_hex": "0x3FD",
+        "frame_name": "MSG_3FD"
+      },
+      "decode": {
+        "start_bit": 23,
+        "bit_length": 3,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 7.0,
         "unit": "",
         "mux": null
       }
@@ -793,7 +815,7 @@
         "frame_name": "MSG_0DE"
       },
       "decode": {
-        "start_bit": 51,
+        "start_bit": 12,
         "bit_length": 2,
         "byte_order": "big_endian",
         "signed": false,
@@ -815,7 +837,7 @@
         "frame_name": "MSG_0DE"
       },
       "decode": {
-        "start_bit": 40,
+        "start_bit": 17,
         "bit_length": 2,
         "byte_order": "big_endian",
         "signed": false,
