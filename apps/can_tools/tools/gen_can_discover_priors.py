@@ -3,37 +3,36 @@ from __future__ import annotations
 
 import argparse
 import collections
-import re
+import json
 import sys
+from decimal import Decimal
 from pathlib import Path
 
 
-FAMILY_MAP = {
-    "Steering_Angle": "DISC_SIG_STEERING",
-    "Engine_Speed": "DISC_SIG_RPM",
-    "Throttle_Position": "DISC_SIG_THROTTLE",
-    "Accelerator_Pedal_Position": "DISC_SIG_THROTTLE",
-    "Gear": "DISC_SIG_GEAR",
-    "Brake_Position": "DISC_SIG_BRAKE",
-    "Brake_Pedal_Position": "DISC_SIG_BRAKE",
-    "Brake_Pressure": "DISC_SIG_BRAKE",
+CANONICAL_MAP = {
+    "steering.wheel.angle": "DISC_SIG_STEERING",
+    "engine.speed": "DISC_SIG_RPM",
+    "throttle.position": "DISC_SIG_THROTTLE",
+    "accelerator.pedal.position": "DISC_SIG_THROTTLE",
+    "brake.pedal.position": "DISC_SIG_BRAKE",
+    "brake.pressure": "DISC_SIG_BRAKE",
+    "brake.pressure.front": "DISC_SIG_BRAKE",
+    "brake.pressure.rear": "DISC_SIG_BRAKE",
+    "transmission.gear.selected": "DISC_SIG_GEAR",
+    "transmission.gear.requested": "DISC_SIG_GEAR",
+    "vehicle.speed": "DISC_SIG_WHEEL_SPEED",
+    "wheel.speed": "DISC_SIG_WHEEL_SPEED",
+    "wheel.speed.front_left": "DISC_SIG_WHEEL_SPEED",
+    "wheel.speed.front_right": "DISC_SIG_WHEEL_SPEED",
+    "wheel.speed.rear_left": "DISC_SIG_WHEEL_SPEED",
+    "wheel.speed.rear_right": "DISC_SIG_WHEEL_SPEED",
 }
 
-SG_RE = re.compile(
-    r'^ SG_\s+([^ :]+)\s*:\s*(\d+)\|(\d+)@(\d)([+-])\s*'
-    r'\(([^,]+),([^)]+)\)\s*\[([^|]+)\|([^\]]+)\]\s*"([^"]*)"'
-)
-BO_RE = re.compile(r"^BO_\s+(\d+)\s+[^:]+:\s+(\d+)")
 
-
-def signal_enum(name: str) -> str | None:
-    if name in FAMILY_MAP:
-        return FAMILY_MAP[name]
-    if name.startswith("Brake_Position") or name.startswith("Brake_Pressure"):
-        return "DISC_SIG_BRAKE"
-    if name.startswith("Wheel_Speed_") or name.startswith("Indicated_Vehicle_Speed_"):
-        return "DISC_SIG_WHEEL_SPEED"
-    return None
+def signal_enum(canonical_id: str | None) -> str | None:
+    if not canonical_id:
+        return None
+    return CANONICAL_MAP.get(canonical_id)
 
 
 def c_string(value: str) -> str:
@@ -52,45 +51,137 @@ def c_string(value: str) -> str:
     return "".join(out)
 
 
-def parse_dbcs(dbcs_dir: Path):
+def number_string(value) -> str:
+    if value is None:
+        return "0"
+    if isinstance(value, bool):
+        return "1" if value else "0"
+    if isinstance(value, Decimal):
+        s = format(value, "f")
+    elif isinstance(value, int):
+        s = str(value)
+    elif isinstance(value, float):
+        s = format(value, ".12g")
+    else:
+        s = str(value)
+
+    if "." in s:
+        s = s.rstrip("0").rstrip(".")
+    if s in ("", "-0"):
+        return "0"
+    return s
+
+
+def int_or_none(value) -> int | None:
+    if value is None:
+        return None
+    if isinstance(value, bool):
+        return int(value)
+    if isinstance(value, int):
+        return value
+    if isinstance(value, Decimal):
+        return int(value)
+    if isinstance(value, str):
+        s = value.strip()
+        if not s:
+            return None
+        base = 16 if s.lower().startswith("0x") else 10
+        return int(s, base)
+    return int(value)
+
+
+def load_vsp(path: Path):
+    return json.loads(path.read_text(encoding="utf-8"),
+                      parse_float=Decimal,
+                      parse_int=int)
+
+
+def iter_vsp_files(path: Path):
+    if path.is_file():
+        if path.suffix == ".vsp":
+            yield path
+        return
+    yield from sorted(path.rglob("*.vsp"))
+
+
+def build_frame_dlc_map(profile: dict) -> dict[tuple[str | None, int], int]:
+    frame_dlcs: dict[tuple[str | None, int], int] = {}
+    for frame in profile.get("can_frames", []) or []:
+        if not isinstance(frame, dict):
+            continue
+        frame_id = int_or_none(frame.get("frame_id"))
+        dlc = int_or_none(frame.get("dlc"))
+        if frame_id is None or dlc is None:
+            continue
+        bus = frame.get("bus")
+        frame_dlcs[(bus, frame_id)] = dlc
+        frame_dlcs.setdefault((None, frame_id), dlc)
+    return frame_dlcs
+
+
+def inferred_dlc(start_bit: int, bit_length: int, byte_order: int) -> int:
+    bit = start_bit
+    max_byte = 0
+    for _ in range(bit_length):
+        if bit >= 0:
+            max_byte = max(max_byte, bit // 8)
+        bit = bit + 1 if byte_order == 1 else (bit + 15 if bit % 8 == 0 else bit - 1)
+    return min(max_byte + 1, 8)
+
+
+def parse_vsps(profiles_path: Path):
     support = collections.Counter()
 
-    for path in sorted(dbcs_dir.rglob("*.dbc")):
-        current_can_id: int | None = None
-        current_dlc: int | None = None
-        for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
-            bo = BO_RE.match(line)
-            if bo:
-                current_can_id = int(bo.group(1))
-                current_dlc = int(bo.group(2))
+    for path in iter_vsp_files(profiles_path):
+        profile = load_vsp(path)
+        frame_dlcs = build_frame_dlc_map(profile)
+
+        for signal in profile.get("signals", []) or []:
+            if not isinstance(signal, dict):
+                continue
+            acquisition = signal.get("acquisition") or {}
+            if acquisition.get("type") != "can_frame":
                 continue
 
-            if current_can_id is None or current_dlc is None:
-                continue
-
-            sg = SG_RE.match(line)
-            if not sg:
-                continue
-
-            name = sg.group(1).strip()
-            sig_enum = signal_enum(name)
+            canonical = signal.get("canonical") or {}
+            sig_enum = signal_enum(canonical.get("id"))
             if sig_enum is None:
                 continue
 
+            decode = signal.get("decode") or {}
+            frame_id = int_or_none(acquisition.get("frame_id"))
+            start_bit = int_or_none(decode.get("start_bit"))
+            bit_length = int_or_none(decode.get("bit_length"))
+            if frame_id is None or start_bit is None or bit_length is None:
+                continue
+
+            byte_order_name = str(decode.get("byte_order") or "")
+            if byte_order_name in ("little_endian", "little", "intel"):
+                byte_order = 1
+            elif byte_order_name in ("big_endian", "big", "motorola"):
+                byte_order = 0
+            else:
+                continue
+
+            bus = acquisition.get("bus")
+            dlc = frame_dlcs.get((bus, frame_id)) or frame_dlcs.get((None, frame_id))
+            if dlc is None:
+                dlc = inferred_dlc(start_bit, bit_length, byte_order)
+
             key = (
                 sig_enum,
-                current_can_id,
-                current_dlc,
-                int(sg.group(2)),
-                int(sg.group(3)),
-                int(sg.group(4)),
-                sg.group(5),
-                name,
-                sg.group(6).strip(),
-                sg.group(7).strip(),
-                sg.group(8).strip(),
-                sg.group(9).strip(),
-                sg.group(10),
+                frame_id,
+                dlc,
+                start_bit,
+                bit_length,
+                byte_order,
+                "-" if decode.get("signed") else "+",
+                str(signal.get("name") or canonical.get("id") or "Signal"),
+                number_string(decode.get("factor", 1)),
+                number_string(decode.get("offset", 0)),
+                number_string(decode.get("minimum", 0)),
+                number_string(decode.get("maximum", 0)),
+                str(decode.get("unit") or canonical.get("preferred_unit") or ""),
             )
             support[key] += 1
 
@@ -114,11 +205,11 @@ def parse_dbcs(dbcs_dir: Path):
 def emit_header(rows) -> str:
     lines = [
         "/* Auto-generated by tools/gen_can_discover_priors.py. */",
-        "/* Do not edit manually; regenerate from the dbcs directory. */",
+        "/* Do not edit manually; regenerate from VSP profiles. */",
         "#ifndef CAN_DISCOVER_PRIORS_H",
         "#define CAN_DISCOVER_PRIORS_H",
         "",
-        "static const disc_dbc_prior_t s_dbc_priors[] = {",
+        "static const disc_discover_prior_t s_can_discover_priors[] = {",
     ]
 
     for row in rows:
@@ -163,7 +254,7 @@ def emit_header(rows) -> str:
         [
             "};",
             "",
-            "#define DISC_DBC_PRIOR_COUNT ((int)(sizeof(s_dbc_priors) / sizeof(s_dbc_priors[0])))",
+            "#define DISC_CAN_DISCOVER_PRIOR_COUNT ((int)(sizeof(s_can_discover_priors) / sizeof(s_can_discover_priors[0])))",
             "",
             "#endif",
         ]
@@ -172,10 +263,15 @@ def emit_header(rows) -> str:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(
-        description="Generate embedded can_discover DBC priors from dbcs/*.dbc."
+    default_profiles_dir = (
+        Path(__file__).resolve().parents[2]
+        / "vehicle-signal-profile"
+        / "profiles"
     )
-    parser.add_argument("dbcs_dir", nargs="?", default="dbcs")
+    parser = argparse.ArgumentParser(
+        description="Generate embedded can_discover priors from VSP profiles."
+    )
+    parser.add_argument("profiles_path", nargs="?", default=str(default_profiles_dir))
     parser.add_argument(
         "-o",
         "--output",
@@ -184,11 +280,11 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    dbcs_dir = Path(args.dbcs_dir)
-    if not dbcs_dir.is_dir():
-        parser.error(f"DBC directory not found: {dbcs_dir}")
+    profiles_path = Path(args.profiles_path)
+    if not profiles_path.exists():
+        parser.error(f"VSP profile path not found: {profiles_path}")
 
-    header = emit_header(parse_dbcs(dbcs_dir))
+    header = emit_header(parse_vsps(profiles_path))
     if args.output == "-":
         sys.stdout.write(header)
     else:

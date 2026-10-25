@@ -71,6 +71,7 @@ typedef struct {
     double actual_duration_s;
     int    total_frames;
     int    id_count;
+    int    dropped_frames;
     char   dump_file[64];
 } disc_phase_dump_meta_t;
 
@@ -769,6 +770,12 @@ static int64_t get_timestamp_ms(void) {
 static void disc_free_raw_phases(disc_raw_phase_t phases[DISC_NUM_PHASES]) {
     for (int i = 0; i < DISC_NUM_PHASES; i++) {
         disc_raw_phase_free(&phases[i]);
+    }
+}
+
+static void disc_free_phase_stats(disc_phase_t phases[DISC_NUM_PHASES]) {
+    for (int i = 0; i < DISC_NUM_PHASES; i++) {
+        disc_phase_free(&phases[i]);
     }
 }
 
@@ -4521,6 +4528,18 @@ static void disc_make_draft_dbc_path(char *buf, size_t len, const char *dump_dir
     strftime(buf, len, "ptcan_discover_draft_%Y%m%d_%H%M%S.dbc", &tm_now);
 }
 
+static void disc_make_draft_vsp_path(char *buf, size_t len, const char *dump_dir) {
+    if (dump_dir && dump_dir[0]) {
+        disc_join_path(buf, len, dump_dir, "ptcan_discover_draft.vsp");
+        return;
+    }
+
+    time_t now = time(NULL);
+    struct tm tm_now;
+    localtime_r(&now, &tm_now);
+    strftime(buf, len, "ptcan_discover_draft_%Y%m%d_%H%M%S.vsp", &tm_now);
+}
+
 static void disc_make_result_json_path(char *buf, size_t len, const char *dump_dir) {
     if (dump_dir && dump_dir[0]) {
         disc_join_path(buf, len, dump_dir, "result.json");
@@ -4577,6 +4596,7 @@ static void disc_write_result_json_object(FILE *f,
                                           disc_bus_mode_t bus_mode,
                                           const char *dump_dir,
                                           const char *dbc_path,
+                                          const char *vsp_path,
                                           const disc_result_t *result) {
     bool first = true;
 
@@ -4600,6 +4620,12 @@ static void disc_write_result_json_object(FILE *f,
         first = false;
     }
 
+    if (vsp_path && vsp_path[0]) {
+        fprintf(f, "%s  \"vsp_path\":", first ? "" : ",\n");
+        json_print_string(f, vsp_path);
+        first = false;
+    }
+
     for (int s = 0; result && s < DISC_SIG_COUNT; s++) {
         if (!result->found[s]) continue;
 
@@ -4610,8 +4636,17 @@ static void disc_write_result_json_object(FILE *f,
                 c->can_id, c->dlc, c->hz);
         if (c->byte_idx >= 0) fprintf(f, ",\"byte\":%d", c->byte_idx);
         if (c->byte2_idx >= 0) fprintf(f, ",\"byte2\":%d", c->byte2_idx);
+        if (c->start_bit >= 0 && c->bit_length > 0) {
+            fprintf(f, ",\"start_bit\":%d,\"bit_length\":%d,\"byte_order\":%d",
+                    c->start_bit, c->bit_length, c->byte_order);
+        }
         fprintf(f, ",\"score\":%.1f,\"confidence\":\"%s\"",
                 c->score, disc_confidence_name(c->confidence));
+        fprintf(f, ",\"evidence\":{\"phase\":%.1f,\"specificity\":%.1f,"
+                   "\"shape\":%.1f,\"prior\":%.1f,\"prior_support\":%d,"
+                   "\"ambiguity_margin\":%.1f}",
+                c->evidence_score, c->specificity_score, c->shape_score,
+                c->prior_score, c->prior_support, c->ambiguity_margin);
         if (c->byte2_idx >= 0 && c->endianness != DISC_ENDIAN_UNKNOWN) {
             fprintf(f, ",\"endian\":\"%s\"", disc_endian_name(c->endianness));
         }
@@ -4632,12 +4667,14 @@ static bool disc_write_result_json(const char *path,
                                    disc_bus_mode_t bus_mode,
                                    const char *dump_dir,
                                    const char *dbc_path,
+                                   const char *vsp_path,
                                    const disc_result_t *result) {
     if (!path) return false;
 
     FILE *f = fopen(path, "w");
     if (!f) return false;
-    disc_write_result_json_object(f, have_bus_mode, bus_mode, dump_dir, dbc_path, result);
+    disc_write_result_json_object(f, have_bus_mode, bus_mode, dump_dir,
+                                  dbc_path, vsp_path, result);
     fclose(f);
     return true;
 }
@@ -4650,6 +4687,7 @@ static bool disc_write_manifest(const char *path,
                                 bool have_bus_mode,
                                 disc_bus_mode_t bus_mode,
                                 const char *dbc_path,
+                                const char *vsp_path,
                                 const char *result_path,
                                 const disc_phase_dump_meta_t metas[DISC_NUM_PHASES]) {
     if (!path || !status || !metas) return false;
@@ -4676,6 +4714,9 @@ static bool disc_write_manifest(const char *path,
     fprintf(f, ",\n  \"dbc_path\":");
     if (dbc_path && dbc_path[0]) json_print_string(f, dbc_path);
     else fputs("null", f);
+    fprintf(f, ",\n  \"vsp_path\":");
+    if (vsp_path && vsp_path[0]) json_print_string(f, vsp_path);
+    else fputs("null", f);
     fprintf(f, ",\n  \"result_path\":");
     if (result_path && result_path[0]) json_print_string(f, result_path);
     else fputs("null", f);
@@ -4694,6 +4735,7 @@ static bool disc_write_manifest(const char *path,
         fprintf(f, ",\"actual_duration_s\":%.3f", meta->actual_duration_s);
         fprintf(f, ",\"frame_count\":%d", meta->total_frames);
         fprintf(f, ",\"id_count\":%d", meta->id_count);
+        fprintf(f, ",\"dropped_frames\":%d", meta->dropped_frames);
         fprintf(f, ",\"dump_file\":");
         if (meta->dump_file[0]) json_print_string(f, meta->dump_file);
         else fputs("null", f);
@@ -5629,6 +5671,14 @@ static void disc_print_candidate(const char *name, const disc_candidate_t *c) {
         fprintf(stderr, "%s  raw=[%d..%d]\n",
                 disc_sign_name(c->signedness), c->raw_min, c->raw_max);
     }
+    if (c->start_bit >= 0 && c->bit_length > 0) {
+        fprintf(stderr,
+                "                 bit=%d|%d@%d%c  evidence=%.1f specificity=%.1f shape=%.1f prior=%.1f margin=%.1f\n",
+                c->start_bit, c->bit_length, c->byte_order,
+                c->sign_char == '-' ? '-' : '+',
+                c->evidence_score, c->specificity_score, c->shape_score,
+                c->prior_score, c->ambiguity_margin);
+    }
 }
 
 static int cli_discover(const char *device, const char *dump_dir_override) {
@@ -5641,6 +5691,7 @@ static int cli_discover(const char *device, const char *dump_dir_override) {
     const char *monitor_cmd = g_stn_detected ? "STMA" : "ATMA";
     char dump_dir[DISC_PATH_MAX] = {0};
     char dbc_path[DISC_PATH_MAX] = {0};
+    char vsp_path[DISC_PATH_MAX] = {0};
     char result_path[DISC_PATH_MAX] = {0};
     char manifest_path[DISC_PATH_MAX] = {0};
     bool dump_enabled = false;
@@ -5665,17 +5716,8 @@ static int cli_discover(const char *device, const char *dump_dir_override) {
         disc_make_result_json_path(result_path, sizeof(result_path), dump_dir);
     }
 
-    /* Keep exclusions empty so multiple signals can share one CAN message. */
-    uint32_t excl[DISC_SIG_COUNT] = {0};
-    int excl_count = 0;
-
-    /* Confirmed results */
     disc_result_t result;
-    memset(&result, 0, sizeof(result));
-    for (int i = 0; i < DISC_SIG_COUNT; i++) {
-        result.signals[i].byte_idx = -1;
-        result.signals[i].byte2_idx = -1;
-    }
+    disc_result_init(&result);
 
     /* === Phase 1: Baseline (mandatory) === */
     fprintf(stderr, "\n=== Phase 1/%d: Baseline ===\n", DISC_NUM_PHASES);
@@ -5692,9 +5734,13 @@ static int cli_discover(const char *device, const char *dump_dir_override) {
                             &raw_phases[DISC_PHASE_BASELINE],
                             s_disc_phases[0].duration_s, monitor_cmd))
         goto disconnected;
-    fprintf(stderr, " %d frames, %d CAN IDs\n",
+    fprintf(stderr, " %d frames, %d CAN IDs",
             phases[DISC_PHASE_BASELINE].total_frames,
             phases[DISC_PHASE_BASELINE].id_count);
+    if (phases[DISC_PHASE_BASELINE].dropped_frames > 0) {
+        fprintf(stderr, " (%d dropped)", phases[DISC_PHASE_BASELINE].dropped_frames);
+    }
+    fprintf(stderr, "\n");
 
     /* Detect bus mode (D-CAN gateway vs direct PT-CAN) */
     bus_mode = disc_detect_bus_mode(&phases[DISC_PHASE_BASELINE]);
@@ -5708,6 +5754,8 @@ static int cli_discover(const char *device, const char *dump_dir_override) {
     phase_meta[DISC_PHASE_BASELINE].actual_duration_s = phases[DISC_PHASE_BASELINE].duration_s;
     phase_meta[DISC_PHASE_BASELINE].total_frames = phases[DISC_PHASE_BASELINE].total_frames;
     phase_meta[DISC_PHASE_BASELINE].id_count = phases[DISC_PHASE_BASELINE].id_count;
+    phase_meta[DISC_PHASE_BASELINE].dropped_frames =
+        phases[DISC_PHASE_BASELINE].dropped_frames;
     if (dump_enabled) {
         char phase_path[DISC_PATH_MAX];
         disc_make_phase_dump_path(phase_path, sizeof(phase_path),
@@ -5748,12 +5796,17 @@ static int cli_discover(const char *device, const char *dump_dir_override) {
         if (!disc_capture_phase(active, &raw_phases[p],
                                 s_disc_phases[p].duration_s, monitor_cmd))
             goto disconnected;
-        fprintf(stderr, " %d frames, %d CAN IDs\n",
+        fprintf(stderr, " %d frames, %d CAN IDs",
                 active->total_frames, active->id_count);
+        if (active->dropped_frames > 0) {
+            fprintf(stderr, " (%d dropped)", active->dropped_frames);
+        }
+        fprintf(stderr, "\n");
         phase_meta[p].captured = true;
         phase_meta[p].actual_duration_s = active->duration_s;
         phase_meta[p].total_frames = active->total_frames;
         phase_meta[p].id_count = active->id_count;
+        phase_meta[p].dropped_frames = active->dropped_frames;
         if (dump_enabled) {
             char phase_path[DISC_PATH_MAX];
             disc_make_phase_dump_path(phase_path, sizeof(phase_path), dump_dir, p);
@@ -5765,95 +5818,10 @@ static int cli_discover(const char *device, const char *dump_dir_override) {
             }
         }
 
-        /* Analyze this phase */
-        disc_signal_t sig;
-        if      (p == DISC_PHASE_STEERING)    sig = DISC_SIG_STEERING;
-        else if (p == DISC_PHASE_THROTTLE)    sig = DISC_SIG_THROTTLE;
-        else if (p == DISC_PHASE_BRAKE)       sig = DISC_SIG_BRAKE;
-        else if (p == DISC_PHASE_GEAR)        sig = DISC_SIG_GEAR;
-        else if (p == DISC_PHASE_WHEEL_SPEED) sig = DISC_SIG_WHEEL_SPEED;
-        else continue;
-
-        disc_candidate_t cand = {0};
-        cand.byte_idx = -1;
-        cand.byte2_idx = -1;
-
-        /* For throttle phase: also gets RPM */
-        disc_candidate_t rpm_cand = {0};
-        rpm_cand.byte_idx = -1;
-        rpm_cand.byte2_idx = -1;
-        bool rpm_det = false;
-
-        bool found = disc_classify_with_raw(&phases[DISC_PHASE_BASELINE],
-                                            &raw_phases[DISC_PHASE_BASELINE],
-                                            active, &raw_phases[p], sig,
-                                            excl, excl_count, &cand,
-                                            &rpm_cand, &rpm_det);
-
-        /* Characterize detected signals */
-        if (found) disc_characterize(active, &cand);
-        if (rpm_det) disc_characterize(active, &rpm_cand);
-
-        if (sig == DISC_SIG_THROTTLE) {
-            /* Show RPM result first */
-            if (rpm_det) {
-                disc_print_candidate("rpm", &rpm_cand);
-                fprintf(stderr, "  Include rpm? [y/n] > ");
-                fflush(stderr);
-                int c2 = disc_read_char();
-                if (!g_running) goto interrupted;
-                if (!g_ble.isConnected) goto disconnected;
-                if (c2 == 'y' || c2 == 'Y' || c2 == '\n') {
-                    result.signals[DISC_SIG_RPM] = rpm_cand;
-                    result.found[DISC_SIG_RPM] = true;
-                    fprintf(stderr, "  -> rpm included.\n");
-                } else {
-                    fprintf(stderr, "  -> rpm excluded.\n");
-                }
-            } else {
-                fprintf(stderr, "    rpm          not detected\n");
-            }
-
-            /* Show throttle result */
-            if (found) {
-                disc_print_candidate("throttle", &cand);
-                fprintf(stderr, "  Include throttle? [y/n] > ");
-                fflush(stderr);
-                int c2 = disc_read_char();
-                if (!g_running) goto interrupted;
-                if (!g_ble.isConnected) goto disconnected;
-                if (c2 == 'y' || c2 == 'Y' || c2 == '\n') {
-                    result.signals[DISC_SIG_THROTTLE] = cand;
-                    result.found[DISC_SIG_THROTTLE] = true;
-                    fprintf(stderr, "  -> throttle included.\n");
-                } else {
-                    fprintf(stderr, "  -> throttle excluded.\n");
-                }
-            } else {
-                fprintf(stderr, "    throttle     not detected\n");
-            }
-        } else {
-            /* Single signal phase */
-            const char *sname = disc_signal_name(sig);
-            if (found) {
-                disc_print_candidate(sname, &cand);
-                fprintf(stderr, "  Include %s? [y/n] > ", sname);
-                fflush(stderr);
-                int c2 = disc_read_char();
-                if (!g_running) goto interrupted;
-                if (!g_ble.isConnected) goto disconnected;
-                if (c2 == 'y' || c2 == 'Y' || c2 == '\n') {
-                    result.signals[sig] = cand;
-                    result.found[sig] = true;
-                    fprintf(stderr, "  -> %s included.\n", sname);
-                } else {
-                    fprintf(stderr, "  -> %s excluded.\n", sname);
-                }
-            } else {
-                fprintf(stderr, "    %-12s not detected\n", sname);
-            }
-        }
     }
+
+    fprintf(stderr, "\n[INFO] Analyzing captures with automatic scoring...\n");
+    disc_analyze_with_raw(phases, raw_phases, &result);
 
     disc_make_draft_dbc_path(dbc_path, sizeof(dbc_path),
                              dump_enabled ? dump_dir : NULL);
@@ -5864,9 +5832,19 @@ static int cli_discover(const char *device, const char *dump_dir_override) {
         fprintf(stderr, "[WARN] Failed to write draft DBC: %s\n", dbc_path);
     }
 
+    disc_make_draft_vsp_path(vsp_path, sizeof(vsp_path),
+                             dump_enabled ? dump_dir : NULL);
+    bool vsp_written = disc_write_draft_vsp(vsp_path, phases, raw_phases, &result);
+    if (vsp_written) {
+        cli_log("Draft VSP written: %s", vsp_path);
+    } else {
+        fprintf(stderr, "[WARN] Failed to write draft VSP: %s\n", vsp_path);
+    }
+
     if (dump_enabled) {
         if (!disc_write_result_json(result_path, have_bus_mode, bus_mode,
-                                    dump_dir, dbc_written ? dbc_path : NULL, &result)) {
+                                    dump_dir, dbc_written ? dbc_path : NULL,
+                                    vsp_written ? vsp_path : NULL, &result)) {
             fprintf(stderr, "[WARN] Failed to write result JSON: %s\n", result_path);
             result_path[0] = '\0';
         }
@@ -5874,16 +5852,18 @@ static int cli_discover(const char *device, const char *dump_dir_override) {
                                  connected_name, monitor_cmd,
                                  have_bus_mode, bus_mode,
                                  dbc_written ? dbc_path : NULL,
+                                 vsp_written ? vsp_path : NULL,
                                  result_path[0] ? result_path : NULL,
                                  phase_meta)) {
             fprintf(stderr, "[WARN] Failed to write manifest: %s\n", manifest_path);
         }
     }
 
-    /* JSON output (stdout) — only confirmed signals */
+    /* JSON output (stdout) — automatically inferred signals */
     disc_write_result_json_object(stdout, have_bus_mode, bus_mode,
                                   dump_enabled ? dump_dir : NULL,
-                                  dbc_written ? dbc_path : NULL, &result);
+                                  dbc_written ? dbc_path : NULL,
+                                  vsp_written ? vsp_path : NULL, &result);
 
     /* Summary to stderr */
     fprintf(stderr, "\n=== Final Results ===\n");
@@ -5895,6 +5875,7 @@ static int cli_discover(const char *device, const char *dump_dir_override) {
     }
 
     disc_free_raw_phases(raw_phases);
+    disc_free_phase_stats(phases);
     [g_ble disconnect];
     g_interrupt = NO;
     return 0;
@@ -5904,9 +5885,10 @@ interrupted:
     if (dump_enabled) {
         disc_write_manifest(manifest_path, "interrupted", device,
                             connected_name, monitor_cmd, have_bus_mode, bus_mode,
-                            NULL, NULL, phase_meta);
+                            NULL, NULL, NULL, phase_meta);
     }
     disc_free_raw_phases(raw_phases);
+    disc_free_phase_stats(phases);
     [g_ble disconnect];
     return 130;
 
@@ -5915,9 +5897,10 @@ disconnected:
     if (dump_enabled) {
         disc_write_manifest(manifest_path, "disconnected", device,
                             connected_name, monitor_cmd, have_bus_mode, bus_mode,
-                            NULL, NULL, phase_meta);
+                            NULL, NULL, NULL, phase_meta);
     }
     disc_free_raw_phases(raw_phases);
+    disc_free_phase_stats(phases);
     return 1;
 }
 

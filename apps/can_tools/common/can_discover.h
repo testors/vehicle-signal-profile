@@ -12,8 +12,8 @@
  *   3. For each CAN ID + byte, compute change score =
  *      max(0, active_range - baseline_range) +
  *      max(0, active_unique - baseline_unique) * 0.5
- *   4. Classify signals by highest-scoring CAN IDs per phase,
- *      excluding previously identified IDs
+ *   4. Classify signals by combining phase evidence, bitfield shape, phase
+ *      specificity, and VSP corpus priors
  */
 
 #pragma once
@@ -30,8 +30,9 @@ extern "C" {
  * Constants
  ******************************************************************************/
 
-/** Maximum CAN IDs tracked per phase */
-#define DISC_MAX_IDS        256
+/** Initial / maximum CAN IDs tracked per phase */
+#define DISC_INITIAL_ID_CAPACITY 256
+#define DISC_MAX_IDS             4096
 
 /** Maximum CAN data bytes */
 #define DISC_MAX_DLC        8
@@ -97,10 +98,13 @@ typedef struct {
 
 /** Accumulated statistics for one capture phase */
 typedef struct {
-    disc_id_t   ids[DISC_MAX_IDS];  /**< Per-ID statistics */
+    disc_id_t  *ids;                /**< Per-ID statistics */
     int         id_count;           /**< Number of unique CAN IDs seen */
+    int         id_capacity;        /**< Allocated ID slots */
     double      duration_s;         /**< Capture duration in seconds */
     int         total_frames;       /**< Total frames captured */
+    int         dropped_frames;     /**< Frames dropped because ID storage was full */
+    bool        id_overflow;        /**< Whether any IDs/frames were dropped */
 } disc_phase_t;
 
 /*******************************************************************************
@@ -152,6 +156,17 @@ typedef struct {
     disc_sign_t   signedness;   /**< Signed/unsigned */
     int32_t       raw_min;      /**< Observed minimum raw value */
     int32_t       raw_max;      /**< Observed maximum raw value */
+    /* Selected bitfield / evidence (filled by automatic discovery when available) */
+    int           start_bit;    /**< DBC/VSP start bit (-1 if unknown) */
+    int           bit_length;   /**< Bit length (0 if unknown) */
+    int           byte_order;   /**< DBC byte order: 0=big, 1=little, -1 unknown */
+    char          sign_char;    /**< '+' unsigned, '-' signed, '?' unknown */
+    double        evidence_score;     /**< Phase-local evidence score */
+    double        specificity_score;  /**< Target-phase-vs-other-phase score */
+    double        shape_score;        /**< Bitfield/shape score */
+    double        prior_score;        /**< VSP corpus prior score */
+    double        ambiguity_margin;   /**< Best score minus runner-up */
+    int           prior_support;      /**< Matched VSP prior support count */
 } disc_candidate_t;
 
 /** Final discovery results for all signals */
@@ -176,6 +191,11 @@ typedef struct {
  * @param phase Phase structure to initialize
  */
 void disc_phase_init(disc_phase_t *phase);
+
+/**
+ * @brief Free storage owned by a phase
+ */
+void disc_phase_free(disc_phase_t *phase);
 
 /**
  * @brief Initialize a discovery result container
@@ -360,6 +380,17 @@ bool disc_write_draft_dbc(const char *path,
                           const disc_result_t *result);
 
 /**
+ * @brief Write a draft VSP file from discovered signals
+ *
+ * The generated profile is a machine-generated starting point. It includes
+ * discovery evidence alongside CAN frame and signal definitions.
+ */
+bool disc_write_draft_vsp(const char *path,
+                          const disc_phase_t phases[DISC_NUM_PHASES],
+                          const disc_raw_phase_t raw_phases[DISC_NUM_PHASES],
+                          const disc_result_t *result);
+
+/**
  * @brief Render a draft DBC into a newly allocated string
  *
  * The returned buffer is allocated with malloc(); the caller owns it and must
@@ -372,6 +403,14 @@ bool disc_write_draft_dbc(const char *path,
  * @return malloc-owned DBC text, or NULL on failure
  */
 char *disc_render_draft_dbc(const disc_phase_t phases[DISC_NUM_PHASES],
+                            const disc_raw_phase_t raw_phases[DISC_NUM_PHASES],
+                            const disc_result_t *result,
+                            size_t *length_out);
+
+/**
+ * @brief Render a draft VSP into a newly allocated string
+ */
+char *disc_render_draft_vsp(const disc_phase_t phases[DISC_NUM_PHASES],
                             const disc_raw_phase_t raw_phases[DISC_NUM_PHASES],
                             const disc_result_t *result,
                             size_t *length_out);

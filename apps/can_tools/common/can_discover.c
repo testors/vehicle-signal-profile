@@ -36,11 +36,11 @@ typedef struct {
     char     max_val[DISC_PRIOR_VALUE_LEN];
     char     unit[DISC_PRIOR_UNIT_LEN];
     int      support_count;
-} disc_dbc_prior_t;
+} disc_discover_prior_t;
 
 typedef struct {
     bool             matched;
-    disc_dbc_prior_t prior;
+    disc_discover_prior_t prior;
 } disc_prior_match_t;
 
 typedef struct {
@@ -80,6 +80,7 @@ typedef struct {
 } disc_string_builder_t;
 
 static int dbc_big_endian_next_bit(int bit);
+static int signal_phase_index(disc_signal_t sig);
 static const char *signal_dbc_name(disc_signal_t sig);
 static uint64_t field_bitmask(int start_bit, int bit_length, int byte_order);
 static void dbc_signal_layout(const disc_candidate_t *cand,
@@ -100,6 +101,97 @@ static int best_multi_raw_guesses(disc_signal_t signal,
                                   int max_guess_out);
 
 #include "can_discover_priors.h"
+
+static double clamp_score(double value, double lo, double hi) {
+    if (value < lo) return lo;
+    if (value > hi) return hi;
+    return value;
+}
+
+static bool prior_touches_layout(const disc_discover_prior_t *prior,
+                                 int start_bit,
+                                 int bit_length,
+                                 int byte_order) {
+    if (!prior || start_bit < 0 || bit_length <= 0) return false;
+    uint64_t a = field_bitmask(prior->start_bit, prior->bit_length, prior->byte_order);
+    uint64_t b = field_bitmask(start_bit, bit_length, byte_order);
+    return (a & b) != 0;
+}
+
+static double score_prior_layout(disc_signal_t signal,
+                                 uint32_t can_id,
+                                 uint8_t dlc,
+                                 int start_bit,
+                                 int bit_length,
+                                 int byte_order,
+                                 char sign_char,
+                                 int *support_out) {
+    double best = 0.0;
+    int best_support = 0;
+
+    for (int i = 0; i < DISC_CAN_DISCOVER_PRIOR_COUNT; i++) {
+        const disc_discover_prior_t *prior = &s_can_discover_priors[i];
+        if (prior->signal != signal) continue;
+        if (prior->can_id != can_id) continue;
+
+        double score = 8.0;
+        if (prior->dlc == dlc) score += 2.0;
+
+        if (start_bit >= 0 && bit_length > 0) {
+            if (prior->start_bit == start_bit) score += 7.0;
+            if (prior->bit_length == bit_length) score += 7.0;
+            if (prior->byte_order == byte_order) score += 4.0;
+            if (prior->sign_char == sign_char) score += 2.0;
+            if (prior->start_bit == start_bit &&
+                prior->bit_length == bit_length &&
+                prior->byte_order == byte_order) {
+                score += 14.0;
+            } else if (prior_touches_layout(prior, start_bit, bit_length, byte_order)) {
+                score += 5.0;
+            }
+        }
+
+        score += (prior->support_count > 12) ? 12.0 : (double)prior->support_count;
+        if (score > best) {
+            best = score;
+            best_support = prior->support_count;
+        }
+    }
+
+    if (support_out) *support_out = best_support;
+    return best;
+}
+
+static void candidate_apply_raw_guess(disc_candidate_t *cand,
+                                      const disc_raw_guess_t *guess) {
+    if (!cand || !guess) return;
+
+    cand->start_bit = guess->start_bit;
+    cand->bit_length = guess->bit_length;
+    cand->byte_order = guess->byte_order;
+    cand->sign_char = guess->sign_char;
+    cand->raw_min = guess->raw_min;
+    cand->raw_max = guess->raw_max;
+    cand->signedness = (guess->sign_char == '-') ? DISC_SIGN_SIGNED
+                                                  : DISC_SIGN_UNSIGNED;
+    cand->endianness = (guess->byte_order == 0) ? DISC_ENDIAN_BIG
+                                                : DISC_ENDIAN_LITTLE;
+
+    if (guess->bit_length <= 8) {
+        cand->byte_idx = guess->start_bit / 8;
+        cand->byte2_idx = -1;
+    } else {
+        uint64_t mask = guess->bitmask;
+        int first = -1, last = -1;
+        for (int b = 0; b < DISC_MAX_DLC; b++) {
+            if ((mask & (0xFFULL << (b * 8))) == 0) continue;
+            if (first < 0) first = b;
+            last = b;
+        }
+        if (first >= 0) cand->byte_idx = first;
+        if (last >= 0 && last != first) cand->byte2_idx = last;
+    }
+}
 
 const char *disc_signal_name(disc_signal_t sig) {
     if (sig < 0 || sig >= DISC_SIG_COUNT) return "unknown";
@@ -197,11 +289,29 @@ void disc_result_init(disc_result_t *result) {
     for (int i = 0; i < DISC_SIG_COUNT; i++) {
         result->signals[i].byte_idx = -1;
         result->signals[i].byte2_idx = -1;
+        result->signals[i].start_bit = -1;
+        result->signals[i].bit_length = 0;
+        result->signals[i].byte_order = -1;
+        result->signals[i].sign_char = '?';
     }
 }
 
 void disc_phase_init(disc_phase_t *phase) {
     memset(phase, 0, sizeof(*phase));
+    phase->id_capacity = DISC_INITIAL_ID_CAPACITY;
+    phase->ids = (disc_id_t *)calloc((size_t)phase->id_capacity, sizeof(*phase->ids));
+    if (!phase->ids) {
+        phase->id_capacity = 0;
+        phase->id_overflow = true;
+    }
+}
+
+void disc_phase_free(disc_phase_t *phase) {
+    if (!phase) return;
+    free(phase->ids);
+    phase->ids = NULL;
+    phase->id_count = 0;
+    phase->id_capacity = 0;
 }
 
 /**
@@ -225,7 +335,23 @@ static int find_or_create_id(disc_phase_t *phase, uint32_t can_id, uint8_t dlc) 
             return i;
         }
     }
-    if (phase->id_count >= DISC_MAX_IDS) return -1;
+    if (phase->id_count >= phase->id_capacity) {
+        if (phase->id_capacity >= DISC_MAX_IDS) return -1;
+
+        int new_capacity = phase->id_capacity > 0
+                           ? phase->id_capacity * 2
+                           : DISC_INITIAL_ID_CAPACITY;
+        if (new_capacity > DISC_MAX_IDS) new_capacity = DISC_MAX_IDS;
+
+        disc_id_t *new_ids = (disc_id_t *)realloc(phase->ids,
+                                                  (size_t)new_capacity * sizeof(*phase->ids));
+        if (!new_ids) return -1;
+
+        memset(new_ids + phase->id_capacity, 0,
+               (size_t)(new_capacity - phase->id_capacity) * sizeof(*phase->ids));
+        phase->ids = new_ids;
+        phase->id_capacity = new_capacity;
+    }
 
     int idx = phase->id_count++;
     disc_id_t *id = &phase->ids[idx];
@@ -246,7 +372,11 @@ void disc_phase_add_frame(disc_phase_t *phase, uint32_t can_id,
     if (dlc > DISC_MAX_DLC) dlc = DISC_MAX_DLC;
 
     int idx = find_or_create_id(phase, can_id, dlc);
-    if (idx < 0) return;
+    if (idx < 0) {
+        phase->dropped_frames++;
+        phase->id_overflow = true;
+        return;
+    }
 
     disc_id_t *id = &phase->ids[idx];
     id->frame_count++;
@@ -533,6 +663,16 @@ static void fill_candidate(disc_candidate_t *cand, const id_cmp_t *cmp) {
     cand->byte_idx = cmp->best_byte;
     cand->byte2_idx = -1;
     cand->score = cmp->total_score;
+    cand->start_bit = -1;
+    cand->bit_length = 0;
+    cand->byte_order = -1;
+    cand->sign_char = '?';
+    cand->evidence_score = cmp->total_score;
+    cand->specificity_score = 0.0;
+    cand->shape_score = 0.0;
+    cand->prior_score = 0.0;
+    cand->ambiguity_margin = 0.0;
+    cand->prior_support = 0;
 }
 
 static bool cmp_has_adjacent_pair(const id_cmp_t *cmp, double min_secondary_score) {
@@ -843,6 +983,15 @@ void disc_characterize(const disc_phase_t *active, disc_candidate_t *cand) {
         cand->signedness = DISC_SIGN_UNSIGNED;
         cand->raw_min = b->min_val;
         cand->raw_max = b->max_val;
+        if (cand->start_bit < 0) {
+            int start_bit, bit_length, byte_order;
+            char sign_char;
+            dbc_signal_layout(cand, &start_bit, &bit_length, &byte_order, &sign_char);
+            cand->start_bit = start_bit;
+            cand->bit_length = bit_length;
+            cand->byte_order = byte_order;
+            cand->sign_char = sign_char;
+        }
         return;
     }
 
@@ -894,6 +1043,16 @@ void disc_characterize(const disc_phase_t *active, disc_candidate_t *cand) {
     } else {
         cand->raw_min = u_min;
         cand->raw_max = u_max;
+    }
+
+    if (cand->start_bit < 0) {
+        int start_bit, bit_length, byte_order;
+        char sign_char;
+        dbc_signal_layout(cand, &start_bit, &bit_length, &byte_order, &sign_char);
+        cand->start_bit = start_bit;
+        cand->bit_length = bit_length;
+        cand->byte_order = byte_order;
+        cand->sign_char = sign_char;
     }
 }
 
@@ -970,6 +1129,264 @@ bool disc_classify(const disc_phase_t *baseline,
  * Main Analysis (Batch)
  ******************************************************************************/
 
+typedef struct {
+    disc_candidate_t cand;
+    double final_score;
+} disc_scored_candidate_t;
+
+static int cmp_scored_candidate_desc(const void *a, const void *b) {
+    const disc_scored_candidate_t *ca = (const disc_scored_candidate_t *)a;
+    const disc_scored_candidate_t *cb = (const disc_scored_candidate_t *)b;
+    if (ca->final_score > cb->final_score) return -1;
+    if (ca->final_score < cb->final_score) return 1;
+    if (ca->cand.prior_support > cb->cand.prior_support) return -1;
+    if (ca->cand.prior_support < cb->cand.prior_support) return 1;
+    return 0;
+}
+
+static void prepare_candidate_for_signal(disc_signal_t signal,
+                                         const id_cmp_t *cmp,
+                                         double hz_threshold,
+                                         disc_candidate_t *cand,
+                                         double *shape_hint_out) {
+    fill_candidate(cand, cmp);
+
+    double shape_hint = 0.0;
+    switch (signal) {
+    case DISC_SIG_STEERING:
+        if (cmp_has_adjacent_pair(cmp, 1.0)) {
+            candidate_use_adjacent_pair(cand, cmp);
+            shape_hint += 16.0;
+        }
+        if (cmp->changed_bytes >= 2) shape_hint += 6.0;
+        break;
+
+    case DISC_SIG_RPM:
+        if (cmp_has_adjacent_pair(cmp, 1.0)) {
+            candidate_use_adjacent_pair(cand, cmp);
+            shape_hint += 10.0;
+        }
+        if (cmp->changed_bytes >= 2) shape_hint += 12.0;
+        if (cmp->hz >= hz_threshold) shape_hint += 8.0;
+        break;
+
+    case DISC_SIG_THROTTLE:
+        if (cmp->changed_bytes <= 2) shape_hint += 10.0;
+        if (cmp->dlc <= 8) shape_hint += 2.0;
+        break;
+
+    case DISC_SIG_BRAKE:
+        if (cmp_has_adjacent_pair(cmp, 2.0)) {
+            candidate_use_adjacent_pair(cand, cmp);
+            shape_hint += 8.0;
+        }
+        if (cmp->changed_bytes <= 3) shape_hint += 4.0;
+        break;
+
+    case DISC_SIG_GEAR:
+        for (int b = 0; b < cmp->byte_count; b++) {
+            const byte_cmp_t *bc = &cmp->bytes[b];
+            if (bc->is_counter || bc->is_constant) continue;
+            if (bc->active_unique >= 3 && bc->active_unique <= 8 &&
+                bc->baseline_unique <= 2 && bc->score > 0) {
+                cand->byte_idx = b;
+                cand->byte2_idx = -1;
+                shape_hint += 24.0;
+                break;
+            }
+        }
+        break;
+
+    case DISC_SIG_WHEEL_SPEED:
+        if (cmp_has_adjacent_pair(cmp, 1.0)) {
+            candidate_use_adjacent_pair(cand, cmp);
+            shape_hint += 8.0;
+        }
+        if (cmp->changed_bytes >= 4) shape_hint += 16.0;
+        else if (cmp->changed_bytes >= 2) shape_hint += 8.0;
+        if (cmp->hz >= hz_threshold) shape_hint += 8.0;
+        break;
+
+    default:
+        break;
+    }
+
+    if (shape_hint_out) *shape_hint_out = shape_hint;
+}
+
+static double compare_specificity_for_signal(disc_signal_t signal,
+                                             const disc_phase_t phases[DISC_NUM_PHASES],
+                                             const disc_raw_phase_t *raw_phases,
+                                             uint32_t can_id,
+                                             double target_score) {
+    int target_phase = signal_phase_index(signal);
+    const disc_phase_t *baseline = &phases[DISC_PHASE_BASELINE];
+    const disc_raw_phase_t *baseline_raw =
+        raw_phases ? &raw_phases[DISC_PHASE_BASELINE] : NULL;
+    double max_other = 0.0;
+
+    for (int p = 1; p < DISC_NUM_PHASES; p++) {
+        if (p == target_phase) continue;
+
+        id_cmp_t other;
+        const disc_raw_phase_t *active_raw = raw_phases ? &raw_phases[p] : NULL;
+        if (compare_id(baseline, &phases[p], baseline_raw, active_raw,
+                       can_id, &other) && other.total_score > max_other) {
+            max_other = other.total_score;
+        }
+    }
+
+    double delta = target_score - max_other;
+    double score = clamp_score(delta, -30.0, 35.0);
+    if (target_score > 0.0) {
+        if (max_other <= target_score * 0.25) score += 12.0;
+        else if (max_other <= target_score * 0.50) score += 6.0;
+        else if (max_other >= target_score * 0.90) score -= 12.0;
+    }
+    return score;
+}
+
+static double candidate_evidence_score(disc_signal_t signal,
+                                       const id_cmp_t *cmp,
+                                       double hz_threshold) {
+    double score = clamp_score(cmp->total_score, 0.0, 80.0);
+
+    switch (signal) {
+    case DISC_SIG_RPM:
+        if (cmp->hz >= hz_threshold) score += 10.0;
+        if (cmp->changed_bytes >= 2) score += 10.0;
+        break;
+    case DISC_SIG_THROTTLE:
+        if (cmp->changed_bytes <= 2) score += 8.0;
+        if (cmp->changed_bytes > 4) score -= 10.0;
+        break;
+    case DISC_SIG_GEAR:
+        if (cmp->hz >= hz_threshold * 4.0) score -= 4.0;
+        break;
+    case DISC_SIG_WHEEL_SPEED:
+        if (cmp->hz >= hz_threshold) score += 10.0;
+        break;
+    default:
+        break;
+    }
+
+    return score;
+}
+
+static bool select_signal_automatic(const disc_phase_t phases[DISC_NUM_PHASES],
+                                    const disc_raw_phase_t *raw_phases,
+                                    disc_signal_t signal,
+                                    double hz_threshold,
+                                    disc_candidate_t *out) {
+    if (!phases || !out) return false;
+
+    int phase_idx = signal_phase_index(signal);
+    if (phase_idx <= DISC_PHASE_BASELINE || phase_idx >= DISC_NUM_PHASES) return false;
+
+    const disc_phase_t *baseline = &phases[DISC_PHASE_BASELINE];
+    const disc_phase_t *active = &phases[phase_idx];
+    const disc_raw_phase_t *baseline_raw =
+        raw_phases ? &raw_phases[DISC_PHASE_BASELINE] : NULL;
+    const disc_raw_phase_t *active_raw = raw_phases ? &raw_phases[phase_idx] : NULL;
+
+    id_cmp_t *cmp_buf = (id_cmp_t *)calloc(DISC_MAX_IDS, sizeof(*cmp_buf));
+    disc_scored_candidate_t *scored =
+        (disc_scored_candidate_t *)calloc(DISC_MAX_IDS, sizeof(*scored));
+    if (!cmp_buf || !scored) {
+        free(cmp_buf);
+        free(scored);
+        return false;
+    }
+
+    int cmp_count = compare_phases(baseline, active, baseline_raw, active_raw,
+                                   cmp_buf, DISC_MAX_IDS);
+    int scored_count = 0;
+
+    for (int i = 0; i < cmp_count; i++) {
+        double shape_hint = 0.0;
+        disc_candidate_t cand;
+        prepare_candidate_for_signal(signal, &cmp_buf[i], hz_threshold,
+                                     &cand, &shape_hint);
+        disc_characterize(active, &cand);
+
+        disc_raw_guess_t guess;
+        double raw_shape = 0.0;
+        if (best_raw_guess(signal, baseline_raw, active_raw, &cand, &guess)) {
+            raw_shape = guess.score + raw_guess_candidate_bonus(&cand, &guess);
+            if (raw_shape >= 8.0) {
+                candidate_apply_raw_guess(&cand, &guess);
+            }
+        }
+
+        int prior_support = 0;
+        double prior_score = score_prior_layout(signal, cand.can_id, cand.dlc,
+                                                cand.start_bit, cand.bit_length,
+                                                cand.byte_order, cand.sign_char,
+                                                &prior_support);
+        double evidence = candidate_evidence_score(signal, &cmp_buf[i], hz_threshold);
+        double specificity = compare_specificity_for_signal(signal, phases, raw_phases,
+                                                            cand.can_id,
+                                                            cmp_buf[i].total_score);
+        double shape = clamp_score(shape_hint + raw_shape, -30.0, 45.0);
+        double prior = clamp_score(prior_score, 0.0, 35.0);
+
+        cand.evidence_score = evidence;
+        cand.specificity_score = specificity;
+        cand.shape_score = shape;
+        cand.prior_score = prior;
+        cand.prior_support = prior_support;
+
+        double final_score = evidence + specificity + shape + prior;
+        if (final_score <= 0.0) continue;
+
+        scored[scored_count].cand = cand;
+        scored[scored_count].final_score = final_score;
+        scored_count++;
+    }
+
+    if (scored_count == 0) {
+        free(cmp_buf);
+        free(scored);
+        return false;
+    }
+
+    qsort(scored, (size_t)scored_count, sizeof(scored[0]),
+          cmp_scored_candidate_desc);
+
+    double margin = scored[0].final_score -
+                    (scored_count > 1 ? scored[1].final_score : 0.0);
+    disc_candidate_t best = scored[0].cand;
+    best.score = scored[0].final_score;
+    best.ambiguity_margin = margin;
+    if (best.score >= 75.0 && margin >= 12.0) {
+        best.confidence = DISC_CONF_HIGH;
+    } else if (best.score >= 45.0 && margin >= 5.0) {
+        best.confidence = DISC_CONF_MEDIUM;
+    } else {
+        best.confidence = DISC_CONF_LOW;
+    }
+
+    bool accepted = best.score >= 18.0;
+    if (accepted) *out = best;
+
+    free(cmp_buf);
+    free(scored);
+    return accepted;
+}
+
+static bool candidates_same_layout(const disc_candidate_t *a,
+                                   const disc_candidate_t *b) {
+    if (!a || !b) return false;
+    if (a->can_id != b->can_id) return false;
+    if (a->start_bit >= 0 && b->start_bit >= 0 &&
+        a->bit_length > 0 && b->bit_length > 0) {
+        return a->start_bit == b->start_bit &&
+               a->bit_length == b->bit_length &&
+               a->byte_order == b->byte_order;
+    }
+    return a->byte_idx == b->byte_idx && a->byte2_idx == b->byte2_idx;
+}
+
 static void disc_analyze_internal(const disc_phase_t phases[DISC_NUM_PHASES],
                                   const disc_raw_phase_t *raw_phases,
                                   disc_result_t *result) {
@@ -982,83 +1399,26 @@ static void disc_analyze_internal(const disc_phase_t phases[DISC_NUM_PHASES],
     double hz_threshold;
     result->bus_mode = detect_bus_mode(baseline, &hz_threshold);
 
-    /* Keep exclusions empty so multiple signals can share one CAN message. */
-    uint32_t excl[DISC_SIG_COUNT] = {0};
-    int excl_count = 0;
-    disc_candidate_t rpm_cand;
-    bool rpm_found = false;
-
-    if (disc_classify_with_raw(baseline,
-                               raw_phases ? &raw_phases[DISC_PHASE_BASELINE] : NULL,
-                               &phases[DISC_PHASE_STEERING],
-                               raw_phases ? &raw_phases[DISC_PHASE_STEERING] : NULL,
-                               DISC_SIG_STEERING,
-                               excl, excl_count,
-                               &result->signals[DISC_SIG_STEERING],
-                               NULL, NULL)) {
-        result->found[DISC_SIG_STEERING] = true;
-        disc_characterize(&phases[DISC_PHASE_STEERING],
-                          &result->signals[DISC_SIG_STEERING]);
+    for (int s = 0; s < DISC_SIG_COUNT; s++) {
+        if (select_signal_automatic(phases, raw_phases, (disc_signal_t)s,
+                                    hz_threshold, &result->signals[s])) {
+            result->found[s] = true;
+        }
     }
 
-    rpm_cand.byte_idx = -1;
-    rpm_cand.byte2_idx = -1;
-    if (disc_classify_with_raw(baseline,
-                               raw_phases ? &raw_phases[DISC_PHASE_BASELINE] : NULL,
-                               &phases[DISC_PHASE_THROTTLE],
-                               raw_phases ? &raw_phases[DISC_PHASE_THROTTLE] : NULL,
-                               DISC_SIG_THROTTLE,
-                               excl, excl_count,
-                               &result->signals[DISC_SIG_THROTTLE],
-                               &rpm_cand, &rpm_found)) {
-        result->found[DISC_SIG_THROTTLE] = true;
-        disc_characterize(&phases[DISC_PHASE_THROTTLE],
-                          &result->signals[DISC_SIG_THROTTLE]);
-    }
-    if (rpm_found) {
-        result->signals[DISC_SIG_RPM] = rpm_cand;
-        result->found[DISC_SIG_RPM] = true;
-        disc_characterize(&phases[DISC_PHASE_THROTTLE],
-                          &result->signals[DISC_SIG_RPM]);
-    }
+    for (int a = 0; a < DISC_SIG_COUNT; a++) {
+        if (!result->found[a]) continue;
+        for (int b = a + 1; b < DISC_SIG_COUNT; b++) {
+            if (!result->found[b]) continue;
+            if (!candidates_same_layout(&result->signals[a], &result->signals[b])) continue;
 
-    if (disc_classify_with_raw(baseline,
-                               raw_phases ? &raw_phases[DISC_PHASE_BASELINE] : NULL,
-                               &phases[DISC_PHASE_BRAKE],
-                               raw_phases ? &raw_phases[DISC_PHASE_BRAKE] : NULL,
-                               DISC_SIG_BRAKE,
-                               excl, excl_count,
-                               &result->signals[DISC_SIG_BRAKE],
-                               NULL, NULL)) {
-        result->found[DISC_SIG_BRAKE] = true;
-        disc_characterize(&phases[DISC_PHASE_BRAKE],
-                          &result->signals[DISC_SIG_BRAKE]);
-    }
-
-    if (disc_classify_with_raw(baseline,
-                               raw_phases ? &raw_phases[DISC_PHASE_BASELINE] : NULL,
-                               &phases[DISC_PHASE_GEAR],
-                               raw_phases ? &raw_phases[DISC_PHASE_GEAR] : NULL,
-                               DISC_SIG_GEAR,
-                               excl, excl_count,
-                               &result->signals[DISC_SIG_GEAR],
-                               NULL, NULL)) {
-        result->found[DISC_SIG_GEAR] = true;
-        disc_characterize(&phases[DISC_PHASE_GEAR],
-                          &result->signals[DISC_SIG_GEAR]);
-    }
-
-    if (disc_classify_with_raw(baseline,
-                               raw_phases ? &raw_phases[DISC_PHASE_BASELINE] : NULL,
-                               &phases[DISC_PHASE_WHEEL_SPEED],
-                               raw_phases ? &raw_phases[DISC_PHASE_WHEEL_SPEED] : NULL,
-                               DISC_SIG_WHEEL_SPEED,
-                               excl, excl_count,
-                               &result->signals[DISC_SIG_WHEEL_SPEED],
-                               NULL, NULL)) {
-        result->found[DISC_SIG_WHEEL_SPEED] = true;
-        disc_characterize(&phases[DISC_PHASE_WHEEL_SPEED],
-                          &result->signals[DISC_SIG_WHEEL_SPEED]);
+            if (result->signals[a].score >= result->signals[b].score) {
+                result->found[b] = false;
+            } else {
+                result->found[a] = false;
+                break;
+            }
+        }
     }
 }
 
@@ -1133,6 +1493,43 @@ static bool disc_sb_appendf(disc_string_builder_t *sb, const char *fmt, ...) {
     return true;
 }
 
+static bool disc_sb_append_json_string(disc_string_builder_t *sb, const char *s) {
+    if (!disc_sb_appendf(sb, "\"")) return false;
+    if (!s) s = "";
+
+    for (; *s; s++) {
+        unsigned char ch = (unsigned char)*s;
+        switch (ch) {
+        case '"':
+            if (!disc_sb_appendf(sb, "\\\"")) return false;
+            break;
+        case '\\':
+            if (!disc_sb_appendf(sb, "\\\\")) return false;
+            break;
+        case '\n':
+            if (!disc_sb_appendf(sb, "\\n")) return false;
+            break;
+        case '\r':
+            if (!disc_sb_appendf(sb, "\\r")) return false;
+            break;
+        case '\t':
+            if (!disc_sb_appendf(sb, "\\t")) return false;
+            break;
+        default:
+            if (ch < 0x20) {
+                if (!disc_sb_appendf(sb, "\\u%04x", ch)) return false;
+            } else {
+                if (!disc_sb_reserve(sb, 1)) return false;
+                sb->data[sb->len++] = (char)ch;
+                sb->data[sb->len] = '\0';
+            }
+            break;
+        }
+    }
+
+    return disc_sb_appendf(sb, "\"");
+}
+
 static int signal_phase_index(disc_signal_t sig) {
     switch (sig) {
     case DISC_SIG_STEERING:    return DISC_PHASE_STEERING;
@@ -1157,8 +1554,32 @@ static const char *signal_dbc_name(disc_signal_t sig) {
     }
 }
 
+static const char *signal_canonical_id(disc_signal_t sig) {
+    switch (sig) {
+    case DISC_SIG_STEERING:    return "steering.wheel.angle";
+    case DISC_SIG_RPM:         return "engine.speed";
+    case DISC_SIG_THROTTLE:    return "throttle.position";
+    case DISC_SIG_BRAKE:       return "brake.pressure";
+    case DISC_SIG_GEAR:        return "transmission.gear.selected";
+    case DISC_SIG_WHEEL_SPEED: return "wheel.speed";
+    default:                   return "unknown";
+    }
+}
+
+static const char *signal_canonical_label(disc_signal_t sig) {
+    switch (sig) {
+    case DISC_SIG_STEERING:    return "Steering wheel angle";
+    case DISC_SIG_RPM:         return "Engine speed";
+    case DISC_SIG_THROTTLE:    return "Throttle position";
+    case DISC_SIG_BRAKE:       return "Brake pressure";
+    case DISC_SIG_GEAR:        return "Selected gear";
+    case DISC_SIG_WHEEL_SPEED: return "Wheel speed";
+    default:                   return "Unknown signal";
+    }
+}
+
 static void fill_export_from_prior(disc_export_signal_t *out,
-                                   const disc_dbc_prior_t *prior) {
+                                   const disc_discover_prior_t *prior) {
     snprintf(out->name, sizeof(out->name), "%s", prior->name);
     out->start_bit = prior->start_bit;
     out->bit_length = prior->bit_length;
@@ -1306,7 +1727,7 @@ static void candidate_byte_mask(const disc_candidate_t *cand, bool mask[DISC_MAX
     if (cand->byte2_idx >= 0 && cand->byte2_idx < DISC_MAX_DLC) mask[cand->byte2_idx] = true;
 }
 
-static void prior_byte_mask(const disc_dbc_prior_t *prior, bool mask[DISC_MAX_DLC]) {
+static void prior_byte_mask(const disc_discover_prior_t *prior, bool mask[DISC_MAX_DLC]) {
     memset(mask, 0, DISC_MAX_DLC * sizeof(mask[0]));
     if (!prior) return;
 
@@ -1326,12 +1747,30 @@ static int overlap_byte_count(const bool a[DISC_MAX_DLC], const bool b[DISC_MAX_
     return overlap;
 }
 
-static int score_dbc_prior(disc_signal_t signal,
-                           const disc_candidate_t *cand,
-                           const disc_dbc_prior_t *prior) {
+static int score_discover_prior(disc_signal_t signal,
+                                const disc_candidate_t *cand,
+                                const disc_discover_prior_t *prior) {
     if (!cand || !prior) return -1;
     if (prior->signal != signal) return -1;
     if (prior->can_id != cand->can_id) return -1;
+
+    if (cand->start_bit >= 0 && cand->bit_length > 0) {
+        int layout_support = 0;
+        double layout_score = score_prior_layout(signal, cand->can_id, cand->dlc,
+                                                 cand->start_bit,
+                                                 cand->bit_length,
+                                                 cand->byte_order,
+                                                 cand->sign_char,
+                                                 &layout_support);
+        if (layout_score > 0.0 &&
+            prior->start_bit == cand->start_bit &&
+            prior->bit_length == cand->bit_length &&
+            prior->byte_order == cand->byte_order) {
+            int score = (int)(layout_score + 70.0);
+            if (prior->sign_char == cand->sign_char) score += 4;
+            return score;
+        }
+    }
 
     bool cand_mask[DISC_MAX_DLC];
     bool prior_mask[DISC_MAX_DLC];
@@ -1379,17 +1818,17 @@ static int score_dbc_prior(disc_signal_t signal,
     return score;
 }
 
-static bool find_best_dbc_prior(disc_signal_t signal,
-                                const disc_candidate_t *cand,
-                                const disc_dbc_prior_t *priors,
-                                int prior_count,
-                                disc_prior_match_t *match_out) {
+static bool find_best_discover_prior(disc_signal_t signal,
+                                     const disc_candidate_t *cand,
+                                     const disc_discover_prior_t *priors,
+                                     int prior_count,
+                                     disc_prior_match_t *match_out) {
     if (!cand || !priors || prior_count <= 0 || !match_out) return false;
 
     int best_idx = -1;
     int best_score = -1;
     for (int i = 0; i < prior_count; i++) {
-        int score = score_dbc_prior(signal, cand, &priors[i]);
+        int score = score_discover_prior(signal, cand, &priors[i]);
         if (score > best_score) {
             best_score = score;
             best_idx = i;
@@ -2126,6 +2565,14 @@ static int estimate_message_cycle_ms(uint32_t can_id,
 static void dbc_signal_layout(const disc_candidate_t *cand,
                               int *start_bit, int *bit_length,
                               int *byte_order, char *sign_char) {
+    if (cand->start_bit >= 0 && cand->bit_length > 0 && cand->byte_order >= 0) {
+        *start_bit = cand->start_bit;
+        *bit_length = cand->bit_length;
+        *byte_order = cand->byte_order;
+        *sign_char = (cand->sign_char == '-') ? '-' : '+';
+        return;
+    }
+
     bool is_word = cand->byte2_idx >= 0 && abs(cand->byte_idx - cand->byte2_idx) == 1;
 
     *sign_char = (cand->signedness == DISC_SIGN_SIGNED) ? '-' : '+';
@@ -2198,8 +2645,10 @@ char *disc_render_draft_dbc(const disc_phase_t phases[DISC_NUM_PHASES],
 
     for (int s = 0; s < DISC_SIG_COUNT; s++) {
         if (!result->found[s]) continue;
-        find_best_dbc_prior((disc_signal_t)s, &result->signals[s],
-                            s_dbc_priors, DISC_DBC_PRIOR_COUNT, &prior_matches[s]);
+        find_best_discover_prior((disc_signal_t)s, &result->signals[s],
+                                 s_can_discover_priors,
+                                 DISC_CAN_DISCOVER_PRIOR_COUNT,
+                                 &prior_matches[s]);
     }
 
     uint32_t msg_ids[DISC_SIG_COUNT];
@@ -2410,6 +2859,260 @@ bool disc_write_draft_dbc(const char *path,
 
     bool ok = fwrite(dbc, 1, dbc_len, f) == dbc_len;
     free(dbc);
+    fclose(f);
+    return ok;
+}
+
+typedef struct {
+    uint32_t can_id;
+    uint8_t dlc;
+    disc_export_signal_t sig;
+    disc_candidate_t cand;
+} disc_vsp_entry_t;
+
+static int collect_vsp_entries(const disc_phase_t phases[DISC_NUM_PHASES],
+                               const disc_raw_phase_t raw_phases[DISC_NUM_PHASES],
+                               const disc_result_t *result,
+                               disc_vsp_entry_t *entries,
+                               int max_entries) {
+    if (!phases || !raw_phases || !result || !entries || max_entries <= 0) return 0;
+
+    disc_prior_match_t prior_matches[DISC_SIG_COUNT];
+    memset(prior_matches, 0, sizeof(prior_matches));
+    for (int s = 0; s < DISC_SIG_COUNT; s++) {
+        if (!result->found[s]) continue;
+        find_best_discover_prior((disc_signal_t)s, &result->signals[s],
+                                 s_can_discover_priors,
+                                 DISC_CAN_DISCOVER_PRIOR_COUNT,
+                                 &prior_matches[s]);
+    }
+
+    int count = 0;
+    for (int s = 0; s < DISC_SIG_COUNT; s++) {
+        if (!result->found[s]) continue;
+
+        const disc_candidate_t *cand = &result->signals[s];
+        disc_export_signal_t export_signals[4] = {0};
+        int phase_idx = signal_phase_index((disc_signal_t)s);
+        int export_count = build_export_signals((disc_signal_t)s, cand,
+                                                &prior_matches[s],
+                                                &raw_phases[DISC_PHASE_BASELINE],
+                                                &raw_phases[phase_idx],
+                                                export_signals,
+                                                (int)(sizeof(export_signals) /
+                                                      sizeof(export_signals[0])));
+        for (int i = 0; i < export_count && count < max_entries; i++) {
+            entries[count].can_id = cand->can_id;
+            entries[count].dlc = cand->dlc;
+            if (prior_matches[s].matched && prior_matches[s].prior.dlc > entries[count].dlc) {
+                entries[count].dlc = prior_matches[s].prior.dlc;
+            }
+            entries[count].sig = export_signals[i];
+            entries[count].cand = *cand;
+            count++;
+        }
+    }
+
+    return count;
+}
+
+char *disc_render_draft_vsp(const disc_phase_t phases[DISC_NUM_PHASES],
+                            const disc_raw_phase_t raw_phases[DISC_NUM_PHASES],
+                            const disc_result_t *result,
+                            size_t *length_out) {
+    if (!phases || !raw_phases || !result) return NULL;
+
+    disc_vsp_entry_t entries[DISC_SIG_COUNT * 4];
+    int entry_count = collect_vsp_entries(phases, raw_phases, result,
+                                          entries,
+                                          (int)(sizeof(entries) / sizeof(entries[0])));
+    disc_string_builder_t out = {0};
+
+#define OUT(...) do { if (!disc_sb_appendf(&out, __VA_ARGS__)) goto fail; } while (0)
+#define OUTS(s) do { if (!disc_sb_append_json_string(&out, (s))) goto fail; } while (0)
+
+    OUT("{\n");
+    OUT("  \"schema\": \"vehicle_data_profile.v1\",\n");
+    OUT("  \"vehicle\": {\n");
+    OUT("    \"manufacturer\": \"unknown\",\n");
+    OUT("    \"model\": \"unknown\"\n");
+    OUT("  },\n");
+    OUT("  \"applicability\": {\n");
+    OUT("    \"generation\": null,\n");
+    OUT("    \"platform\": null,\n");
+    OUT("    \"year_start\": null,\n");
+    OUT("    \"year_end\": null,\n");
+    OUT("    \"market\": null,\n");
+    OUT("    \"trim\": null,\n");
+    OUT("    \"powertrain\": null\n");
+    OUT("  },\n");
+    OUT("  \"buses\": [\n");
+    OUT("    {\"id\": \"can0\", \"type\": \"can\", \"bitrate\": 500000}\n");
+    OUT("  ],\n");
+    OUT("  \"can_frames\": [\n");
+
+    bool first_msg = true;
+    for (int i = 0; i < entry_count; i++) {
+        uint32_t can_id = entries[i].can_id;
+        bool already = false;
+        for (int j = 0; j < i; j++) {
+            if (entries[j].can_id == can_id) {
+                already = true;
+                break;
+            }
+        }
+        if (already) continue;
+
+        uint8_t dlc = entries[i].dlc;
+        for (int j = i + 1; j < entry_count; j++) {
+            if (entries[j].can_id == can_id && entries[j].dlc > dlc) dlc = entries[j].dlc;
+        }
+
+        OUT("%s    {\n", first_msg ? "" : ",\n");
+        OUT("      \"bus\": \"can0\",\n");
+        OUT("      \"frame_id\": %u,\n", can_id);
+        OUT("      \"frame_id_hex\": \"0x%X\",\n", can_id);
+        OUT("      \"id_format\": \"%s\",\n", can_id > 0x7FFu ? "extended29" : "standard11");
+        OUT("      \"name\": \"MSG_%03X\",\n", can_id);
+        OUT("      \"dlc\": %u,\n", dlc);
+        OUT("      \"signals\": [\n");
+
+        bool first_sig = true;
+        for (int j = 0; j < entry_count; j++) {
+            if (entries[j].can_id != can_id) continue;
+            const disc_export_signal_t *sig = &entries[j].sig;
+            OUT("%s        {\n", first_sig ? "" : ",\n");
+            OUT("          \"name\": ");
+            OUTS(sig->name);
+            OUT(",\n");
+            OUT("          \"decode\": {\n");
+            OUT("            \"start_bit\": %d,\n", sig->start_bit);
+            OUT("            \"bit_length\": %d,\n", sig->bit_length);
+            OUT("            \"byte_order\": \"%s\",\n",
+                sig->byte_order == 1 ? "little_endian" : "big_endian");
+            OUT("            \"signed\": %s,\n", sig->sign_char == '-' ? "true" : "false");
+            OUT("            \"factor\": %s,\n", sig->factor[0] ? sig->factor : "1.0");
+            OUT("            \"offset\": %s,\n", sig->offset[0] ? sig->offset : "0.0");
+            OUT("            \"minimum\": %s,\n", sig->min_val[0] ? sig->min_val : "0.0");
+            OUT("            \"maximum\": %s,\n", sig->max_val[0] ? sig->max_val : "0.0");
+            OUT("            \"unit\": ");
+            OUTS(sig->unit);
+            OUT(",\n");
+            OUT("            \"mux\": null\n");
+            OUT("          }\n");
+            OUT("        }");
+            first_sig = false;
+        }
+        OUT("\n      ]\n");
+        OUT("    }");
+        first_msg = false;
+    }
+
+    OUT("\n  ],\n");
+    OUT("  \"diagnostic_queries\": [],\n");
+    OUT("  \"signals\": [\n");
+
+    for (int i = 0; i < entry_count; i++) {
+        const disc_export_signal_t *sig = &entries[i].sig;
+        const disc_candidate_t *cand = &entries[i].cand;
+        disc_signal_t signal = sig->signal;
+        OUT("%s    {\n", i == 0 ? "" : ",\n");
+        OUT("      \"name\": ");
+        OUTS(sig->name);
+        OUT(",\n");
+        OUT("      \"acquisition\": {\n");
+        OUT("        \"type\": \"can_frame\",\n");
+        OUT("        \"bus\": \"can0\",\n");
+        OUT("        \"frame_id\": %u,\n", entries[i].can_id);
+        OUT("        \"frame_id_hex\": \"0x%X\",\n", entries[i].can_id);
+        OUT("        \"frame_name\": \"MSG_%03X\"\n", entries[i].can_id);
+        OUT("      },\n");
+        OUT("      \"decode\": {\n");
+        OUT("        \"start_bit\": %d,\n", sig->start_bit);
+        OUT("        \"bit_length\": %d,\n", sig->bit_length);
+        OUT("        \"byte_order\": \"%s\",\n",
+            sig->byte_order == 1 ? "little_endian" : "big_endian");
+        OUT("        \"signed\": %s,\n", sig->sign_char == '-' ? "true" : "false");
+        OUT("        \"factor\": %s,\n", sig->factor[0] ? sig->factor : "1.0");
+        OUT("        \"offset\": %s,\n", sig->offset[0] ? sig->offset : "0.0");
+        OUT("        \"minimum\": %s,\n", sig->min_val[0] ? sig->min_val : "0.0");
+        OUT("        \"maximum\": %s,\n", sig->max_val[0] ? sig->max_val : "0.0");
+        OUT("        \"unit\": ");
+        OUTS(sig->unit);
+        OUT(",\n");
+        OUT("        \"mux\": null\n");
+        OUT("      },\n");
+        OUT("      \"canonical\": {\n");
+        OUT("        \"id\": ");
+        OUTS(signal_canonical_id(signal));
+        OUT(",\n");
+        OUT("        \"label\": ");
+        OUTS(signal_canonical_label(signal));
+        OUT(",\n");
+        OUT("        \"quantity\": \"unknown\",\n");
+        OUT("        \"preferred_unit\": ");
+        OUTS(sig->unit);
+        OUT(",\n");
+        OUT("        \"confidence\": \"%s\",\n",
+            cand->confidence == DISC_CONF_HIGH ? "mapped" : "heuristic");
+        OUT("        \"aliases\": [");
+        OUTS(sig->name);
+        OUT("]\n");
+        OUT("      },\n");
+        OUT("      \"discovery\": {\n");
+        OUT("        \"tool\": \"can_discover\",\n");
+        OUT("        \"confidence\": ");
+        OUTS(disc_confidence_name(cand->confidence));
+        OUT(",\n");
+        OUT("        \"observed_hz\": %.3f,\n", cand->hz);
+        OUT("        \"final_score\": %.3f,\n", cand->score);
+        OUT("        \"evidence_score\": %.3f,\n", cand->evidence_score);
+        OUT("        \"specificity_score\": %.3f,\n", cand->specificity_score);
+        OUT("        \"shape_score\": %.3f,\n", cand->shape_score);
+        OUT("        \"prior_score\": %.3f,\n", cand->prior_score);
+        OUT("        \"prior_support\": %d,\n", cand->prior_support);
+        OUT("        \"ambiguity_margin\": %.3f,\n", cand->ambiguity_margin);
+        OUT("        \"raw_min\": %d,\n", cand->raw_min);
+        OUT("        \"raw_max\": %d\n", cand->raw_max);
+        OUT("      }\n");
+        OUT("    }");
+    }
+
+    OUT("\n  ]\n");
+    OUT("}\n");
+
+    if (!disc_sb_reserve(&out, 0)) goto fail;
+    out.data[out.len] = '\0';
+    if (length_out) *length_out = out.len;
+    return out.data;
+
+fail:
+    free(out.data);
+    if (length_out) *length_out = 0;
+    return NULL;
+
+#undef OUT
+#undef OUTS
+}
+
+bool disc_write_draft_vsp(const char *path,
+                          const disc_phase_t phases[DISC_NUM_PHASES],
+                          const disc_raw_phase_t raw_phases[DISC_NUM_PHASES],
+                          const disc_result_t *result) {
+    if (!path || !phases || !raw_phases || !result) return false;
+
+    size_t vsp_len = 0;
+    char *vsp = disc_render_draft_vsp(phases, raw_phases, result, &vsp_len);
+    if (!vsp) return false;
+
+    FILE *f = fopen(path, "w");
+    if (!f) {
+        free(vsp);
+        return false;
+    }
+
+    bool ok = fwrite(vsp, 1, vsp_len, f) == vsp_len;
+    free(vsp);
     fclose(f);
     return ok;
 }

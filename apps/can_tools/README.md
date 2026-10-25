@@ -25,7 +25,8 @@ mkdir -p build && cd build && cmake .. && make
 ```
 
 빌드 후 `build/libcan_discover_core.a`가 함께 생성된다. 다른 앱에서 탐색 엔진만 쓰고 싶으면
-`common/can_discover.h`를 포함해 `disc_analyze_with_raw()`와 `disc_render_draft_dbc()`를 직접 호출하면 된다.
+`common/can_discover.h`를 포함해 `disc_analyze_with_raw()`,
+`disc_render_draft_dbc()`, `disc_render_draft_vsp()`를 직접 호출하면 된다.
 
 ## vsp_probe
 
@@ -139,18 +140,20 @@ Phase 5: Gear        (10초)  — P → R → N → D 시프트 [스킵 가능]
 Phase 6: Wheel Speed (15초)  — 저속 주행 30+ km/h [스킵 가능]
 ```
 
-각 Phase 후 감지 결과를 신뢰도와 함께 표시하고, 포함/제외를 선택한다.
+각 Phase 후 사람이 CAN 후보를 고르지 않는다. 캡처가 끝나면 툴이 phase 특이성,
+raw bitfield shape, VSP corpus prior를 합산해 자동 추정한다.
 
-완료 시 JSON 결과와 함께 작업 디렉터리에 `ptcan_discover_draft_YYYYMMDD_HHMMSS.dbc`
-형식의 draft DBC 파일도 생성한다. 이 파일은 raw 값 기준의 초안이며,
-내장된 prior table과 exact CAN ID가 맞으면 signal layout/scale/unit을 보강한다.
+완료 시 JSON 결과와 함께 작업 디렉터리에 draft DBC와 draft VSP를 생성한다.
+DBC는 raw 값 기준의 호환 초안이고, VSP는 정보가 없는 차량의 profile 시작점이다.
+내장된 prior table과 exact CAN ID/layout이 맞으면 signal layout/scale/unit을 보강한다.
 prior가 없더라도 raw frame을 다시 스캔해 bitfield 길이/시작 비트를 보정하고,
 counter처럼 보이는 증가 필드를 억제한다. wheel speed는 가능한 경우 4개 신호로 분해해 출력한다.
 discover 실행 시에는 기본적으로 `captures/YYYYMMDD_HHMMSS/` 세션 폴더를 만들고,
-각 phase raw dump(`*.frames.tsv`), `manifest.json`, `result.json`, `ptcan_discover_draft.dbc`를 함께 저장한다.
+각 phase raw dump(`*.frames.tsv`), `manifest.json`, `result.json`,
+`ptcan_discover_draft.dbc`, `ptcan_discover_draft.vsp`를 함께 저장한다.
 원하면 `--dump-dir <DIR>`로 저장 위치를 덮어쓸 수 있다.
-이 prior table은 `tools/gen_can_discover_priors.py`로 `dbcs/*.dbc`에서 생성하며, 런타임에는 `dbcs/`가 없어도 된다.
-그래도 checksum/counter와 나머지 bit-packed field는 사람이 검토해 보정해야 한다.
+이 prior table은 `tools/gen_can_discover_priors.py`로 `../vehicle-signal-profile/profiles/*.vsp`에서 생성하며, 런타임에는 VSP 저장소가 없어도 된다.
+그래도 low confidence/unresolved 성격의 결과와 checksum/counter, 나머지 bit-packed field는 사람이 검토해 보정해야 한다.
 
 ### D-CAN / PT-CAN 자동 감지
 
@@ -185,6 +188,7 @@ JSON 출력에도 `"bus_mode"` 필드가 포함된다.
 {
   "bus_mode":"direct",
   "dbc_path":"ptcan_discover_draft_20260408_153012.dbc",
+  "vsp_path":"ptcan_discover_draft_20260408_153012.vsp",
   "steering":{"can_id":"0x0A5","dlc":8,"hz":100.0,"byte":2,"byte2":3,"score":48.5,"confidence":"HIGH","endian":"big","signed":true,"raw_min":-5420,"raw_max":5380},
   "rpm":{"can_id":"0x316","dlc":8,"hz":50.0,"byte":2,"byte2":3,"score":35.2,"confidence":"HIGH","endian":"big","signed":false,"raw_min":780,"raw_max":6200},
   "throttle":{"can_id":"0x1A0","dlc":8,"hz":50.0,"byte":5,"score":28.0,"confidence":"HIGH","signed":false,"raw_min":0,"raw_max":255},
