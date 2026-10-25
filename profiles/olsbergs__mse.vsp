@@ -564,44 +564,6 @@
       }
     },
     {
-      "name": "ECU_LAU_RPM",
-      "decode": {
-        "start_bit": 23,
-        "bit_length": 16,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 1.0,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 65535.0,
-        "unit": "#",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 24,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 259,
-        "frame_id_hex": "0x103",
-        "frame_name": "MSG_103"
-      },
-      "canonical": {
-        "id": "engine.speed",
-        "label": "Engine speed",
-        "quantity": "rotational_speed",
-        "preferred_unit": "rpm",
-        "confidence": "heuristic",
-        "aliases": [
-          "ECU_LAU_RPM"
-        ]
-      }
-    },
-    {
       "name": "ECU_LAMBDA1",
       "decode": {
         "start_bit": 7,
@@ -877,6 +839,44 @@
       }
     },
     {
+      "name": "ECU_GBOX_TMP",
+      "decode": {
+        "start_bit": 39,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": true,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": -128.0,
+        "maximum": 127.0,
+        "unit": "C",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 32,
+        "signed_known": true,
+        "signed_reason": "rawfmt:signed"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 256,
+        "frame_id_hex": "0x100",
+        "frame_name": "MSG_100"
+      },
+      "canonical": {
+        "id": "transmission.oil.temperature",
+        "label": "Transmission oil temperature",
+        "quantity": "temperature",
+        "preferred_unit": "C",
+        "confidence": "heuristic",
+        "aliases": [
+          "ECU_GBOX_TMP"
+        ]
+      }
+    },
+    {
       "name": "ECU_VEH_SPD",
       "decode": {
         "start_bit": 23,
@@ -999,31 +999,31 @@
       }
     },
     {
-      "name": "ECU_GBOX_TMP",
+      "name": "ECU_LAU_RPM",
       "decode": {
-        "start_bit": 39,
-        "bit_length": 8,
+        "start_bit": 23,
+        "bit_length": 16,
         "byte_order": "big_endian",
-        "signed": true,
+        "signed": false,
         "factor": 1.0,
         "offset": 0.0,
-        "minimum": -128.0,
-        "maximum": 127.0,
-        "unit": "C",
+        "minimum": 0.0,
+        "maximum": 65535.0,
+        "unit": "#",
         "mux": null
       },
       "raw": {
         "cflag": 0,
-        "canp_start_bit": 32,
+        "canp_start_bit": 24,
         "signed_known": true,
-        "signed_reason": "rawfmt:signed"
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
         "bus": "can0",
-        "frame_id": 256,
-        "frame_id_hex": "0x100",
-        "frame_name": "MSG_100"
+        "frame_id": 259,
+        "frame_id_hex": "0x103",
+        "frame_name": "MSG_103"
       }
     },
     {

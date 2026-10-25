@@ -480,6 +480,45 @@
       }
     },
     {
+      "name": "TEMP_OUTSIDE",
+      "decode": {
+        "start_bit": 24,
+        "bit_length": 7,
+        "byte_order": "little_endian",
+        "signed": false,
+        "sign_bit": 31,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": -127.0,
+        "maximum": 127.0,
+        "unit": "C",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 5,
+        "canp_start_bit": 24,
+        "signed_known": true,
+        "signed_reason": "rawfmt:sign_magnitude"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1557,
+        "frame_id_hex": "0x615",
+        "frame_name": "MSG_615"
+      },
+      "canonical": {
+        "id": "ambient_air.temperature",
+        "label": "Ambient air temperature",
+        "quantity": "temperature",
+        "preferred_unit": "C",
+        "confidence": "heuristic",
+        "aliases": [
+          "TEMP_OUTSIDE"
+        ]
+      }
+    },
+    {
       "name": "BRAKE_PRESSURE",
       "decode": {
         "start_bit": 16,
@@ -1088,35 +1127,6 @@
         "frame_id": 1555,
         "frame_id_hex": "0x613",
         "frame_name": "MSG_613"
-      }
-    },
-    {
-      "name": "TEMP_OUTSIDE",
-      "decode": {
-        "start_bit": 24,
-        "bit_length": 7,
-        "byte_order": "little_endian",
-        "signed": false,
-        "sign_bit": 31,
-        "factor": 1.0,
-        "offset": 0.0,
-        "minimum": -127.0,
-        "maximum": 127.0,
-        "unit": "C",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 5,
-        "canp_start_bit": 24,
-        "signed_known": true,
-        "signed_reason": "rawfmt:sign_magnitude"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1557,
-        "frame_id_hex": "0x615",
-        "frame_name": "MSG_615"
       }
     }
   ]

@@ -424,13 +424,11 @@
             "values": [
               {
                 "raw": 46,
-                "label": "OFF",
-                "value": null
+                "label": "OFF"
               },
               {
                 "raw": 62,
-                "label": "ON",
-                "value": null
+                "label": "ON"
               }
             ],
             "mux": null
@@ -892,106 +890,6 @@
       }
     },
     {
-      "name": "Surface_Map",
-      "decode": {
-        "start_bit": 39,
-        "bit_length": 8,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 1.0,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 255.0,
-        "unit": "#",
-        "values": [
-          {
-            "raw": 0,
-            "label": "TARM"
-          },
-          {
-            "raw": 1,
-            "label": "GRAV"
-          }
-        ],
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 32,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 369,
-        "frame_id_hex": "0x171",
-        "frame_name": "MSG_171"
-      },
-      "canonical": {
-        "id": "intake_manifold.pressure",
-        "label": "Intake manifold pressure",
-        "quantity": "pressure",
-        "preferred_unit": "bar",
-        "confidence": "heuristic",
-        "aliases": [
-          "Surface_Map"
-        ]
-      }
-    },
-    {
-      "name": "Map",
-      "decode": {
-        "start_bit": 55,
-        "bit_length": 8,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 1.0,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 255.0,
-        "unit": "#",
-        "values": [
-          {
-            "raw": 1,
-            "label": "MAP1"
-          },
-          {
-            "raw": 2,
-            "label": "MAP2"
-          },
-          {
-            "raw": 3,
-            "label": "MAP3"
-          }
-        ],
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 48,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 369,
-        "frame_id_hex": "0x171",
-        "frame_name": "MSG_171"
-      },
-      "canonical": {
-        "id": "intake_manifold.pressure",
-        "label": "Intake manifold pressure",
-        "quantity": "pressure",
-        "preferred_unit": "bar",
-        "confidence": "mapped",
-        "aliases": [
-          "Map"
-        ]
-      }
-    },
-    {
       "name": "aSteering",
       "decode": {
         "start_bit": 7,
@@ -1100,56 +998,6 @@
         "confidence": "mapped",
         "aliases": [
           "Gear"
-        ]
-      }
-    },
-    {
-      "name": "Solenoid_Gear",
-      "decode": {
-        "start_bit": 15,
-        "bit_length": 8,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 1.0,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 255.0,
-        "unit": "#",
-        "values": [
-          {
-            "raw": 46,
-            "label": "OFF",
-            "value": null
-          },
-          {
-            "raw": 62,
-            "label": "ON",
-            "value": null
-          }
-        ],
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 8,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 370,
-        "frame_id_hex": "0x172",
-        "frame_name": "MSG_172"
-      },
-      "canonical": {
-        "id": "transmission.gear.selected",
-        "label": "Selected gear",
-        "quantity": "gear",
-        "preferred_unit": "gear",
-        "confidence": "heuristic",
-        "aliases": [
-          "Solenoid_Gear"
         ]
       }
     },
@@ -1344,6 +1192,48 @@
       }
     },
     {
+      "name": "Map",
+      "decode": {
+        "start_bit": 55,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 255.0,
+        "unit": "#",
+        "values": [
+          {
+            "raw": 1,
+            "label": "MAP1"
+          },
+          {
+            "raw": 2,
+            "label": "MAP2"
+          },
+          {
+            "raw": 3,
+            "label": "MAP3"
+          }
+        ],
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 48,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 369,
+        "frame_id_hex": "0x171",
+        "frame_name": "MSG_171"
+      }
+    },
+    {
       "name": "Mode",
       "decode": {
         "start_bit": 63,
@@ -1370,6 +1260,82 @@
       "raw": {
         "cflag": 0,
         "canp_start_bit": 56,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 369,
+        "frame_id_hex": "0x171",
+        "frame_name": "MSG_171"
+      }
+    },
+    {
+      "name": "Solenoid_Gear",
+      "decode": {
+        "start_bit": 15,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 255.0,
+        "unit": "#",
+        "values": [
+          {
+            "raw": 46,
+            "label": "OFF"
+          },
+          {
+            "raw": 62,
+            "label": "ON"
+          }
+        ],
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 8,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 370,
+        "frame_id_hex": "0x172",
+        "frame_name": "MSG_172"
+      }
+    },
+    {
+      "name": "Surface_Map",
+      "decode": {
+        "start_bit": 39,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 255.0,
+        "unit": "#",
+        "values": [
+          {
+            "raw": 0,
+            "label": "TARM"
+          },
+          {
+            "raw": 1,
+            "label": "GRAV"
+          }
+        ],
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 32,
         "signed_known": true,
         "signed_reason": "rawfmt:unsigned"
       },

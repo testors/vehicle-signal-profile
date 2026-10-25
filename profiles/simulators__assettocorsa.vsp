@@ -1882,10 +1882,10 @@
         "frame_name": "MSG_5F2"
       },
       "canonical": {
-        "id": "fuel.level",
-        "label": "Fuel level",
-        "quantity": "level",
-        "preferred_unit": "%",
+        "id": "fuel.remaining",
+        "label": "Fuel remaining",
+        "quantity": "volume",
+        "preferred_unit": "L",
         "confidence": "mapped",
         "aliases": [
           "FuelLevel"
@@ -1920,8 +1920,8 @@
         "frame_name": "MSG_5F0"
       },
       "canonical": {
-        "id": "intake_air.temperature",
-        "label": "Intake air temperature",
+        "id": "ambient_air.temperature",
+        "label": "Ambient air temperature",
         "quantity": "temperature",
         "preferred_unit": "C",
         "confidence": "mapped",
@@ -1965,6 +1965,310 @@
         "confidence": "heuristic",
         "aliases": [
           "Throttle"
+        ]
+      }
+    },
+    {
+      "name": "FLTirePress",
+      "decode": {
+        "start_bit": 0,
+        "bit_length": 32,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 0.0689474482549,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 296127035.32850033,
+        "unit": "bar",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 5,
+        "canp_start_bit": 0,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1531,
+        "frame_id_hex": "0x5FB",
+        "frame_name": "MSG_5FB"
+      },
+      "canonical": {
+        "id": "tire.pressure.front_left",
+        "label": "Front-left tire pressure",
+        "quantity": "pressure",
+        "preferred_unit": "bar",
+        "confidence": "heuristic",
+        "aliases": [
+          "FLTirePress"
+        ]
+      }
+    },
+    {
+      "name": "FRTirePress",
+      "decode": {
+        "start_bit": 32,
+        "bit_length": 32,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 0.0689474482549,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 296127035.32850033,
+        "unit": "bar",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 5,
+        "canp_start_bit": 32,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1531,
+        "frame_id_hex": "0x5FB",
+        "frame_name": "MSG_5FB"
+      },
+      "canonical": {
+        "id": "tire.pressure.front_right",
+        "label": "Front-right tire pressure",
+        "quantity": "pressure",
+        "preferred_unit": "bar",
+        "confidence": "heuristic",
+        "aliases": [
+          "FRTirePress"
+        ]
+      }
+    },
+    {
+      "name": "RLTirePress",
+      "decode": {
+        "start_bit": 0,
+        "bit_length": 32,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 0.0689474482549,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 296127035.32850033,
+        "unit": "bar",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 5,
+        "canp_start_bit": 0,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1532,
+        "frame_id_hex": "0x5FC",
+        "frame_name": "MSG_5FC"
+      },
+      "canonical": {
+        "id": "tire.pressure.rear_left",
+        "label": "Rear-left tire pressure",
+        "quantity": "pressure",
+        "preferred_unit": "bar",
+        "confidence": "heuristic",
+        "aliases": [
+          "RLTirePress"
+        ]
+      }
+    },
+    {
+      "name": "RRTirePress",
+      "decode": {
+        "start_bit": 32,
+        "bit_length": 32,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 0.0689474482549,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 296127035.32850033,
+        "unit": "bar",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 5,
+        "canp_start_bit": 32,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1532,
+        "frame_id_hex": "0x5FC",
+        "frame_name": "MSG_5FC"
+      },
+      "canonical": {
+        "id": "tire.pressure.rear_right",
+        "label": "Rear-right tire pressure",
+        "quantity": "pressure",
+        "preferred_unit": "bar",
+        "confidence": "heuristic",
+        "aliases": [
+          "RRTirePress"
+        ]
+      }
+    },
+    {
+      "name": "FLTireCoreTemp",
+      "decode": {
+        "start_bit": 0,
+        "bit_length": 32,
+        "byte_order": "little_endian",
+        "signed": true,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": -2147483648.0,
+        "maximum": 2147483647.0,
+        "unit": "C",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 5,
+        "canp_start_bit": 0,
+        "signed_known": true,
+        "signed_reason": "rawfmt:signed"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1533,
+        "frame_id_hex": "0x5FD",
+        "frame_name": "MSG_5FD"
+      },
+      "canonical": {
+        "id": "tire.temperature.front_left",
+        "label": "Front-left tire temperature",
+        "quantity": "temperature",
+        "preferred_unit": "C",
+        "confidence": "heuristic",
+        "aliases": [
+          "FLTireCoreTemp"
+        ]
+      }
+    },
+    {
+      "name": "FRTireCoreTemp",
+      "decode": {
+        "start_bit": 32,
+        "bit_length": 32,
+        "byte_order": "little_endian",
+        "signed": true,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": -2147483648.0,
+        "maximum": 2147483647.0,
+        "unit": "C",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 5,
+        "canp_start_bit": 32,
+        "signed_known": true,
+        "signed_reason": "rawfmt:signed"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1533,
+        "frame_id_hex": "0x5FD",
+        "frame_name": "MSG_5FD"
+      },
+      "canonical": {
+        "id": "tire.temperature.front_right",
+        "label": "Front-right tire temperature",
+        "quantity": "temperature",
+        "preferred_unit": "C",
+        "confidence": "heuristic",
+        "aliases": [
+          "FRTireCoreTemp"
+        ]
+      }
+    },
+    {
+      "name": "RLTireCoreTemp",
+      "decode": {
+        "start_bit": 0,
+        "bit_length": 32,
+        "byte_order": "little_endian",
+        "signed": true,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": -2147483648.0,
+        "maximum": 2147483647.0,
+        "unit": "C",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 5,
+        "canp_start_bit": 0,
+        "signed_known": true,
+        "signed_reason": "rawfmt:signed"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1534,
+        "frame_id_hex": "0x5FE",
+        "frame_name": "MSG_5FE"
+      },
+      "canonical": {
+        "id": "tire.temperature.rear_left",
+        "label": "Rear-left tire temperature",
+        "quantity": "temperature",
+        "preferred_unit": "C",
+        "confidence": "heuristic",
+        "aliases": [
+          "RLTireCoreTemp"
+        ]
+      }
+    },
+    {
+      "name": "RRTireCoreTemp",
+      "decode": {
+        "start_bit": 32,
+        "bit_length": 32,
+        "byte_order": "little_endian",
+        "signed": true,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": -2147483648.0,
+        "maximum": 2147483647.0,
+        "unit": "C",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 5,
+        "canp_start_bit": 32,
+        "signed_known": true,
+        "signed_reason": "rawfmt:signed"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1534,
+        "frame_id_hex": "0x5FE",
+        "frame_name": "MSG_5FE"
+      },
+      "canonical": {
+        "id": "tire.temperature.rear_right",
+        "label": "Rear-right tire temperature",
+        "quantity": "temperature",
+        "preferred_unit": "C",
+        "confidence": "heuristic",
+        "aliases": [
+          "RRTireCoreTemp"
         ]
       }
     },
@@ -2684,62 +2988,6 @@
       }
     },
     {
-      "name": "FLTireCoreTemp",
-      "decode": {
-        "start_bit": 0,
-        "bit_length": 32,
-        "byte_order": "little_endian",
-        "signed": true,
-        "factor": 1.0,
-        "offset": 0.0,
-        "minimum": -2147483648.0,
-        "maximum": 2147483647.0,
-        "unit": "C",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 5,
-        "canp_start_bit": 0,
-        "signed_known": true,
-        "signed_reason": "rawfmt:signed"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1533,
-        "frame_id_hex": "0x5FD",
-        "frame_name": "MSG_5FD"
-      }
-    },
-    {
-      "name": "FLTirePress",
-      "decode": {
-        "start_bit": 0,
-        "bit_length": 32,
-        "byte_order": "little_endian",
-        "signed": false,
-        "factor": 0.0689474482549,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 296127035.32850033,
-        "unit": "bar",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 5,
-        "canp_start_bit": 0,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1531,
-        "frame_id_hex": "0x5FB",
-        "frame_name": "MSG_5FB"
-      }
-    },
-    {
       "name": "FRBrakeTemp",
       "decode": {
         "start_bit": 32,
@@ -2849,62 +3097,6 @@
         "frame_id": 1545,
         "frame_id_hex": "0x609",
         "frame_name": "MSG_609"
-      }
-    },
-    {
-      "name": "FRTireCoreTemp",
-      "decode": {
-        "start_bit": 32,
-        "bit_length": 32,
-        "byte_order": "little_endian",
-        "signed": true,
-        "factor": 1.0,
-        "offset": 0.0,
-        "minimum": -2147483648.0,
-        "maximum": 2147483647.0,
-        "unit": "C",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 5,
-        "canp_start_bit": 32,
-        "signed_known": true,
-        "signed_reason": "rawfmt:signed"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1533,
-        "frame_id_hex": "0x5FD",
-        "frame_name": "MSG_5FD"
-      }
-    },
-    {
-      "name": "FRTirePress",
-      "decode": {
-        "start_bit": 32,
-        "bit_length": 32,
-        "byte_order": "little_endian",
-        "signed": false,
-        "factor": 0.0689474482549,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 296127035.32850033,
-        "unit": "bar",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 5,
-        "canp_start_bit": 32,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1531,
-        "frame_id_hex": "0x5FB",
-        "frame_name": "MSG_5FB"
       }
     },
     {
@@ -3544,62 +3736,6 @@
       }
     },
     {
-      "name": "RLTireCoreTemp",
-      "decode": {
-        "start_bit": 0,
-        "bit_length": 32,
-        "byte_order": "little_endian",
-        "signed": true,
-        "factor": 1.0,
-        "offset": 0.0,
-        "minimum": -2147483648.0,
-        "maximum": 2147483647.0,
-        "unit": "C",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 5,
-        "canp_start_bit": 0,
-        "signed_known": true,
-        "signed_reason": "rawfmt:signed"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1534,
-        "frame_id_hex": "0x5FE",
-        "frame_name": "MSG_5FE"
-      }
-    },
-    {
-      "name": "RLTirePress",
-      "decode": {
-        "start_bit": 0,
-        "bit_length": 32,
-        "byte_order": "little_endian",
-        "signed": false,
-        "factor": 0.0689474482549,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 296127035.32850033,
-        "unit": "bar",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 5,
-        "canp_start_bit": 0,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1532,
-        "frame_id_hex": "0x5FC",
-        "frame_name": "MSG_5FC"
-      }
-    },
-    {
       "name": "RRBrakeTemp",
       "decode": {
         "start_bit": 32,
@@ -3709,62 +3845,6 @@
         "frame_id": 1545,
         "frame_id_hex": "0x609",
         "frame_name": "MSG_609"
-      }
-    },
-    {
-      "name": "RRTireCoreTemp",
-      "decode": {
-        "start_bit": 32,
-        "bit_length": 32,
-        "byte_order": "little_endian",
-        "signed": true,
-        "factor": 1.0,
-        "offset": 0.0,
-        "minimum": -2147483648.0,
-        "maximum": 2147483647.0,
-        "unit": "C",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 5,
-        "canp_start_bit": 32,
-        "signed_known": true,
-        "signed_reason": "rawfmt:signed"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1534,
-        "frame_id_hex": "0x5FE",
-        "frame_name": "MSG_5FE"
-      }
-    },
-    {
-      "name": "RRTirePress",
-      "decode": {
-        "start_bit": 32,
-        "bit_length": 32,
-        "byte_order": "little_endian",
-        "signed": false,
-        "factor": 0.0689474482549,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 296127035.32850033,
-        "unit": "bar",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 5,
-        "canp_start_bit": 32,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1532,
-        "frame_id_hex": "0x5FC",
-        "frame_name": "MSG_5FC"
       }
     },
     {

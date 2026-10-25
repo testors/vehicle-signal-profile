@@ -953,49 +953,6 @@
       }
     },
     {
-      "name": "MapSide",
-      "decode": {
-        "start_bit": 47,
-        "bit_length": 8,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 0.06274509803,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 15.99999999765,
-        "unit": "#",
-        "mux": {
-          "value": 2,
-          "start_bit": 7,
-          "bit_length": 8,
-          "byte_order": "big_endian"
-        }
-      },
-      "raw": {
-        "cflag": 2,
-        "canp_start_bit": 40,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 814,
-        "frame_id_hex": "0x32E",
-        "frame_name": "MSG_32E"
-      },
-      "canonical": {
-        "id": "intake_manifold.pressure",
-        "label": "Intake manifold pressure",
-        "quantity": "pressure",
-        "preferred_unit": "bar",
-        "confidence": "heuristic",
-        "aliases": [
-          "MapSide"
-        ]
-      }
-    },
-    {
       "name": "ThrotPos",
       "decode": {
         "start_bit": 40,
@@ -1391,6 +1348,39 @@
       },
       "raw": {
         "cflag": 7,
+        "canp_start_bit": 40,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 814,
+        "frame_id_hex": "0x32E",
+        "frame_name": "MSG_32E"
+      }
+    },
+    {
+      "name": "MapSide",
+      "decode": {
+        "start_bit": 47,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.06274509803,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 15.99999999765,
+        "unit": "#",
+        "mux": {
+          "value": 2,
+          "start_bit": 7,
+          "bit_length": 8,
+          "byte_order": "big_endian"
+        }
+      },
+      "raw": {
+        "cflag": 2,
         "canp_start_bit": 40,
         "signed_known": true,
         "signed_reason": "rawfmt:unsigned"

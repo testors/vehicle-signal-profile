@@ -855,10 +855,10 @@
         "frame_name": "MSG_5C5"
       },
       "canonical": {
-        "id": "fuel.level",
-        "label": "Fuel level",
-        "quantity": "level",
-        "preferred_unit": "%",
+        "id": "fuel.remaining",
+        "label": "Fuel remaining",
+        "quantity": "volume",
+        "preferred_unit": "L",
         "confidence": "heuristic",
         "aliases": [
           "ECU_FUEL_LEVEL"
@@ -1233,6 +1233,16 @@
         "frame_id": 644,
         "frame_id_hex": "0x284",
         "frame_name": "MSG_284"
+      },
+      "canonical": {
+        "id": "wheel.speed.front_left",
+        "label": "Front-left wheel speed",
+        "quantity": "speed",
+        "preferred_unit": "km/h",
+        "confidence": "heuristic",
+        "aliases": [
+          "ECU_FL_SPEED"
+        ]
       }
     },
     {
@@ -1261,6 +1271,92 @@
         "frame_id": 644,
         "frame_id_hex": "0x284",
         "frame_name": "MSG_284"
+      },
+      "canonical": {
+        "id": "wheel.speed.front_right",
+        "label": "Front-right wheel speed",
+        "quantity": "speed",
+        "preferred_unit": "km/h",
+        "confidence": "heuristic",
+        "aliases": [
+          "ECU_FR_SPEED"
+        ]
+      }
+    },
+    {
+      "name": "ECU_RL_SPEED",
+      "decode": {
+        "start_bit": 23,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.0047619,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 312.0711165,
+        "unit": "km/h",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 24,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 645,
+        "frame_id_hex": "0x285",
+        "frame_name": "MSG_285"
+      },
+      "canonical": {
+        "id": "wheel.speed.rear_left",
+        "label": "Rear-left wheel speed",
+        "quantity": "speed",
+        "preferred_unit": "km/h",
+        "confidence": "heuristic",
+        "aliases": [
+          "ECU_RL_SPEED"
+        ]
+      }
+    },
+    {
+      "name": "ECU_RR_SPEED",
+      "decode": {
+        "start_bit": 7,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.0047619,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 312.0711165,
+        "unit": "km/h",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 8,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 645,
+        "frame_id_hex": "0x285",
+        "frame_name": "MSG_285"
+      },
+      "canonical": {
+        "id": "wheel.speed.rear_right",
+        "label": "Rear-right wheel speed",
+        "quantity": "speed",
+        "preferred_unit": "km/h",
+        "confidence": "heuristic",
+        "aliases": [
+          "ECU_RR_SPEED"
+        ]
       }
     },
     {
@@ -1485,62 +1581,6 @@
         "frame_id": 353,
         "frame_id_hex": "0x161",
         "frame_name": "MSG_161"
-      }
-    },
-    {
-      "name": "ECU_RL_SPEED",
-      "decode": {
-        "start_bit": 23,
-        "bit_length": 16,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 0.0047619,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 312.0711165,
-        "unit": "km/h",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 24,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 645,
-        "frame_id_hex": "0x285",
-        "frame_name": "MSG_285"
-      }
-    },
-    {
-      "name": "ECU_RR_SPEED",
-      "decode": {
-        "start_bit": 7,
-        "bit_length": 16,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 0.0047619,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 312.0711165,
-        "unit": "km/h",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 8,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 645,
-        "frame_id_hex": "0x285",
-        "frame_name": "MSG_285"
       }
     },
     {

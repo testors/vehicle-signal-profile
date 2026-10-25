@@ -4439,44 +4439,6 @@
       }
     },
     {
-      "name": "ClutchSlip",
-      "decode": {
-        "start_bit": 48,
-        "bit_length": 16,
-        "byte_order": "little_endian",
-        "signed": true,
-        "factor": 0.1,
-        "offset": 0.0,
-        "minimum": -3276.8,
-        "maximum": 3276.7000000000003,
-        "unit": "%",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 5,
-        "canp_start_bit": 48,
-        "signed_known": true,
-        "signed_reason": "rawfmt:signed"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 325,
-        "frame_id_hex": "0x145",
-        "frame_name": "MSG_145"
-      },
-      "canonical": {
-        "id": "clutch.position",
-        "label": "Clutch position",
-        "quantity": "position",
-        "preferred_unit": "%",
-        "confidence": "heuristic",
-        "aliases": [
-          "ClutchSlip"
-        ]
-      }
-    },
-    {
       "name": "BoardTemp",
       "decode": {
         "start_bit": 48,
@@ -4644,49 +4606,6 @@
       }
     },
     {
-      "name": "InjCorrLambda",
-      "decode": {
-        "start_bit": 32,
-        "bit_length": 16,
-        "byte_order": "little_endian",
-        "signed": false,
-        "factor": 0.001,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 65.535,
-        "unit": "#",
-        "mux": {
-          "value": 4,
-          "start_bit": 0,
-          "bit_length": 8,
-          "byte_order": "little_endian"
-        }
-      },
-      "raw": {
-        "cflag": 7,
-        "canp_start_bit": 32,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 368,
-        "frame_id_hex": "0x170",
-        "frame_name": "MSG_170"
-      },
-      "canonical": {
-        "id": "exhaust.lambda",
-        "label": "Lambda",
-        "quantity": "ratio",
-        "preferred_unit": "lambda",
-        "confidence": "heuristic",
-        "aliases": [
-          "InjCorrLambda"
-        ]
-      }
-    },
-    {
       "name": "Lambda",
       "decode": {
         "start_bit": 0,
@@ -4840,44 +4759,6 @@
         "confidence": "mapped",
         "aliases": [
           "TPS"
-        ]
-      }
-    },
-    {
-      "name": "TCPidError",
-      "decode": {
-        "start_bit": 48,
-        "bit_length": 16,
-        "byte_order": "little_endian",
-        "signed": true,
-        "factor": 0.1,
-        "offset": 0.0,
-        "minimum": -3276.8,
-        "maximum": 3276.7000000000003,
-        "unit": "%",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 5,
-        "canp_start_bit": 48,
-        "signed_known": true,
-        "signed_reason": "rawfmt:signed"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 333,
-        "frame_id_hex": "0x14D",
-        "frame_name": "MSG_14D"
-      },
-      "canonical": {
-        "id": "traction_control.fault",
-        "label": "Traction control fault",
-        "quantity": "state",
-        "preferred_unit": "bool",
-        "confidence": "heuristic",
-        "aliases": [
-          "TCPidError"
         ]
       }
     },
@@ -5241,6 +5122,34 @@
         "frame_id": 368,
         "frame_id_hex": "0x170",
         "frame_name": "MSG_170"
+      }
+    },
+    {
+      "name": "ClutchSlip",
+      "decode": {
+        "start_bit": 48,
+        "bit_length": 16,
+        "byte_order": "little_endian",
+        "signed": true,
+        "factor": 0.1,
+        "offset": 0.0,
+        "minimum": -3276.8,
+        "maximum": 3276.7000000000003,
+        "unit": "%",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 5,
+        "canp_start_bit": 48,
+        "signed_known": true,
+        "signed_reason": "rawfmt:signed"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 325,
+        "frame_id_hex": "0x145",
+        "frame_name": "MSG_145"
       }
     },
     {
@@ -7697,6 +7606,39 @@
       }
     },
     {
+      "name": "InjCorrLambda",
+      "decode": {
+        "start_bit": 32,
+        "bit_length": 16,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 0.001,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 65.535,
+        "unit": "#",
+        "mux": {
+          "value": 4,
+          "start_bit": 0,
+          "bit_length": 8,
+          "byte_order": "little_endian"
+        }
+      },
+      "raw": {
+        "cflag": 7,
+        "canp_start_bit": 32,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 368,
+        "frame_id_hex": "0x170",
+        "frame_name": "MSG_170"
+      }
+    },
+    {
       "name": "InjDiag1",
       "decode": {
         "start_bit": 16,
@@ -9715,6 +9657,34 @@
         "frame_id": 321,
         "frame_id_hex": "0x141",
         "frame_name": "MSG_141"
+      }
+    },
+    {
+      "name": "TCPidError",
+      "decode": {
+        "start_bit": 48,
+        "bit_length": 16,
+        "byte_order": "little_endian",
+        "signed": true,
+        "factor": 0.1,
+        "offset": 0.0,
+        "minimum": -3276.8,
+        "maximum": 3276.7000000000003,
+        "unit": "%",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 5,
+        "canp_start_bit": 48,
+        "signed_known": true,
+        "signed_reason": "rawfmt:signed"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 333,
+        "frame_id_hex": "0x14D",
+        "frame_name": "MSG_14D"
       }
     },
     {

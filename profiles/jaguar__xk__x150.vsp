@@ -475,6 +475,38 @@
   "diagnostic_queries": [],
   "signals": [
     {
+      "name": "Air_Temperature",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 789,
+        "frame_id_hex": "0x315",
+        "frame_name": "MSG_315"
+      },
+      "decode": {
+        "start_bit": 9,
+        "bit_length": 10,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.25,
+        "offset": -128.0,
+        "minimum": -128.0,
+        "maximum": 127.75,
+        "unit": "C",
+        "mux": null
+      },
+      "canonical": {
+        "id": "ambient_air.temperature",
+        "label": "Ambient air temperature",
+        "quantity": "temperature",
+        "preferred_unit": "C",
+        "confidence": "mapped",
+        "aliases": [
+          "Air_Temperature"
+        ]
+      }
+    },
+    {
       "name": "Brake_Pressure",
       "acquisition": {
         "type": "can_frame",
@@ -599,38 +631,6 @@
         "confidence": "mapped",
         "aliases": [
           "Engine_Speed"
-        ]
-      }
-    },
-    {
-      "name": "Air_Temperature",
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 789,
-        "frame_id_hex": "0x315",
-        "frame_name": "MSG_315"
-      },
-      "decode": {
-        "start_bit": 9,
-        "bit_length": 10,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 0.25,
-        "offset": -128.0,
-        "minimum": -128.0,
-        "maximum": 127.75,
-        "unit": "C",
-        "mux": null
-      },
-      "canonical": {
-        "id": "intake_air.temperature",
-        "label": "Intake air temperature",
-        "quantity": "temperature",
-        "preferred_unit": "C",
-        "confidence": "mapped",
-        "aliases": [
-          "Air_Temperature"
         ]
       }
     },

@@ -292,6 +292,44 @@
   "diagnostic_queries": [],
   "signals": [
     {
+      "name": "ECU_HAND_TPS",
+      "decode": {
+        "start_bit": 46,
+        "bit_length": 7,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 127.0,
+        "unit": "%",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 40,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 530,
+        "frame_id_hex": "0x212",
+        "frame_name": "MSG_212"
+      },
+      "canonical": {
+        "id": "accelerator.pedal.position",
+        "label": "Accelerator pedal position",
+        "quantity": "position",
+        "preferred_unit": "%",
+        "confidence": "heuristic",
+        "aliases": [
+          "ECU_HAND_TPS"
+        ]
+      }
+    },
+    {
       "name": "ECU_VBATT",
       "decode": {
         "start_bit": 15,
@@ -478,44 +516,6 @@
         "confidence": "heuristic",
         "aliases": [
           "ECU_MAN_AIR_PRES"
-        ]
-      }
-    },
-    {
-      "name": "ECU_HAND_TPS",
-      "decode": {
-        "start_bit": 46,
-        "bit_length": 7,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 1.0,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 127.0,
-        "unit": "%",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 40,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 530,
-        "frame_id_hex": "0x212",
-        "frame_name": "MSG_212"
-      },
-      "canonical": {
-        "id": "throttle.position",
-        "label": "Throttle position",
-        "quantity": "position",
-        "preferred_unit": "%",
-        "confidence": "heuristic",
-        "aliases": [
-          "ECU_HAND_TPS"
         ]
       }
     },

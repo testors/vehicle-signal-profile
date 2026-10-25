@@ -1205,38 +1205,6 @@
       }
     },
     {
-      "name": "Fuel_Level",
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 994,
-        "frame_id_hex": "0x3E2",
-        "frame_name": "MSG_3E2"
-      },
-      "decode": {
-        "start_bit": 7,
-        "bit_length": 16,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 0.1,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 0.0,
-        "unit": "L",
-        "mux": null
-      },
-      "canonical": {
-        "id": "fuel.level",
-        "label": "Fuel level",
-        "quantity": "level",
-        "preferred_unit": "%",
-        "confidence": "mapped",
-        "aliases": [
-          "Fuel_Level"
-        ]
-      }
-    },
-    {
       "name": "Fuel_Pressure",
       "acquisition": {
         "type": "can_frame",
@@ -1265,6 +1233,38 @@
         "confidence": "mapped",
         "aliases": [
           "Fuel_Pressure"
+        ]
+      }
+    },
+    {
+      "name": "Fuel_Level",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 994,
+        "frame_id_hex": "0x3E2",
+        "frame_name": "MSG_3E2"
+      },
+      "decode": {
+        "start_bit": 7,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.1,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 0.0,
+        "unit": "L",
+        "mux": null
+      },
+      "canonical": {
+        "id": "fuel.remaining",
+        "label": "Fuel remaining",
+        "quantity": "volume",
+        "preferred_unit": "L",
+        "confidence": "mapped",
+        "aliases": [
+          "Fuel_Level"
         ]
       }
     },
@@ -1781,38 +1781,6 @@
       }
     },
     {
-      "name": "Wheel_Speed_Difference_kph",
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 867,
-        "frame_id_hex": "0x363",
-        "frame_name": "MSG_363"
-      },
-      "decode": {
-        "start_bit": 23,
-        "bit_length": 16,
-        "byte_order": "big_endian",
-        "signed": true,
-        "factor": 0.1,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 0.0,
-        "unit": "km/h",
-        "mux": null
-      },
-      "canonical": {
-        "id": "wheel.speed",
-        "label": "Wheel speed",
-        "quantity": "speed",
-        "preferred_unit": "km/h",
-        "confidence": "heuristic",
-        "aliases": [
-          "Wheel_Speed_Difference_kph"
-        ]
-      }
-    },
-    {
       "name": "Anti_Lag",
       "acquisition": {
         "type": "can_frame",
@@ -2055,7 +2023,7 @@
       }
     },
     {
-      "name": "Wheel_Slip_mph",
+      "name": "Wheel_Slip_kph",
       "acquisition": {
         "type": "can_frame",
         "bus": "can0",
@@ -2068,11 +2036,33 @@
         "bit_length": 16,
         "byte_order": "big_endian",
         "signed": true,
-        "factor": 0.0621,
+        "factor": 0.1,
         "offset": 0.0,
         "minimum": 0.0,
         "maximum": 0.0,
-        "unit": "mph",
+        "unit": "km/h",
+        "mux": null
+      }
+    },
+    {
+      "name": "Wheel_Speed_Difference_kph",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 867,
+        "frame_id_hex": "0x363",
+        "frame_name": "MSG_363"
+      },
+      "decode": {
+        "start_bit": 23,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": true,
+        "factor": 0.1,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 0.0,
+        "unit": "km/h",
         "mux": null
       }
     }

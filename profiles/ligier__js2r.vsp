@@ -985,6 +985,82 @@
       }
     },
     {
+      "name": "FrontBrake",
+      "decode": {
+        "start_bit": 7,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": true,
+        "factor": 0.01,
+        "offset": 0.0,
+        "minimum": -327.68,
+        "maximum": 327.67,
+        "unit": "bar",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 8,
+        "signed_known": true,
+        "signed_reason": "rawfmt:signed"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1542,
+        "frame_id_hex": "0x606",
+        "frame_name": "MSG_606"
+      },
+      "canonical": {
+        "id": "brake.pressure.front",
+        "label": "Front brake pressure",
+        "quantity": "pressure",
+        "preferred_unit": "bar",
+        "confidence": "heuristic",
+        "aliases": [
+          "FrontBrake"
+        ]
+      }
+    },
+    {
+      "name": "RearBrake",
+      "decode": {
+        "start_bit": 23,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": true,
+        "factor": 0.01,
+        "offset": 0.0,
+        "minimum": -327.68,
+        "maximum": 327.67,
+        "unit": "bar",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 24,
+        "signed_known": true,
+        "signed_reason": "rawfmt:signed"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1542,
+        "frame_id_hex": "0x606",
+        "frame_name": "MSG_606"
+      },
+      "canonical": {
+        "id": "brake.pressure.rear",
+        "label": "Rear brake pressure",
+        "quantity": "pressure",
+        "preferred_unit": "bar",
+        "confidence": "heuristic",
+        "aliases": [
+          "RearBrake"
+        ]
+      }
+    },
+    {
       "name": "WaterT",
       "decode": {
         "start_bit": 23,
@@ -1565,44 +1641,6 @@
       }
     },
     {
-      "name": "RRSpeed",
-      "decode": {
-        "start_bit": 23,
-        "bit_length": 16,
-        "byte_order": "big_endian",
-        "signed": true,
-        "factor": 0.036,
-        "offset": 0.0,
-        "minimum": -1179.648,
-        "maximum": 1179.6119999999999,
-        "unit": "km/h",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 24,
-        "signed_known": true,
-        "signed_reason": "rawfmt:signed"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1561,
-        "frame_id_hex": "0x619",
-        "frame_name": "MSG_619"
-      },
-      "canonical": {
-        "id": "vehicle.speed",
-        "label": "Vehicle speed",
-        "quantity": "speed",
-        "preferred_unit": "km/h",
-        "confidence": "heuristic",
-        "aliases": [
-          "RRSpeed"
-        ]
-      }
-    },
-    {
       "name": "FLSpeed",
       "decode": {
         "start_bit": 39,
@@ -1630,8 +1668,8 @@
         "frame_name": "MSG_618"
       },
       "canonical": {
-        "id": "vehicle.speed",
-        "label": "Vehicle speed",
+        "id": "wheel.speed.front_left",
+        "label": "Front-left wheel speed",
         "quantity": "speed",
         "preferred_unit": "km/h",
         "confidence": "heuristic",
@@ -1668,8 +1706,8 @@
         "frame_name": "MSG_618"
       },
       "canonical": {
-        "id": "vehicle.speed",
-        "label": "Vehicle speed",
+        "id": "wheel.speed.front_right",
+        "label": "Front-right wheel speed",
         "quantity": "speed",
         "preferred_unit": "km/h",
         "confidence": "heuristic",
@@ -1706,13 +1744,51 @@
         "frame_name": "MSG_619"
       },
       "canonical": {
-        "id": "vehicle.speed",
-        "label": "Vehicle speed",
+        "id": "wheel.speed.rear_left",
+        "label": "Rear-left wheel speed",
         "quantity": "speed",
         "preferred_unit": "km/h",
         "confidence": "heuristic",
         "aliases": [
           "RLSpeed"
+        ]
+      }
+    },
+    {
+      "name": "RRSpeed",
+      "decode": {
+        "start_bit": 23,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": true,
+        "factor": 0.036,
+        "offset": 0.0,
+        "minimum": -1179.648,
+        "maximum": 1179.6119999999999,
+        "unit": "km/h",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 24,
+        "signed_known": true,
+        "signed_reason": "rawfmt:signed"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1561,
+        "frame_id_hex": "0x619",
+        "frame_name": "MSG_619"
+      },
+      "canonical": {
+        "id": "wheel.speed.rear_right",
+        "label": "Rear-right wheel speed",
+        "quantity": "speed",
+        "preferred_unit": "km/h",
+        "confidence": "heuristic",
+        "aliases": [
+          "RRSpeed"
         ]
       }
     },
@@ -1868,34 +1944,6 @@
         "frame_id": 1543,
         "frame_id_hex": "0x607",
         "frame_name": "MSG_607"
-      }
-    },
-    {
-      "name": "FrontBrake",
-      "decode": {
-        "start_bit": 7,
-        "bit_length": 16,
-        "byte_order": "big_endian",
-        "signed": true,
-        "factor": 0.01,
-        "offset": 0.0,
-        "minimum": -327.68,
-        "maximum": 327.67,
-        "unit": "bar",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 8,
-        "signed_known": true,
-        "signed_reason": "rawfmt:signed"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1542,
-        "frame_id_hex": "0x606",
-        "frame_name": "MSG_606"
       }
     },
     {
@@ -2148,34 +2196,6 @@
         "frame_id": 1544,
         "frame_id_hex": "0x608",
         "frame_name": "MSG_608"
-      }
-    },
-    {
-      "name": "RearBrake",
-      "decode": {
-        "start_bit": 23,
-        "bit_length": 16,
-        "byte_order": "big_endian",
-        "signed": true,
-        "factor": 0.01,
-        "offset": 0.0,
-        "minimum": -327.68,
-        "maximum": 327.67,
-        "unit": "bar",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 24,
-        "signed_known": true,
-        "signed_reason": "rawfmt:signed"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1542,
-        "frame_id_hex": "0x606",
-        "frame_name": "MSG_606"
       }
     },
     {

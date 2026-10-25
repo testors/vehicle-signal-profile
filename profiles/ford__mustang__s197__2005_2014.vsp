@@ -1419,6 +1419,44 @@
       }
     },
     {
+      "name": "BrakeLampSw",
+      "decode": {
+        "start_bit": 48,
+        "bit_length": 1,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "unit": "#",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 48,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 512,
+        "frame_id_hex": "0x200",
+        "frame_name": "MSG_200"
+      },
+      "canonical": {
+        "id": "brake.light.switch",
+        "label": "Brake light switch",
+        "quantity": "state",
+        "preferred_unit": "bool",
+        "confidence": "heuristic",
+        "aliases": [
+          "BrakeLampSw"
+        ]
+      }
+    },
+    {
       "name": "MCBrakePress",
       "decode": {
         "start_bit": 63,
@@ -1453,44 +1491,6 @@
         "confidence": "heuristic",
         "aliases": [
           "MCBrakePress"
-        ]
-      }
-    },
-    {
-      "name": "BrakeLampSw",
-      "decode": {
-        "start_bit": 48,
-        "bit_length": 1,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 1.0,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "unit": "#",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 48,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 512,
-        "frame_id_hex": "0x200",
-        "frame_name": "MSG_200"
-      },
-      "canonical": {
-        "id": "brake.switch",
-        "label": "Brake switch",
-        "quantity": "state",
-        "preferred_unit": "bool",
-        "confidence": "heuristic",
-        "aliases": [
-          "BrakeLampSw"
         ]
       }
     },
@@ -1685,44 +1685,6 @@
       }
     },
     {
-      "name": "DesLambda1",
-      "decode": {
-        "start_bit": 39,
-        "bit_length": 8,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 0.01,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 2.5500000000000003,
-        "unit": "lambda",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 32,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1062,
-        "frame_id_hex": "0x426",
-        "frame_name": "MSG_426"
-      },
-      "canonical": {
-        "id": "exhaust.lambda.bank1",
-        "label": "Lambda bank 1",
-        "quantity": "ratio",
-        "preferred_unit": "lambda",
-        "confidence": "heuristic",
-        "aliases": [
-          "DesLambda1"
-        ]
-      }
-    },
-    {
       "name": "Lambda1",
       "decode": {
         "start_bit": 55,
@@ -1757,44 +1719,6 @@
         "confidence": "mapped",
         "aliases": [
           "Lambda1"
-        ]
-      }
-    },
-    {
-      "name": "DesLambda2",
-      "decode": {
-        "start_bit": 47,
-        "bit_length": 8,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 0.01,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 2.5500000000000003,
-        "unit": "lambda",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 40,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1062,
-        "frame_id_hex": "0x426",
-        "frame_name": "MSG_426"
-      },
-      "canonical": {
-        "id": "exhaust.lambda.bank2",
-        "label": "Lambda bank 2",
-        "quantity": "ratio",
-        "preferred_unit": "lambda",
-        "confidence": "heuristic",
-        "aliases": [
-          "DesLambda2"
         ]
       }
     },
@@ -2903,6 +2827,62 @@
         "frame_id": 1056,
         "frame_id_hex": "0x420",
         "frame_name": "MSG_420"
+      }
+    },
+    {
+      "name": "DesLambda1",
+      "decode": {
+        "start_bit": 39,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.01,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 2.5500000000000003,
+        "unit": "lambda",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 32,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1062,
+        "frame_id_hex": "0x426",
+        "frame_name": "MSG_426"
+      }
+    },
+    {
+      "name": "DesLambda2",
+      "decode": {
+        "start_bit": 47,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.01,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 2.5500000000000003,
+        "unit": "lambda",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 40,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1062,
+        "frame_id_hex": "0x426",
+        "frame_name": "MSG_426"
       }
     },
     {

@@ -1089,6 +1089,38 @@
       }
     },
     {
+      "name": "Air_Temperature",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 144,
+        "frame_id_hex": "0x90",
+        "frame_name": "MSG_090"
+      },
+      "decode": {
+        "start_bit": 7,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": -55.0,
+        "minimum": 0.0,
+        "maximum": 0.0,
+        "unit": "C",
+        "mux": null
+      },
+      "canonical": {
+        "id": "ambient_air.temperature",
+        "label": "Ambient air temperature",
+        "quantity": "temperature",
+        "preferred_unit": "C",
+        "confidence": "mapped",
+        "aliases": [
+          "Air_Temperature"
+        ]
+      }
+    },
+    {
       "name": "Battery_Voltage",
       "acquisition": {
         "type": "can_frame",
@@ -1448,10 +1480,10 @@
         "mux": null
       },
       "canonical": {
-        "id": "exhaust.air_fuel_ratio",
-        "label": "Air/fuel ratio",
+        "id": "exhaust.lambda.bank2",
+        "label": "Lambda bank 2",
         "quantity": "ratio",
-        "preferred_unit": "ratio",
+        "preferred_unit": "lambda",
         "confidence": "heuristic",
         "aliases": [
           "Air_Fuel_Ratio_2"
@@ -1480,10 +1512,10 @@
         "mux": null
       },
       "canonical": {
-        "id": "exhaust.air_fuel_ratio",
-        "label": "Air/fuel ratio",
+        "id": "exhaust.lambda.bank1",
+        "label": "Lambda bank 1",
         "quantity": "ratio",
-        "preferred_unit": "ratio",
+        "preferred_unit": "lambda",
         "confidence": "mapped",
         "aliases": [
           "Air_Fuel_Ratio"
@@ -1647,38 +1679,6 @@
         "confidence": "mapped",
         "aliases": [
           "Intake_Air_Temperature"
-        ]
-      }
-    },
-    {
-      "name": "Air_Temperature",
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 144,
-        "frame_id_hex": "0x90",
-        "frame_name": "MSG_090"
-      },
-      "decode": {
-        "start_bit": 7,
-        "bit_length": 8,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 1.0,
-        "offset": -55.0,
-        "minimum": 0.0,
-        "maximum": 0.0,
-        "unit": "C",
-        "mux": null
-      },
-      "canonical": {
-        "id": "intake_air.temperature",
-        "label": "Intake air temperature",
-        "quantity": "temperature",
-        "preferred_unit": "C",
-        "confidence": "mapped",
-        "aliases": [
-          "Air_Temperature"
         ]
       }
     },

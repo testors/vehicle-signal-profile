@@ -603,44 +603,6 @@
       }
     },
     {
-      "name": "Rear_Brake_Pr",
-      "decode": {
-        "start_bit": 23,
-        "bit_length": 16,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 0.1,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 6553.5,
-        "unit": "bar",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 24,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1537,
-        "frame_id_hex": "0x601",
-        "frame_name": "MSG_601"
-      },
-      "canonical": {
-        "id": "brake.pressure",
-        "label": "Brake pressure",
-        "quantity": "pressure",
-        "preferred_unit": "bar",
-        "confidence": "heuristic",
-        "aliases": [
-          "Rear_Brake_Pr"
-        ]
-      }
-    },
-    {
       "name": "Front_Brake_Pr",
       "decode": {
         "start_bit": 7,
@@ -668,13 +630,51 @@
         "frame_name": "MSG_601"
       },
       "canonical": {
-        "id": "brake.pressure",
-        "label": "Brake pressure",
+        "id": "brake.pressure.front",
+        "label": "Front brake pressure",
         "quantity": "pressure",
         "preferred_unit": "bar",
         "confidence": "heuristic",
         "aliases": [
           "Front_Brake_Pr"
+        ]
+      }
+    },
+    {
+      "name": "Rear_Brake_Pr",
+      "decode": {
+        "start_bit": 23,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.1,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 6553.5,
+        "unit": "bar",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 24,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1537,
+        "frame_id_hex": "0x601",
+        "frame_name": "MSG_601"
+      },
+      "canonical": {
+        "id": "brake.pressure.rear",
+        "label": "Rear brake pressure",
+        "quantity": "pressure",
+        "preferred_unit": "bar",
+        "confidence": "heuristic",
+        "aliases": [
+          "Rear_Brake_Pr"
         ]
       }
     },
@@ -1093,6 +1093,44 @@
         "confidence": "heuristic",
         "aliases": [
           "Inlet_Air_Temp"
+        ]
+      }
+    },
+    {
+      "name": "Inlet_Man_Press",
+      "decode": {
+        "start_bit": 23,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.001,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 65.535,
+        "unit": "bar",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 24,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1541,
+        "frame_id_hex": "0x605",
+        "frame_name": "MSG_605"
+      },
+      "canonical": {
+        "id": "intake_manifold.pressure",
+        "label": "Intake manifold pressure",
+        "quantity": "pressure",
+        "preferred_unit": "bar",
+        "confidence": "heuristic",
+        "aliases": [
+          "Inlet_Man_Press"
         ]
       }
     },
@@ -1538,34 +1576,6 @@
         "frame_id": 1539,
         "frame_id_hex": "0x603",
         "frame_name": "MSG_603"
-      }
-    },
-    {
-      "name": "Inlet_Man_Press",
-      "decode": {
-        "start_bit": 23,
-        "bit_length": 16,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 0.001,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 65.535,
-        "unit": "bar",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 24,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1541,
-        "frame_id_hex": "0x605",
-        "frame_name": "MSG_605"
       }
     },
     {

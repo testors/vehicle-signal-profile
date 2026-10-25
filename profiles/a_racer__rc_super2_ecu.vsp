@@ -2145,10 +2145,10 @@
         "frame_name": "MSG_040"
       },
       "canonical": {
-        "id": "exhaust.air_fuel_ratio",
-        "label": "Air/fuel ratio",
+        "id": "exhaust.lambda",
+        "label": "Lambda",
         "quantity": "ratio",
-        "preferred_unit": "ratio",
+        "preferred_unit": "lambda",
         "confidence": "mapped",
         "aliases": [
           "AFR"
@@ -2195,92 +2195,6 @@
         "confidence": "heuristic",
         "aliases": [
           "TAir"
-        ]
-      }
-    },
-    {
-      "name": "Cyl1ExpectMAP",
-      "decode": {
-        "start_bit": 39,
-        "bit_length": 16,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 3.90625e-05,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 2.5599609375,
-        "unit": "bar",
-        "mux": {
-          "value": 1536,
-          "start_bit": 7,
-          "bit_length": 16,
-          "byte_order": "big_endian"
-        }
-      },
-      "raw": {
-        "cflag": 2,
-        "canp_start_bit": 40,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 64,
-        "frame_id_hex": "0x40",
-        "frame_name": "MSG_040"
-      },
-      "canonical": {
-        "id": "intake_manifold.pressure",
-        "label": "Intake manifold pressure",
-        "quantity": "pressure",
-        "preferred_unit": "bar",
-        "confidence": "heuristic",
-        "aliases": [
-          "Cyl1ExpectMAP"
-        ]
-      }
-    },
-    {
-      "name": "MapNum",
-      "decode": {
-        "start_bit": 23,
-        "bit_length": 8,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 1.0,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 255.0,
-        "unit": "#",
-        "mux": {
-          "value": 1537,
-          "start_bit": 7,
-          "bit_length": 16,
-          "byte_order": "big_endian"
-        }
-      },
-      "raw": {
-        "cflag": 2,
-        "canp_start_bit": 16,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 64,
-        "frame_id_hex": "0x40",
-        "frame_name": "MSG_040"
-      },
-      "canonical": {
-        "id": "intake_manifold.pressure",
-        "label": "Intake manifold pressure",
-        "quantity": "pressure",
-        "preferred_unit": "bar",
-        "confidence": "heuristic",
-        "aliases": [
-          "MapNum"
         ]
       }
     },
@@ -4690,6 +4604,39 @@
       }
     },
     {
+      "name": "Cyl1ExpectMAP",
+      "decode": {
+        "start_bit": 39,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 3.90625e-05,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 2.5599609375,
+        "unit": "bar",
+        "mux": {
+          "value": 1536,
+          "start_bit": 7,
+          "bit_length": 16,
+          "byte_order": "big_endian"
+        }
+      },
+      "raw": {
+        "cflag": 2,
+        "canp_start_bit": 40,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 64,
+        "frame_id_hex": "0x40",
+        "frame_name": "MSG_040"
+      }
+    },
+    {
       "name": "Dis",
       "decode": {
         "start_bit": 7,
@@ -4937,6 +4884,39 @@
       "raw": {
         "cflag": 2,
         "canp_start_bit": 48,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 64,
+        "frame_id_hex": "0x40",
+        "frame_name": "MSG_040"
+      }
+    },
+    {
+      "name": "MapNum",
+      "decode": {
+        "start_bit": 23,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 255.0,
+        "unit": "#",
+        "mux": {
+          "value": 1537,
+          "start_bit": 7,
+          "bit_length": 16,
+          "byte_order": "big_endian"
+        }
+      },
+      "raw": {
+        "cflag": 2,
+        "canp_start_bit": 16,
         "signed_known": true,
         "signed_reason": "rawfmt:unsigned"
       },

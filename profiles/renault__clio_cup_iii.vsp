@@ -829,6 +829,44 @@
       }
     },
     {
+      "name": "InletPress",
+      "decode": {
+        "start_bit": 39,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": true,
+        "factor": 0.001,
+        "offset": 0.0,
+        "minimum": -32.768,
+        "maximum": 32.767,
+        "unit": "bar",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 40,
+        "signed_known": true,
+        "signed_reason": "rawfmt:signed"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 354,
+        "frame_id_hex": "0x162",
+        "frame_name": "MSG_162"
+      },
+      "canonical": {
+        "id": "intake_manifold.pressure",
+        "label": "Intake manifold pressure",
+        "quantity": "pressure",
+        "preferred_unit": "bar",
+        "confidence": "heuristic",
+        "aliases": [
+          "InletPress"
+        ]
+      }
+    },
+    {
       "name": "Manifold_Pressure",
       "acquisition": {
         "type": "can_frame",
@@ -1234,34 +1272,6 @@
         "frame_id": 358,
         "frame_id_hex": "0x166",
         "frame_name": "MSG_166"
-      }
-    },
-    {
-      "name": "InletPress",
-      "decode": {
-        "start_bit": 39,
-        "bit_length": 16,
-        "byte_order": "big_endian",
-        "signed": true,
-        "factor": 0.001,
-        "offset": 0.0,
-        "minimum": -32.768,
-        "maximum": 32.767,
-        "unit": "bar",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 40,
-        "signed_known": true,
-        "signed_reason": "rawfmt:signed"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 354,
-        "frame_id_hex": "0x162",
-        "frame_name": "MSG_162"
       }
     }
   ]

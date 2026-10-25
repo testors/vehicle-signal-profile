@@ -1673,49 +1673,6 @@
       }
     },
     {
-      "name": "TarBoost",
-      "decode": {
-        "start_bit": 55,
-        "bit_length": 8,
-        "byte_order": "big_endian",
-        "signed": true,
-        "factor": 0.02569803921,
-        "offset": -1.0,
-        "minimum": -4.289349018879999,
-        "maximum": 2.26365097967,
-        "unit": "bar",
-        "mux": {
-          "value": 4,
-          "start_bit": 7,
-          "bit_length": 8,
-          "byte_order": "big_endian"
-        }
-      },
-      "raw": {
-        "cflag": 2,
-        "canp_start_bit": 48,
-        "signed_known": true,
-        "signed_reason": "rawfmt:signed"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 814,
-        "frame_id_hex": "0x32E",
-        "frame_name": "MSG_32E"
-      },
-      "canonical": {
-        "id": "intake_air.boost_pressure",
-        "label": "Boost pressure",
-        "quantity": "pressure",
-        "preferred_unit": "bar",
-        "confidence": "mapped",
-        "aliases": [
-          "TarBoost"
-        ]
-      }
-    },
-    {
       "name": "AirTemp",
       "decode": {
         "start_bit": 63,
@@ -1798,92 +1755,6 @@
         "confidence": "mapped",
         "aliases": [
           "ManifAirPress"
-        ]
-      }
-    },
-    {
-      "name": "MapSide",
-      "decode": {
-        "start_bit": 47,
-        "bit_length": 8,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 0.06274509803,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 15.99999999765,
-        "unit": "#",
-        "mux": {
-          "value": 2,
-          "start_bit": 7,
-          "bit_length": 8,
-          "byte_order": "big_endian"
-        }
-      },
-      "raw": {
-        "cflag": 2,
-        "canp_start_bit": 40,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 814,
-        "frame_id_hex": "0x32E",
-        "frame_name": "MSG_32E"
-      },
-      "canonical": {
-        "id": "intake_manifold.pressure",
-        "label": "Intake manifold pressure",
-        "quantity": "pressure",
-        "preferred_unit": "bar",
-        "confidence": "heuristic",
-        "aliases": [
-          "MapSide"
-        ]
-      }
-    },
-    {
-      "name": "ThrotSide",
-      "decode": {
-        "start_bit": 47,
-        "bit_length": 8,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 0.06274509803,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 15.99999999765,
-        "unit": "#",
-        "mux": {
-          "value": 1,
-          "start_bit": 7,
-          "bit_length": 8,
-          "byte_order": "big_endian"
-        }
-      },
-      "raw": {
-        "cflag": 2,
-        "canp_start_bit": 40,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 814,
-        "frame_id_hex": "0x32E",
-        "frame_name": "MSG_32E"
-      },
-      "canonical": {
-        "id": "throttle.position",
-        "label": "Throttle position",
-        "quantity": "position",
-        "preferred_unit": "%",
-        "confidence": "heuristic",
-        "aliases": [
-          "ThrotSide"
         ]
       }
     },
@@ -2772,6 +2643,39 @@
       }
     },
     {
+      "name": "MapSide",
+      "decode": {
+        "start_bit": 47,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.06274509803,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 15.99999999765,
+        "unit": "#",
+        "mux": {
+          "value": 2,
+          "start_bit": 7,
+          "bit_length": 8,
+          "byte_order": "big_endian"
+        }
+      },
+      "raw": {
+        "cflag": 2,
+        "canp_start_bit": 40,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 814,
+        "frame_id_hex": "0x32E",
+        "frame_name": "MSG_32E"
+      }
+    },
+    {
       "name": "RadFan1",
       "decode": {
         "start_bit": 8,
@@ -2904,6 +2808,39 @@
       }
     },
     {
+      "name": "TarBoost",
+      "decode": {
+        "start_bit": 55,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": true,
+        "factor": 0.02569803921,
+        "offset": -1.0,
+        "minimum": -4.289349018879999,
+        "maximum": 2.26365097967,
+        "unit": "bar",
+        "mux": {
+          "value": 4,
+          "start_bit": 7,
+          "bit_length": 8,
+          "byte_order": "big_endian"
+        }
+      },
+      "raw": {
+        "cflag": 2,
+        "canp_start_bit": 48,
+        "signed_known": true,
+        "signed_reason": "rawfmt:signed"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 814,
+        "frame_id_hex": "0x32E",
+        "frame_name": "MSG_32E"
+      }
+    },
+    {
       "name": "TargGear",
       "decode": {
         "start_bit": 63,
@@ -2950,6 +2887,39 @@
         "unit": "λ",
         "mux": {
           "value": 4,
+          "start_bit": 7,
+          "bit_length": 8,
+          "byte_order": "big_endian"
+        }
+      },
+      "raw": {
+        "cflag": 2,
+        "canp_start_bit": 40,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 814,
+        "frame_id_hex": "0x32E",
+        "frame_name": "MSG_32E"
+      }
+    },
+    {
+      "name": "ThrotSide",
+      "decode": {
+        "start_bit": 47,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.06274509803,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 15.99999999765,
+        "unit": "#",
+        "mux": {
+          "value": 1,
           "start_bit": 7,
           "bit_length": 8,
           "byte_order": "big_endian"

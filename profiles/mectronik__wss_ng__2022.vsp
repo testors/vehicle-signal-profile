@@ -4768,44 +4768,6 @@
       }
     },
     {
-      "name": "CLUTCH_SLIP",
-      "decode": {
-        "start_bit": 32,
-        "bit_length": 16,
-        "byte_order": "little_endian",
-        "signed": true,
-        "factor": 0.1,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 0.0,
-        "unit": "%",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 5,
-        "canp_start_bit": 32,
-        "signed_known": true,
-        "signed_reason": "rawfmt:signed"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 526,
-        "frame_id_hex": "0x20E",
-        "frame_name": "MSG_20E"
-      },
-      "canonical": {
-        "id": "clutch.position",
-        "label": "Clutch position",
-        "quantity": "position",
-        "preferred_unit": "%",
-        "confidence": "heuristic",
-        "aliases": [
-          "CLUTCH_SLIP"
-        ]
-      }
-    },
-    {
       "name": "BOARD_TEMP",
       "decode": {
         "start_bit": 48,
@@ -4996,44 +4958,6 @@
       }
     },
     {
-      "name": "RPM_VIRTUAL",
-      "decode": {
-        "start_bit": 16,
-        "bit_length": 16,
-        "byte_order": "little_endian",
-        "signed": false,
-        "factor": 1.0,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 0.0,
-        "unit": "1/min",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 5,
-        "canp_start_bit": 16,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 516,
-        "frame_id_hex": "0x204",
-        "frame_name": "MSG_204"
-      },
-      "canonical": {
-        "id": "engine.speed",
-        "label": "Engine speed",
-        "quantity": "rotational_speed",
-        "preferred_unit": "rpm",
-        "confidence": "heuristic",
-        "aliases": [
-          "RPM_VIRTUAL"
-        ]
-      }
-    },
-    {
       "name": "ENGINE_STATE",
       "decode": {
         "start_bit": 32,
@@ -5098,120 +5022,6 @@
       }
     },
     {
-      "name": "LAMBDA_B_CORR",
-      "decode": {
-        "start_bit": 48,
-        "bit_length": 16,
-        "byte_order": "little_endian",
-        "signed": false,
-        "factor": 0.001,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 0.0,
-        "unit": "#",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 5,
-        "canp_start_bit": 48,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 534,
-        "frame_id_hex": "0x216",
-        "frame_name": "MSG_216"
-      },
-      "canonical": {
-        "id": "exhaust.lambda",
-        "label": "Lambda",
-        "quantity": "ratio",
-        "preferred_unit": "lambda",
-        "confidence": "heuristic",
-        "aliases": [
-          "LAMBDA_B_CORR"
-        ]
-      }
-    },
-    {
-      "name": "LAMBDA_A_CORR",
-      "decode": {
-        "start_bit": 32,
-        "bit_length": 16,
-        "byte_order": "little_endian",
-        "signed": false,
-        "factor": 0.001,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 0.0,
-        "unit": "#",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 5,
-        "canp_start_bit": 32,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 534,
-        "frame_id_hex": "0x216",
-        "frame_name": "MSG_216"
-      },
-      "canonical": {
-        "id": "exhaust.lambda",
-        "label": "Lambda",
-        "quantity": "ratio",
-        "preferred_unit": "lambda",
-        "confidence": "heuristic",
-        "aliases": [
-          "LAMBDA_A_CORR"
-        ]
-      }
-    },
-    {
-      "name": "LAMBDA_HTR",
-      "decode": {
-        "start_bit": 48,
-        "bit_length": 16,
-        "byte_order": "little_endian",
-        "signed": false,
-        "factor": 0.1,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 0.0,
-        "unit": "#",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 5,
-        "canp_start_bit": 48,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 537,
-        "frame_id_hex": "0x219",
-        "frame_name": "MSG_219"
-      },
-      "canonical": {
-        "id": "exhaust.lambda",
-        "label": "Lambda",
-        "quantity": "ratio",
-        "preferred_unit": "lambda",
-        "confidence": "heuristic",
-        "aliases": [
-          "LAMBDA_HTR"
-        ]
-      }
-    },
-    {
       "name": "LAMBDA_B",
       "decode": {
         "start_bit": 48,
@@ -5239,8 +5049,8 @@
         "frame_name": "MSG_204"
       },
       "canonical": {
-        "id": "exhaust.lambda",
-        "label": "Lambda",
+        "id": "exhaust.lambda.bank2",
+        "label": "Lambda bank 2",
         "quantity": "ratio",
         "preferred_unit": "lambda",
         "confidence": "heuristic",
@@ -7020,6 +6830,34 @@
       }
     },
     {
+      "name": "CLUTCH_SLIP",
+      "decode": {
+        "start_bit": 32,
+        "bit_length": 16,
+        "byte_order": "little_endian",
+        "signed": true,
+        "factor": 0.1,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 0.0,
+        "unit": "%",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 5,
+        "canp_start_bit": 32,
+        "signed_known": true,
+        "signed_reason": "rawfmt:signed"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 526,
+        "frame_id_hex": "0x20E",
+        "frame_name": "MSG_20E"
+      }
+    },
+    {
       "name": "CORR_IGN_CYL1",
       "decode": {
         "start_bit": 0,
@@ -8718,6 +8556,62 @@
       }
     },
     {
+      "name": "LAMBDA_A_CORR",
+      "decode": {
+        "start_bit": 32,
+        "bit_length": 16,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 0.001,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 0.0,
+        "unit": "#",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 5,
+        "canp_start_bit": 32,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 534,
+        "frame_id_hex": "0x216",
+        "frame_name": "MSG_216"
+      }
+    },
+    {
+      "name": "LAMBDA_B_CORR",
+      "decode": {
+        "start_bit": 48,
+        "bit_length": 16,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 0.001,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 0.0,
+        "unit": "#",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 5,
+        "canp_start_bit": 48,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 534,
+        "frame_id_hex": "0x216",
+        "frame_name": "MSG_216"
+      }
+    },
+    {
       "name": "LAMBDA_DIAG",
       "decode": {
         "start_bit": 16,
@@ -9222,6 +9116,34 @@
         "canp_start_bit": 19,
         "signed_known": true,
         "signed_reason": "rawfmt:bitfield"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 537,
+        "frame_id_hex": "0x219",
+        "frame_name": "MSG_219"
+      }
+    },
+    {
+      "name": "LAMBDA_HTR",
+      "decode": {
+        "start_bit": 48,
+        "bit_length": 16,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 0.1,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 0.0,
+        "unit": "#",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 5,
+        "canp_start_bit": 48,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
@@ -10125,6 +10047,34 @@
         "frame_id": 518,
         "frame_id_hex": "0x206",
         "frame_name": "MSG_206"
+      }
+    },
+    {
+      "name": "RPM_VIRTUAL",
+      "decode": {
+        "start_bit": 16,
+        "bit_length": 16,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 0.0,
+        "unit": "1/min",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 5,
+        "canp_start_bit": 16,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 516,
+        "frame_id_hex": "0x204",
+        "frame_name": "MSG_204"
       }
     },
     {

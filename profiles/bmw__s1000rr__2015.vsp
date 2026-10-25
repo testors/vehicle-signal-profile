@@ -1739,6 +1739,44 @@
       }
     },
     {
+      "name": "HandTPS",
+      "decode": {
+        "start_bit": 40,
+        "bit_length": 8,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 0.5,
+        "offset": -18.0,
+        "minimum": -18.0,
+        "maximum": 109.5,
+        "unit": "%",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 5,
+        "canp_start_bit": 40,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 272,
+        "frame_id_hex": "0x110",
+        "frame_name": "MSG_110"
+      },
+      "canonical": {
+        "id": "accelerator.pedal.position",
+        "label": "Accelerator pedal position",
+        "quantity": "position",
+        "preferred_unit": "%",
+        "confidence": "heuristic",
+        "aliases": [
+          "HandTPS"
+        ]
+      }
+    },
+    {
       "name": "BrakePressF",
       "decode": {
         "start_bit": 16,
@@ -2197,44 +2235,6 @@
       }
     },
     {
-      "name": "SelMap",
-      "decode": {
-        "start_bit": 16,
-        "bit_length": 3,
-        "byte_order": "little_endian",
-        "signed": false,
-        "factor": 1.0,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 7.0,
-        "unit": "#",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 5,
-        "canp_start_bit": 16,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 736,
-        "frame_id_hex": "0x2E0",
-        "frame_name": "MSG_2E0"
-      },
-      "canonical": {
-        "id": "intake_manifold.pressure",
-        "label": "Intake manifold pressure",
-        "quantity": "pressure",
-        "preferred_unit": "bar",
-        "confidence": "heuristic",
-        "aliases": [
-          "SelMap"
-        ]
-      }
-    },
-    {
       "name": "TPS",
       "decode": {
         "start_bit": 8,
@@ -2269,44 +2269,6 @@
         "confidence": "mapped",
         "aliases": [
           "TPS"
-        ]
-      }
-    },
-    {
-      "name": "HandTPS",
-      "decode": {
-        "start_bit": 40,
-        "bit_length": 8,
-        "byte_order": "little_endian",
-        "signed": false,
-        "factor": 0.5,
-        "offset": -18.0,
-        "minimum": -18.0,
-        "maximum": 109.5,
-        "unit": "%",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 5,
-        "canp_start_bit": 40,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 272,
-        "frame_id_hex": "0x110",
-        "frame_name": "MSG_110"
-      },
-      "canonical": {
-        "id": "throttle.position",
-        "label": "Throttle position",
-        "quantity": "position",
-        "preferred_unit": "%",
-        "confidence": "heuristic",
-        "aliases": [
-          "HandTPS"
         ]
       }
     },
@@ -2453,44 +2415,6 @@
         "confidence": "mapped",
         "aliases": [
           "TCOff"
-        ]
-      }
-    },
-    {
-      "name": "ASCTrqReduct",
-      "decode": {
-        "start_bit": 40,
-        "bit_length": 8,
-        "byte_order": "little_endian",
-        "signed": false,
-        "factor": 0.39,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 99.45,
-        "unit": "%",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 5,
-        "canp_start_bit": 40,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 659,
-        "frame_id_hex": "0x293",
-        "frame_name": "MSG_293"
-      },
-      "canonical": {
-        "id": "traction_control.event",
-        "label": "Traction control event",
-        "quantity": "state",
-        "preferred_unit": "state",
-        "confidence": "heuristic",
-        "aliases": [
-          "ASCTrqReduct"
         ]
       }
     },
@@ -3314,6 +3238,34 @@
         "aliases": [
           "Indicated_Vehicle_Speed_kph"
         ]
+      }
+    },
+    {
+      "name": "ASCTrqReduct",
+      "decode": {
+        "start_bit": 40,
+        "bit_length": 8,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 0.39,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 99.45,
+        "unit": "%",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 5,
+        "canp_start_bit": 40,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 659,
+        "frame_id_hex": "0x293",
+        "frame_name": "MSG_293"
       }
     },
     {
@@ -4182,6 +4134,34 @@
         "frame_id": 740,
         "frame_id_hex": "0x2E4",
         "frame_name": "MSG_2E4"
+      }
+    },
+    {
+      "name": "SelMap",
+      "decode": {
+        "start_bit": 16,
+        "bit_length": 3,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 7.0,
+        "unit": "#",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 5,
+        "canp_start_bit": 16,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 736,
+        "frame_id_hex": "0x2E0",
+        "frame_name": "MSG_2E0"
       }
     },
     {

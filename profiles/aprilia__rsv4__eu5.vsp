@@ -3344,62 +3344,6 @@
   "diagnostic_queries": [],
   "signals": [
     {
-      "name": "ABS",
-      "decode": {
-        "start_bit": 7,
-        "bit_length": 4,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 1.0,
-        "offset": -1.0,
-        "minimum": -1.0,
-        "maximum": 14.0,
-        "unit": "#",
-        "values": [
-          {
-            "raw": 1,
-            "label": "OFF"
-          },
-          {
-            "raw": 2,
-            "label": "1"
-          },
-          {
-            "raw": 3,
-            "label": "2"
-          },
-          {
-            "raw": 4,
-            "label": "3"
-          }
-        ],
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 4,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 560,
-        "frame_id_hex": "0x230",
-        "frame_name": "MSG_230"
-      },
-      "canonical": {
-        "id": "abs.active",
-        "label": "ABS active",
-        "quantity": "state",
-        "preferred_unit": "bool",
-        "confidence": "mapped",
-        "aliases": [
-          "ABS"
-        ]
-      }
-    },
-    {
       "name": "ABS_Level_St",
       "decode": {
         "start_bit": 1,
@@ -3490,6 +3434,62 @@
       }
     },
     {
+      "name": "ABS",
+      "decode": {
+        "start_bit": 7,
+        "bit_length": 4,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": -1.0,
+        "minimum": -1.0,
+        "maximum": 14.0,
+        "unit": "#",
+        "values": [
+          {
+            "raw": 1,
+            "label": "OFF"
+          },
+          {
+            "raw": 2,
+            "label": "1"
+          },
+          {
+            "raw": 3,
+            "label": "2"
+          },
+          {
+            "raw": 4,
+            "label": "3"
+          }
+        ],
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 4,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 560,
+        "frame_id_hex": "0x230",
+        "frame_name": "MSG_230"
+      },
+      "canonical": {
+        "id": "abs.mode",
+        "label": "ABS mode",
+        "quantity": "state",
+        "preferred_unit": "state",
+        "confidence": "mapped",
+        "aliases": [
+          "ABS"
+        ]
+      }
+    },
+    {
       "name": "ABS_Lamp_St",
       "decode": {
         "start_bit": 3,
@@ -3524,6 +3524,44 @@
         "confidence": "heuristic",
         "aliases": [
           "ABS_Lamp_St"
+        ]
+      }
+    },
+    {
+      "name": "Hand_Throttle",
+      "decode": {
+        "start_bit": 7,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 255.0,
+        "unit": "%",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 0,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1537,
+        "frame_id_hex": "0x601",
+        "frame_name": "MSG_601"
+      },
+      "canonical": {
+        "id": "accelerator.pedal.position",
+        "label": "Accelerator pedal position",
+        "quantity": "position",
+        "preferred_unit": "%",
+        "confidence": "heuristic",
+        "aliases": [
+          "Hand_Throttle"
         ]
       }
     },
@@ -3638,44 +3676,6 @@
         "confidence": "mapped",
         "aliases": [
           "Brake_Press"
-        ]
-      }
-    },
-    {
-      "name": "Brake_Press_Rest",
-      "decode": {
-        "start_bit": 15,
-        "bit_length": 4,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 1.0,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 15.0,
-        "unit": "#",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 12,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 609,
-        "frame_id_hex": "0x261",
-        "frame_name": "MSG_261"
-      },
-      "canonical": {
-        "id": "brake.pressure",
-        "label": "Brake pressure",
-        "quantity": "pressure",
-        "preferred_unit": "bar",
-        "confidence": "heuristic",
-        "aliases": [
-          "Brake_Press_Rest"
         ]
       }
     },
@@ -3984,44 +3984,6 @@
       }
     },
     {
-      "name": "Fuel_Cons",
-      "decode": {
-        "start_bit": 23,
-        "bit_length": 8,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 0.2,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 51.0,
-        "unit": "km/l",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 16,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 256,
-        "frame_id_hex": "0x100",
-        "frame_name": "MSG_100"
-      },
-      "canonical": {
-        "id": "fuel.consumption",
-        "label": "Fuel consumption",
-        "quantity": "consumption",
-        "preferred_unit": "L/h",
-        "confidence": "mapped",
-        "aliases": [
-          "Fuel_Cons"
-        ]
-      }
-    },
-    {
       "name": "Fuel_Level",
       "decode": {
         "start_bit": 7,
@@ -4174,108 +4136,6 @@
       }
     },
     {
-      "name": "RSV4_SEL_MAP",
-      "decode": {
-        "start_bit": 63,
-        "bit_length": 4,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 1.0,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 15.0,
-        "unit": "#",
-        "values": [
-          {
-            "raw": 1,
-            "label": "-"
-          },
-          {
-            "raw": 2,
-            "label": "T"
-          },
-          {
-            "raw": 3,
-            "label": "-"
-          },
-          {
-            "raw": 4,
-            "label": "S"
-          },
-          {
-            "raw": 5,
-            "label": "-"
-          },
-          {
-            "raw": 6,
-            "label": "R"
-          }
-        ],
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 60,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 256,
-        "frame_id_hex": "0x100",
-        "frame_name": "MSG_100"
-      },
-      "canonical": {
-        "id": "intake_manifold.pressure",
-        "label": "Intake manifold pressure",
-        "quantity": "pressure",
-        "preferred_unit": "bar",
-        "confidence": "heuristic",
-        "aliases": [
-          "RSV4_SEL_MAP"
-        ]
-      }
-    },
-    {
-      "name": "Engine_Map",
-      "decode": {
-        "start_bit": 23,
-        "bit_length": 4,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 1.0,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 15.0,
-        "unit": "#",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 20,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 260,
-        "frame_id_hex": "0x104",
-        "frame_name": "MSG_104"
-      },
-      "canonical": {
-        "id": "intake_manifold.pressure",
-        "label": "Intake manifold pressure",
-        "quantity": "pressure",
-        "preferred_unit": "bar",
-        "confidence": "heuristic",
-        "aliases": [
-          "Engine_Map"
-        ]
-      }
-    },
-    {
       "name": "RSV4_TPS2",
       "decode": {
         "start_bit": 23,
@@ -4310,44 +4170,6 @@
         "confidence": "heuristic",
         "aliases": [
           "RSV4_TPS2"
-        ]
-      }
-    },
-    {
-      "name": "Hand_Throttle",
-      "decode": {
-        "start_bit": 7,
-        "bit_length": 8,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 1.0,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 255.0,
-        "unit": "%",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 0,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1537,
-        "frame_id_hex": "0x601",
-        "frame_name": "MSG_601"
-      },
-      "canonical": {
-        "id": "throttle.position",
-        "label": "Throttle position",
-        "quantity": "position",
-        "preferred_unit": "%",
-        "confidence": "heuristic",
-        "aliases": [
-          "Hand_Throttle"
         ]
       }
     },
@@ -4889,44 +4711,6 @@
         "confidence": "heuristic",
         "aliases": [
           "Bike_Speed"
-        ]
-      }
-    },
-    {
-      "name": "Pit_Speed",
-      "decode": {
-        "start_bit": 47,
-        "bit_length": 8,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 1.0,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 255.0,
-        "unit": "km/h",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 40,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 260,
-        "frame_id_hex": "0x104",
-        "frame_name": "MSG_104"
-      },
-      "canonical": {
-        "id": "vehicle.speed",
-        "label": "Vehicle speed",
-        "quantity": "speed",
-        "preferred_unit": "km/h",
-        "confidence": "heuristic",
-        "aliases": [
-          "Pit_Speed"
         ]
       }
     },
@@ -6281,6 +6065,34 @@
       }
     },
     {
+      "name": "Brake_Press_Rest",
+      "decode": {
+        "start_bit": 15,
+        "bit_length": 4,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 15.0,
+        "unit": "#",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 12,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 609,
+        "frame_id_hex": "0x261",
+        "frame_name": "MSG_261"
+      }
+    },
+    {
       "name": "CME_User_Norm",
       "decode": {
         "start_bit": 7,
@@ -6572,6 +6384,62 @@
         "frame_id": 260,
         "frame_id_hex": "0x104",
         "frame_name": "MSG_104"
+      }
+    },
+    {
+      "name": "Engine_Map",
+      "decode": {
+        "start_bit": 23,
+        "bit_length": 4,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 15.0,
+        "unit": "#",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 20,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 260,
+        "frame_id_hex": "0x104",
+        "frame_name": "MSG_104"
+      }
+    },
+    {
+      "name": "Fuel_Cons",
+      "decode": {
+        "start_bit": 23,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.2,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 51.0,
+        "unit": "km/l",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 16,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 256,
+        "frame_id_hex": "0x100",
+        "frame_name": "MSG_100"
       }
     },
     {
@@ -7387,6 +7255,34 @@
       }
     },
     {
+      "name": "Pit_Speed",
+      "decode": {
+        "start_bit": 47,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 255.0,
+        "unit": "km/h",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 40,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 260,
+        "frame_id_hex": "0x104",
+        "frame_name": "MSG_104"
+      }
+    },
+    {
       "name": "Pitch_Angle",
       "decode": {
         "start_bit": 47,
@@ -8168,6 +8064,60 @@
         "frame_id": 2038,
         "frame_id_hex": "0x7F6",
         "frame_name": "MSG_7F6"
+      }
+    },
+    {
+      "name": "RSV4_SEL_MAP",
+      "decode": {
+        "start_bit": 63,
+        "bit_length": 4,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 15.0,
+        "unit": "#",
+        "values": [
+          {
+            "raw": 1,
+            "label": "-"
+          },
+          {
+            "raw": 2,
+            "label": "T"
+          },
+          {
+            "raw": 3,
+            "label": "-"
+          },
+          {
+            "raw": 4,
+            "label": "S"
+          },
+          {
+            "raw": 5,
+            "label": "-"
+          },
+          {
+            "raw": 6,
+            "label": "R"
+          }
+        ],
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 60,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 256,
+        "frame_id_hex": "0x100",
+        "frame_name": "MSG_100"
       }
     },
     {

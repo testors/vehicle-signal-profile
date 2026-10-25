@@ -1404,44 +1404,6 @@
       }
     },
     {
-      "name": "AFR1",
-      "decode": {
-        "start_bit": 31,
-        "bit_length": 8,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 0.00390631,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 0.9961090499999999,
-        "unit": "λ",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 24,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1537,
-        "frame_id_hex": "0x601",
-        "frame_name": "MSG_601"
-      },
-      "canonical": {
-        "id": "exhaust.air_fuel_ratio",
-        "label": "Air/fuel ratio",
-        "quantity": "ratio",
-        "preferred_unit": "ratio",
-        "confidence": "heuristic",
-        "aliases": [
-          "AFR1"
-        ]
-      }
-    },
-    {
       "name": "EGT",
       "decode": {
         "start_bit": 55,
@@ -1476,6 +1438,44 @@
         "confidence": "mapped",
         "aliases": [
           "EGT"
+        ]
+      }
+    },
+    {
+      "name": "AFR1",
+      "decode": {
+        "start_bit": 31,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.00390631,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 0.9961090499999999,
+        "unit": "λ",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 24,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1537,
+        "frame_id_hex": "0x601",
+        "frame_name": "MSG_601"
+      },
+      "canonical": {
+        "id": "exhaust.lambda.bank1",
+        "label": "Lambda bank 1",
+        "quantity": "ratio",
+        "preferred_unit": "lambda",
+        "confidence": "heuristic",
+        "aliases": [
+          "AFR1"
         ]
       }
     },
@@ -1708,44 +1708,6 @@
         "confidence": "mapped",
         "aliases": [
           "GEAR"
-        ]
-      }
-    },
-    {
-      "name": "GEAR_R_KM",
-      "decode": {
-        "start_bit": 63,
-        "bit_length": 8,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 0.390631,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 99.610905,
-        "unit": "#",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 56,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1042,
-        "frame_id_hex": "0x412",
-        "frame_name": "MSG_412"
-      },
-      "canonical": {
-        "id": "transmission.gear.selected",
-        "label": "Selected gear",
-        "quantity": "gear",
-        "preferred_unit": "gear",
-        "confidence": "heuristic",
-        "aliases": [
-          "GEAR_R_KM"
         ]
       }
     },
@@ -2653,6 +2615,34 @@
         "frame_id": 1537,
         "frame_id_hex": "0x601",
         "frame_name": "MSG_601"
+      }
+    },
+    {
+      "name": "GEAR_R_KM",
+      "decode": {
+        "start_bit": 63,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.390631,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 99.610905,
+        "unit": "#",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 56,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1042,
+        "frame_id_hex": "0x412",
+        "frame_name": "MSG_412"
       }
     },
     {

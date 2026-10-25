@@ -1110,44 +1110,6 @@
       }
     },
     {
-      "name": "CS_K_ACCEL",
-      "decode": {
-        "start_bit": 39,
-        "bit_length": 8,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 1.0,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 255.0,
-        "unit": "%",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 32,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1632,
-        "frame_id_hex": "0x660",
-        "frame_name": "MSG_660"
-      },
-      "canonical": {
-        "id": "accelerator.pedal.position",
-        "label": "Accelerator pedal position",
-        "quantity": "position",
-        "preferred_unit": "%",
-        "confidence": "heuristic",
-        "aliases": [
-          "CS_K_ACCEL"
-        ]
-      }
-    },
-    {
       "name": "CS_V_BATTERY",
       "decode": {
         "start_bit": 15,
@@ -1182,44 +1144,6 @@
         "confidence": "mapped",
         "aliases": [
           "CS_V_BATTERY"
-        ]
-      }
-    },
-    {
-      "name": "CS_ENGINE_OIL_T",
-      "decode": {
-        "start_bit": 47,
-        "bit_length": 8,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 1.0,
-        "offset": -40.0,
-        "minimum": -40.0,
-        "maximum": 215.0,
-        "unit": "C",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 40,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1552,
-        "frame_id_hex": "0x610",
-        "frame_name": "MSG_610"
-      },
-      "canonical": {
-        "id": "engine.coolant.temperature",
-        "label": "Engine coolant temperature",
-        "quantity": "temperature",
-        "preferred_unit": "C",
-        "confidence": "heuristic",
-        "aliases": [
-          "CS_ENGINE_OIL_T"
         ]
       }
     },
@@ -1334,6 +1258,44 @@
         "confidence": "heuristic",
         "aliases": [
           "CS_ENGINE_OIL_PR"
+        ]
+      }
+    },
+    {
+      "name": "CS_ENGINE_OIL_T",
+      "decode": {
+        "start_bit": 47,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": -40.0,
+        "minimum": -40.0,
+        "maximum": 215.0,
+        "unit": "C",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 40,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1552,
+        "frame_id_hex": "0x610",
+        "frame_name": "MSG_610"
+      },
+      "canonical": {
+        "id": "engine.oil.temperature",
+        "label": "Engine oil temperature",
+        "quantity": "temperature",
+        "preferred_unit": "C",
+        "confidence": "heuristic",
+        "aliases": [
+          "CS_ENGINE_OIL_T"
         ]
       }
     },
@@ -1486,44 +1448,6 @@
         "confidence": "heuristic",
         "aliases": [
           "CS_THROTTLE_POS"
-        ]
-      }
-    },
-    {
-      "name": "CS_PWM_EL_THR_CO",
-      "decode": {
-        "start_bit": 47,
-        "bit_length": 8,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 1.0,
-        "offset": -128.0,
-        "minimum": -128.0,
-        "maximum": 127.0,
-        "unit": "%",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 40,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1648,
-        "frame_id_hex": "0x670",
-        "frame_name": "MSG_670"
-      },
-      "canonical": {
-        "id": "throttle.position",
-        "label": "Throttle position",
-        "quantity": "position",
-        "preferred_unit": "%",
-        "confidence": "heuristic",
-        "aliases": [
-          "CS_PWM_EL_THR_CO"
         ]
       }
     },
@@ -2348,6 +2272,34 @@
       }
     },
     {
+      "name": "CS_K_ACCEL",
+      "decode": {
+        "start_bit": 39,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 255.0,
+        "unit": "%",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 32,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1632,
+        "frame_id_hex": "0x660",
+        "frame_name": "MSG_660"
+      }
+    },
+    {
       "name": "CS_PWM_CAM",
       "decode": {
         "start_bit": 47,
@@ -2392,6 +2344,34 @@
       "raw": {
         "cflag": 0,
         "canp_start_bit": 32,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1648,
+        "frame_id_hex": "0x670",
+        "frame_name": "MSG_670"
+      }
+    },
+    {
+      "name": "CS_PWM_EL_THR_CO",
+      "decode": {
+        "start_bit": 47,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": -128.0,
+        "minimum": -128.0,
+        "maximum": 127.0,
+        "unit": "%",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 40,
         "signed_known": true,
         "signed_reason": "rawfmt:unsigned"
       },

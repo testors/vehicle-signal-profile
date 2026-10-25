@@ -1100,10 +1100,10 @@
         "frame_name": "MSG_327"
       },
       "canonical": {
-        "id": "exhaust.air_fuel_ratio",
-        "label": "Air/fuel ratio",
+        "id": "exhaust.lambda.bank1",
+        "label": "Lambda bank 1",
         "quantity": "ratio",
-        "preferred_unit": "ratio",
+        "preferred_unit": "lambda",
         "confidence": "heuristic",
         "aliases": [
           "AFR1"
@@ -1138,10 +1138,10 @@
         "frame_name": "MSG_327"
       },
       "canonical": {
-        "id": "exhaust.air_fuel_ratio",
-        "label": "Air/fuel ratio",
+        "id": "exhaust.lambda",
+        "label": "Lambda",
         "quantity": "ratio",
-        "preferred_unit": "ratio",
+        "preferred_unit": "lambda",
         "confidence": "mapped",
         "aliases": [
           "AFR"
@@ -1221,44 +1221,6 @@
         "confidence": "mapped",
         "aliases": [
           "MAP"
-        ]
-      }
-    },
-    {
-      "name": "TpsCorrInj",
-      "decode": {
-        "start_bit": 32,
-        "bit_length": 16,
-        "byte_order": "little_endian",
-        "signed": false,
-        "factor": 0.1,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 6553.5,
-        "unit": "%",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 5,
-        "canp_start_bit": 32,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 809,
-        "frame_id_hex": "0x329",
-        "frame_name": "MSG_329"
-      },
-      "canonical": {
-        "id": "throttle.position",
-        "label": "Throttle position",
-        "quantity": "position",
-        "preferred_unit": "%",
-        "confidence": "heuristic",
-        "aliases": [
-          "TpsCorrInj"
         ]
       }
     },
@@ -1383,6 +1345,44 @@
         "confidence": "mapped",
         "aliases": [
           "Gear"
+        ]
+      }
+    },
+    {
+      "name": "FrontSpeed",
+      "decode": {
+        "start_bit": 48,
+        "bit_length": 16,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 65535.0,
+        "unit": "km/h",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 5,
+        "canp_start_bit": 48,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 809,
+        "frame_id_hex": "0x329",
+        "frame_name": "MSG_329"
+      },
+      "canonical": {
+        "id": "vehicle.speed",
+        "label": "Vehicle speed",
+        "quantity": "speed",
+        "preferred_unit": "km/h",
+        "confidence": "heuristic",
+        "aliases": [
+          "FrontSpeed"
         ]
       }
     },
@@ -1796,34 +1796,6 @@
         "frame_id": 814,
         "frame_id_hex": "0x32E",
         "frame_name": "MSG_32E"
-      }
-    },
-    {
-      "name": "FrontSpeed",
-      "decode": {
-        "start_bit": 48,
-        "bit_length": 16,
-        "byte_order": "little_endian",
-        "signed": false,
-        "factor": 1.0,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 65535.0,
-        "unit": "km/h",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 5,
-        "canp_start_bit": 48,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 809,
-        "frame_id_hex": "0x329",
-        "frame_name": "MSG_329"
       }
     },
     {
@@ -2300,6 +2272,34 @@
         "frame_id": 811,
         "frame_id_hex": "0x32B",
         "frame_name": "MSG_32B"
+      }
+    },
+    {
+      "name": "TpsCorrInj",
+      "decode": {
+        "start_bit": 32,
+        "bit_length": 16,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 0.1,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 6553.5,
+        "unit": "%",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 5,
+        "canp_start_bit": 32,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 809,
+        "frame_id_hex": "0x329",
+        "frame_name": "MSG_329"
       }
     },
     {

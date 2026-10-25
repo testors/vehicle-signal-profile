@@ -5639,44 +5639,6 @@
       }
     },
     {
-      "name": "ECU_GearbOilPres",
-      "decode": {
-        "start_bit": 7,
-        "bit_length": 16,
-        "byte_order": "big_endian",
-        "signed": true,
-        "factor": 0.001,
-        "offset": -1.013,
-        "minimum": -33.781,
-        "maximum": 31.754000000000005,
-        "unit": "bar",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 8,
-        "signed_known": true,
-        "signed_reason": "rawfmt:signed"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1002,
-        "frame_id_hex": "0x3EA",
-        "frame_name": "MSG_3EA"
-      },
-      "canonical": {
-        "id": "engine.oil.pressure",
-        "label": "Engine oil pressure",
-        "quantity": "pressure",
-        "preferred_unit": "bar",
-        "confidence": "heuristic",
-        "aliases": [
-          "ECU_GearbOilPres"
-        ]
-      }
-    },
-    {
       "name": "ECU_OilPress",
       "decode": {
         "start_bit": 23,
@@ -5787,44 +5749,6 @@
         "confidence": "mapped",
         "aliases": [
           "ECU_RPM"
-        ]
-      }
-    },
-    {
-      "name": "LaunchCtrlEndRPM",
-      "decode": {
-        "start_bit": 55,
-        "bit_length": 16,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 1.0,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 65535.0,
-        "unit": "#",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 56,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 867,
-        "frame_id_hex": "0x363",
-        "frame_name": "MSG_363"
-      },
-      "canonical": {
-        "id": "engine.speed",
-        "label": "Engine speed",
-        "quantity": "rotational_speed",
-        "preferred_unit": "rpm",
-        "confidence": "heuristic",
-        "aliases": [
-          "LaunchCtrlEndRPM"
         ]
       }
     },
@@ -6019,44 +5943,6 @@
       }
     },
     {
-      "name": "ECU_FuelLevel",
-      "decode": {
-        "start_bit": 7,
-        "bit_length": 16,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 0.1,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 6553.5,
-        "unit": "l",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 8,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 994,
-        "frame_id_hex": "0x3E2",
-        "frame_name": "MSG_3E2"
-      },
-      "canonical": {
-        "id": "fuel.level",
-        "label": "Fuel level",
-        "quantity": "level",
-        "preferred_unit": "%",
-        "confidence": "heuristic",
-        "aliases": [
-          "ECU_FuelLevel"
-        ]
-      }
-    },
-    {
       "name": "ECU_FuelPress",
       "decode": {
         "start_bit": 7,
@@ -6091,6 +5977,44 @@
         "confidence": "heuristic",
         "aliases": [
           "ECU_FuelPress"
+        ]
+      }
+    },
+    {
+      "name": "ECU_FuelLevel",
+      "decode": {
+        "start_bit": 7,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.1,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 6553.5,
+        "unit": "l",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 8,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 994,
+        "frame_id_hex": "0x3E2",
+        "frame_name": "MSG_3E2"
+      },
+      "canonical": {
+        "id": "fuel.remaining",
+        "label": "Fuel remaining",
+        "quantity": "volume",
+        "preferred_unit": "L",
+        "confidence": "heuristic",
+        "aliases": [
+          "ECU_FuelLevel"
         ]
       }
     },
@@ -6243,44 +6167,6 @@
         "confidence": "heuristic",
         "aliases": [
           "ECU_ManifPress"
-        ]
-      }
-    },
-    {
-      "name": "ExhManifPress",
-      "decode": {
-        "start_bit": 39,
-        "bit_length": 16,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 0.001,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 65.535,
-        "unit": "bar",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 40,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1137,
-        "frame_id_hex": "0x471",
-        "frame_name": "MSG_471"
-      },
-      "canonical": {
-        "id": "intake_manifold.pressure",
-        "label": "Intake manifold pressure",
-        "quantity": "pressure",
-        "preferred_unit": "bar",
-        "confidence": "heuristic",
-        "aliases": [
-          "ExhManifPress"
         ]
       }
     },
@@ -9187,6 +9073,34 @@
         "frame_id": 881,
         "frame_id_hex": "0x371",
         "frame_name": "MSG_371"
+      }
+    },
+    {
+      "name": "ECU_GearbOilPres",
+      "decode": {
+        "start_bit": 7,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": true,
+        "factor": 0.001,
+        "offset": -1.013,
+        "minimum": -33.781,
+        "maximum": 31.754000000000005,
+        "unit": "bar",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 8,
+        "signed_known": true,
+        "signed_reason": "rawfmt:signed"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1002,
+        "frame_id_hex": "0x3EA",
+        "frame_name": "MSG_3EA"
       }
     },
     {
@@ -13346,6 +13260,34 @@
       }
     },
     {
+      "name": "ExhManifPress",
+      "decode": {
+        "start_bit": 39,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.001,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 65.535,
+        "unit": "bar",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 40,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1137,
+        "frame_id_hex": "0x471",
+        "frame_name": "MSG_471"
+      }
+    },
+    {
       "name": "Handbrake_St",
       "decode": {
         "start_bit": 57,
@@ -13371,6 +13313,34 @@
         "frame_id": 996,
         "frame_id_hex": "0x3E4",
         "frame_name": "MSG_3E4"
+      }
+    },
+    {
+      "name": "LaunchCtrlEndRPM",
+      "decode": {
+        "start_bit": 55,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 65535.0,
+        "unit": "#",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 56,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 867,
+        "frame_id_hex": "0x363",
+        "frame_name": "MSG_363"
       }
     },
     {

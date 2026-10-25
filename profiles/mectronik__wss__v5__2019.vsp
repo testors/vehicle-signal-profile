@@ -3939,44 +3939,6 @@
       }
     },
     {
-      "name": "CLUTCH_SLIP",
-      "decode": {
-        "start_bit": 32,
-        "bit_length": 16,
-        "byte_order": "little_endian",
-        "signed": true,
-        "factor": 0.1,
-        "offset": 0.0,
-        "minimum": -3276.8,
-        "maximum": 3276.7000000000003,
-        "unit": "%",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 5,
-        "canp_start_bit": 32,
-        "signed_known": true,
-        "signed_reason": "rawfmt:signed"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 517,
-        "frame_id_hex": "0x205",
-        "frame_name": "MSG_205"
-      },
-      "canonical": {
-        "id": "clutch.position",
-        "label": "Clutch position",
-        "quantity": "position",
-        "preferred_unit": "%",
-        "confidence": "heuristic",
-        "aliases": [
-          "CLUTCH_SLIP"
-        ]
-      }
-    },
-    {
       "name": "BOARD_TEMP",
       "decode": {
         "start_bit": 48,
@@ -4163,120 +4125,6 @@
         "confidence": "mapped",
         "aliases": [
           "RPM"
-        ]
-      }
-    },
-    {
-      "name": "VIRTUAL_RPM",
-      "decode": {
-        "start_bit": 48,
-        "bit_length": 16,
-        "byte_order": "little_endian",
-        "signed": false,
-        "factor": 1.0,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 65535.0,
-        "unit": "rpm",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 5,
-        "canp_start_bit": 48,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 516,
-        "frame_id_hex": "0x204",
-        "frame_name": "MSG_204"
-      },
-      "canonical": {
-        "id": "engine.speed",
-        "label": "Engine speed",
-        "quantity": "rotational_speed",
-        "preferred_unit": "rpm",
-        "confidence": "heuristic",
-        "aliases": [
-          "VIRTUAL_RPM"
-        ]
-      }
-    },
-    {
-      "name": "ENG_STATE",
-      "decode": {
-        "start_bit": 32,
-        "bit_length": 8,
-        "byte_order": "little_endian",
-        "signed": false,
-        "factor": 1.0,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 255.0,
-        "unit": "#",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 5,
-        "canp_start_bit": 32,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 522,
-        "frame_id_hex": "0x20A",
-        "frame_name": "MSG_20A"
-      },
-      "canonical": {
-        "id": "engine.state",
-        "label": "Engine state",
-        "quantity": "state",
-        "preferred_unit": "state",
-        "confidence": "mapped",
-        "aliases": [
-          "ENG_STATE"
-        ]
-      }
-    },
-    {
-      "name": "INJ_CORR_LAMBDA",
-      "decode": {
-        "start_bit": 48,
-        "bit_length": 16,
-        "byte_order": "little_endian",
-        "signed": false,
-        "factor": 0.001,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 65.535,
-        "unit": "#",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 5,
-        "canp_start_bit": 48,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 518,
-        "frame_id_hex": "0x206",
-        "frame_name": "MSG_206"
-      },
-      "canonical": {
-        "id": "exhaust.lambda",
-        "label": "Lambda",
-        "quantity": "ratio",
-        "preferred_unit": "lambda",
-        "confidence": "heuristic",
-        "aliases": [
-          "INJ_CORR_LAMBDA"
         ]
       }
     },
@@ -5931,6 +5779,34 @@
       }
     },
     {
+      "name": "CLUTCH_SLIP",
+      "decode": {
+        "start_bit": 32,
+        "bit_length": 16,
+        "byte_order": "little_endian",
+        "signed": true,
+        "factor": 0.1,
+        "offset": 0.0,
+        "minimum": -3276.8,
+        "maximum": 3276.7000000000003,
+        "unit": "%",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 5,
+        "canp_start_bit": 32,
+        "signed_known": true,
+        "signed_reason": "rawfmt:signed"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 517,
+        "frame_id_hex": "0x205",
+        "frame_name": "MSG_205"
+      }
+    },
+    {
       "name": "CUT_FUNCTION",
       "decode": {
         "start_bit": 48,
@@ -6584,6 +6460,34 @@
         "frame_id": 525,
         "frame_id_hex": "0x20D",
         "frame_name": "MSG_20D"
+      }
+    },
+    {
+      "name": "ENG_STATE",
+      "decode": {
+        "start_bit": 32,
+        "bit_length": 8,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 255.0,
+        "unit": "#",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 5,
+        "canp_start_bit": 32,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 522,
+        "frame_id_hex": "0x20A",
+        "frame_name": "MSG_20A"
       }
     },
     {
@@ -7466,6 +7370,34 @@
         "frame_id": 530,
         "frame_id_hex": "0x212",
         "frame_name": "MSG_212"
+      }
+    },
+    {
+      "name": "INJ_CORR_LAMBDA",
+      "decode": {
+        "start_bit": 48,
+        "bit_length": 16,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 0.001,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 65.535,
+        "unit": "#",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 5,
+        "canp_start_bit": 48,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 518,
+        "frame_id_hex": "0x206",
+        "frame_name": "MSG_206"
       }
     },
     {
@@ -9874,6 +9806,34 @@
         "frame_id": 519,
         "frame_id_hex": "0x207",
         "frame_name": "MSG_207"
+      }
+    },
+    {
+      "name": "VIRTUAL_RPM",
+      "decode": {
+        "start_bit": 48,
+        "bit_length": 16,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 65535.0,
+        "unit": "rpm",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 5,
+        "canp_start_bit": 48,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 516,
+        "frame_id_hex": "0x204",
+        "frame_name": "MSG_204"
       }
     },
     {

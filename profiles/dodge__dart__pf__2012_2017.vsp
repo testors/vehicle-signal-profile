@@ -577,6 +577,38 @@
       }
     },
     {
+      "name": "Air_Temperature",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 169385984,
+        "frame_id_hex": "0xA18A000",
+        "frame_name": "MSG_8A18A000"
+      },
+      "decode": {
+        "start_bit": 31,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.5,
+        "offset": -40.0,
+        "minimum": -39.5,
+        "maximum": 87.5,
+        "unit": "C",
+        "mux": null
+      },
+      "canonical": {
+        "id": "ambient_air.temperature",
+        "label": "Ambient air temperature",
+        "quantity": "temperature",
+        "preferred_unit": "C",
+        "confidence": "mapped",
+        "aliases": [
+          "Air_Temperature"
+        ]
+      }
+    },
+    {
       "name": "Battery_Voltage",
       "acquisition": {
         "type": "can_frame",
@@ -705,38 +737,6 @@
       }
     },
     {
-      "name": "Oil_Temperature",
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 169648129,
-        "frame_id_hex": "0xA1CA001",
-        "frame_name": "MSG_8A1CA001"
-      },
-      "decode": {
-        "start_bit": 10,
-        "bit_length": 3,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 1.0,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 6.0,
-        "unit": "",
-        "mux": null
-      },
-      "canonical": {
-        "id": "engine.oil.temperature",
-        "label": "Engine oil temperature",
-        "quantity": "temperature",
-        "preferred_unit": "C",
-        "confidence": "mapped",
-        "aliases": [
-          "Oil_Temperature"
-        ]
-      }
-    },
-    {
       "name": "Engine_Speed",
       "acquisition": {
         "type": "can_frame",
@@ -829,38 +829,6 @@
         "confidence": "mapped",
         "aliases": [
           "Boost_Pressure"
-        ]
-      }
-    },
-    {
-      "name": "Air_Temperature",
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 169385984,
-        "frame_id_hex": "0xA18A000",
-        "frame_name": "MSG_8A18A000"
-      },
-      "decode": {
-        "start_bit": 31,
-        "bit_length": 8,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 0.5,
-        "offset": -40.0,
-        "minimum": -39.5,
-        "maximum": 87.5,
-        "unit": "C",
-        "mux": null
-      },
-      "canonical": {
-        "id": "intake_air.temperature",
-        "label": "Intake air temperature",
-        "quantity": "temperature",
-        "preferred_unit": "C",
-        "confidence": "mapped",
-        "aliases": [
-          "Air_Temperature"
         ]
       }
     },
@@ -1214,6 +1182,28 @@
         "aliases": [
           "Wheel_Speed_RR_kph"
         ]
+      }
+    },
+    {
+      "name": "Oil_Temperature",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 169648129,
+        "frame_id_hex": "0xA1CA001",
+        "frame_name": "MSG_8A1CA001"
+      },
+      "decode": {
+        "start_bit": 10,
+        "bit_length": 3,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 6.0,
+        "unit": "",
+        "mux": null
       }
     }
   ]

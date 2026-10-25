@@ -347,49 +347,6 @@
       }
     },
     {
-      "name": "Throttle_site",
-      "decode": {
-        "start_bit": 40,
-        "bit_length": 8,
-        "byte_order": "little_endian",
-        "signed": false,
-        "factor": 0.4167,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 106.2585,
-        "unit": "%",
-        "mux": {
-          "value": 1,
-          "start_bit": 0,
-          "bit_length": 8,
-          "byte_order": "little_endian"
-        }
-      },
-      "raw": {
-        "cflag": 7,
-        "canp_start_bit": 40,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 814,
-        "frame_id_hex": "0x32E",
-        "frame_name": "MSG_32E"
-      },
-      "canonical": {
-        "id": "throttle.position",
-        "label": "Throttle position",
-        "quantity": "position",
-        "preferred_unit": "%",
-        "confidence": "heuristic",
-        "aliases": [
-          "Throttle_site"
-        ]
-      }
-    },
-    {
       "name": "Supply_volt",
       "decode": {
         "start_bit": 48,
@@ -411,6 +368,39 @@
       "raw": {
         "cflag": 7,
         "canp_start_bit": 48,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 814,
+        "frame_id_hex": "0x32E",
+        "frame_name": "MSG_32E"
+      }
+    },
+    {
+      "name": "Throttle_site",
+      "decode": {
+        "start_bit": 40,
+        "bit_length": 8,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 0.4167,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 106.2585,
+        "unit": "%",
+        "mux": {
+          "value": 1,
+          "start_bit": 0,
+          "bit_length": 8,
+          "byte_order": "little_endian"
+        }
+      },
+      "raw": {
+        "cflag": 7,
+        "canp_start_bit": 40,
         "signed_known": true,
         "signed_reason": "rawfmt:unsigned"
       },

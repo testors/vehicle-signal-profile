@@ -2213,44 +2213,6 @@
       }
     },
     {
-      "name": "ECU_FUEL_LEV",
-      "decode": {
-        "start_bit": 47,
-        "bit_length": 8,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 1.0,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 255.0,
-        "unit": "l",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 40,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1615,
-        "frame_id_hex": "0x64F",
-        "frame_name": "MSG_64F"
-      },
-      "canonical": {
-        "id": "fuel.level",
-        "label": "Fuel level",
-        "quantity": "level",
-        "preferred_unit": "%",
-        "confidence": "heuristic",
-        "aliases": [
-          "ECU_FUEL_LEV"
-        ]
-      }
-    },
-    {
       "name": "ECU_FUEL_P",
       "decode": {
         "start_bit": 39,
@@ -2285,6 +2247,44 @@
         "confidence": "mapped",
         "aliases": [
           "ECU_FUEL_P"
+        ]
+      }
+    },
+    {
+      "name": "ECU_FUEL_LEV",
+      "decode": {
+        "start_bit": 47,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 255.0,
+        "unit": "l",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 40,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1615,
+        "frame_id_hex": "0x64F",
+        "frame_name": "MSG_64F"
+      },
+      "canonical": {
+        "id": "fuel.remaining",
+        "label": "Fuel remaining",
+        "quantity": "volume",
+        "preferred_unit": "L",
+        "confidence": "heuristic",
+        "aliases": [
+          "ECU_FUEL_LEV"
         ]
       }
     },
@@ -2598,40 +2598,40 @@
       }
     },
     {
-      "name": "ECU_GEAR_LV",
+      "name": "ECU_GBOX_T",
       "decode": {
-        "start_bit": 63,
+        "start_bit": 39,
         "bit_length": 8,
         "byte_order": "big_endian",
         "signed": false,
-        "factor": 4.9,
+        "factor": 1.0,
         "offset": 0.0,
         "minimum": 0.0,
-        "maximum": 1249.5,
-        "unit": "#",
+        "maximum": 255.0,
+        "unit": "C",
         "mux": null
       },
       "raw": {
         "cflag": 0,
-        "canp_start_bit": 56,
+        "canp_start_bit": 32,
         "signed_known": true,
         "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
         "bus": "can0",
-        "frame_id": 1605,
-        "frame_id_hex": "0x645",
-        "frame_name": "MSG_645"
+        "frame_id": 1615,
+        "frame_id_hex": "0x64F",
+        "frame_name": "MSG_64F"
       },
       "canonical": {
-        "id": "transmission.gear.selected",
-        "label": "Selected gear",
-        "quantity": "gear",
-        "preferred_unit": "gear",
+        "id": "transmission.oil.temperature",
+        "label": "Transmission oil temperature",
+        "quantity": "temperature",
+        "preferred_unit": "C",
         "confidence": "heuristic",
         "aliases": [
-          "ECU_GEAR_LV"
+          "ECU_GBOX_T"
         ]
       }
     },
@@ -3544,31 +3544,31 @@
       }
     },
     {
-      "name": "ECU_GBOX_T",
+      "name": "ECU_GEAR_LV",
       "decode": {
-        "start_bit": 39,
+        "start_bit": 63,
         "bit_length": 8,
         "byte_order": "big_endian",
         "signed": false,
-        "factor": 1.0,
+        "factor": 4.9,
         "offset": 0.0,
         "minimum": 0.0,
-        "maximum": 255.0,
-        "unit": "C",
+        "maximum": 1249.5,
+        "unit": "#",
         "mux": null
       },
       "raw": {
         "cflag": 0,
-        "canp_start_bit": 32,
+        "canp_start_bit": 56,
         "signed_known": true,
         "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
         "bus": "can0",
-        "frame_id": 1615,
-        "frame_id_hex": "0x64F",
-        "frame_name": "MSG_64F"
+        "frame_id": 1605,
+        "frame_id_hex": "0x645",
+        "frame_name": "MSG_645"
       }
     },
     {

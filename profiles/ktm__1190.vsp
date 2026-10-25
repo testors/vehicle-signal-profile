@@ -689,6 +689,44 @@
       }
     },
     {
+      "name": "HandTps",
+      "decode": {
+        "start_bit": 23,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.39,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 99.45,
+        "unit": "%",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 16,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 288,
+        "frame_id_hex": "0x120",
+        "frame_name": "MSG_120"
+      },
+      "canonical": {
+        "id": "accelerator.pedal.position",
+        "label": "Accelerator pedal position",
+        "quantity": "position",
+        "preferred_unit": "%",
+        "confidence": "heuristic",
+        "aliases": [
+          "HandTps"
+        ]
+      }
+    },
+    {
       "name": "VBatt",
       "decode": {
         "start_bit": 55,
@@ -841,44 +879,6 @@
       }
     },
     {
-      "name": "Load",
-      "decode": {
-        "start_bit": 19,
-        "bit_length": 2,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 1.0,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 3.0,
-        "unit": "#",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 18,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1489,
-        "frame_id_hex": "0x5D1",
-        "frame_name": "MSG_5D1"
-      },
-      "canonical": {
-        "id": "engine.load",
-        "label": "Engine load",
-        "quantity": "load",
-        "preferred_unit": "%",
-        "confidence": "mapped",
-        "aliases": [
-          "Load"
-        ]
-      }
-    },
-    {
       "name": "RPM",
       "decode": {
         "start_bit": 7,
@@ -913,44 +913,6 @@
         "confidence": "mapped",
         "aliases": [
           "RPM"
-        ]
-      }
-    },
-    {
-      "name": "HandTps",
-      "decode": {
-        "start_bit": 23,
-        "bit_length": 8,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 0.39,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 99.45,
-        "unit": "%",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 16,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 288,
-        "frame_id_hex": "0x120",
-        "frame_name": "MSG_120"
-      },
-      "canonical": {
-        "id": "throttle.position",
-        "label": "Throttle position",
-        "quantity": "position",
-        "preferred_unit": "%",
-        "confidence": "heuristic",
-        "aliases": [
-          "HandTps"
         ]
       }
     },
@@ -1508,6 +1470,34 @@
         "frame_id": 1360,
         "frame_id_hex": "0x550",
         "frame_name": "MSG_550"
+      }
+    },
+    {
+      "name": "Load",
+      "decode": {
+        "start_bit": 19,
+        "bit_length": 2,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 3.0,
+        "unit": "#",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 18,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1489,
+        "frame_id_hex": "0x5D1",
+        "frame_name": "MSG_5D1"
       }
     },
     {

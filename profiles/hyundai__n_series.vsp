@@ -1560,44 +1560,6 @@
       }
     },
     {
-      "name": "ECU_SWITCHES_Clutch_op_ack",
-      "decode": {
-        "start_bit": 31,
-        "bit_length": 1,
-        "byte_order": "little_endian",
-        "signed": false,
-        "factor": 1.0,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "unit": "",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 5,
-        "canp_start_bit": 31,
-        "signed_known": true,
-        "signed_reason": "rawfmt:bitfield"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 809,
-        "frame_id_hex": "0x329",
-        "frame_name": "MSG_329"
-      },
-      "canonical": {
-        "id": "clutch.switch",
-        "label": "Clutch switch",
-        "quantity": "state",
-        "preferred_unit": "bool",
-        "confidence": "heuristic",
-        "aliases": [
-          "ECU_SWITCHES_Clutch_op_ack"
-        ]
-      }
-    },
-    {
       "name": "ECU_SWITCHES_ClutchSwitch2",
       "decode": {
         "start_bit": 30,
@@ -1670,44 +1632,6 @@
         "confidence": "heuristic",
         "aliases": [
           "ECU_SWITCHES_ClutchSwitch1"
-        ]
-      }
-    },
-    {
-      "name": "ECU_ENG_OIL_T",
-      "decode": {
-        "start_bit": 32,
-        "bit_length": 8,
-        "byte_order": "little_endian",
-        "signed": false,
-        "factor": 0.75,
-        "offset": -40.0,
-        "minimum": -40.0,
-        "maximum": 151.25,
-        "unit": "C",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 5,
-        "canp_start_bit": 32,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1170,
-        "frame_id_hex": "0x492",
-        "frame_name": "MSG_492"
-      },
-      "canonical": {
-        "id": "engine.coolant.temperature",
-        "label": "Engine coolant temperature",
-        "quantity": "temperature",
-        "preferred_unit": "C",
-        "confidence": "heuristic",
-        "aliases": [
-          "ECU_ENG_OIL_T"
         ]
       }
     },
@@ -1822,6 +1746,44 @@
         "confidence": "mapped",
         "aliases": [
           "ECU_MAF"
+        ]
+      }
+    },
+    {
+      "name": "ECU_ENG_OIL_T",
+      "decode": {
+        "start_bit": 32,
+        "bit_length": 8,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 0.75,
+        "offset": -40.0,
+        "minimum": -40.0,
+        "maximum": 151.25,
+        "unit": "C",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 5,
+        "canp_start_bit": 32,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1170,
+        "frame_id_hex": "0x492",
+        "frame_name": "MSG_492"
+      },
+      "canonical": {
+        "id": "engine.oil.temperature",
+        "label": "Engine oil temperature",
+        "quantity": "temperature",
+        "preferred_unit": "C",
+        "confidence": "heuristic",
+        "aliases": [
+          "ECU_ENG_OIL_T"
         ]
       }
     },
@@ -3420,6 +3382,34 @@
         "canp_start_bit": 24,
         "signed_known": true,
         "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 809,
+        "frame_id_hex": "0x329",
+        "frame_name": "MSG_329"
+      }
+    },
+    {
+      "name": "ECU_SWITCHES_Clutch_op_ack",
+      "decode": {
+        "start_bit": 31,
+        "bit_length": 1,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "unit": "",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 5,
+        "canp_start_bit": 31,
+        "signed_known": true,
+        "signed_reason": "rawfmt:bitfield"
       },
       "acquisition": {
         "type": "can_frame",

@@ -2301,44 +2301,6 @@
       }
     },
     {
-      "name": "BrakePedalRate",
-      "decode": {
-        "start_bit": 23,
-        "bit_length": 8,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 40.0,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 10200.0,
-        "unit": "%/s",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 16,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 241,
-        "frame_id_hex": "0xF1",
-        "frame_name": "MSG_0F1"
-      },
-      "canonical": {
-        "id": "brake.pedal.position",
-        "label": "Brake pedal position",
-        "quantity": "position",
-        "preferred_unit": "%",
-        "confidence": "heuristic",
-        "aliases": [
-          "BrakePedalRate"
-        ]
-      }
-    },
-    {
       "name": "BrakePressMaster",
       "decode": {
         "start_bit": 47,
@@ -2767,44 +2729,6 @@
       }
     },
     {
-      "name": "CommAirFuelRatio",
-      "decode": {
-        "start_bit": 55,
-        "bit_length": 16,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 0.000488281,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 31.999495335000002,
-        "unit": "AFR",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 56,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 493,
-        "frame_id_hex": "0x1ED",
-        "frame_name": "MSG_1ED"
-      },
-      "canonical": {
-        "id": "exhaust.air_fuel_ratio",
-        "label": "Air/fuel ratio",
-        "quantity": "ratio",
-        "preferred_unit": "ratio",
-        "confidence": "heuristic",
-        "aliases": [
-          "CommAirFuelRatio"
-        ]
-      }
-    },
-    {
       "name": "InstFuelConsRate",
       "decode": {
         "start_bit": 35,
@@ -2991,44 +2915,6 @@
         "confidence": "mapped",
         "aliases": [
           "FuelLevel"
-        ]
-      }
-    },
-    {
-      "name": "FuelDelivPressRq",
-      "decode": {
-        "start_bit": 1,
-        "bit_length": 10,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 0.01,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 10.23,
-        "unit": "bar",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 8,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 487,
-        "frame_id_hex": "0x1E7",
-        "frame_name": "MSG_1E7"
-      },
-      "canonical": {
-        "id": "fuel.pressure",
-        "label": "Fuel pressure",
-        "quantity": "pressure",
-        "preferred_unit": "bar",
-        "confidence": "heuristic",
-        "aliases": [
-          "FuelDelivPressRq"
         ]
       }
     },
@@ -3381,6 +3267,310 @@
         "confidence": "mapped",
         "aliases": [
           "ThrottlePos"
+        ]
+      }
+    },
+    {
+      "name": "FL_TirePress",
+      "decode": {
+        "start_bit": 23,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.04,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 10.200000000000001,
+        "unit": "bar",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 16,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1322,
+        "frame_id_hex": "0x52A",
+        "frame_name": "MSG_52A"
+      },
+      "canonical": {
+        "id": "tire.pressure.front_left",
+        "label": "Front-left tire pressure",
+        "quantity": "pressure",
+        "preferred_unit": "bar",
+        "confidence": "heuristic",
+        "aliases": [
+          "FL_TirePress"
+        ]
+      }
+    },
+    {
+      "name": "FR_TirePress",
+      "decode": {
+        "start_bit": 39,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.04,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 10.200000000000001,
+        "unit": "bar",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 32,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1322,
+        "frame_id_hex": "0x52A",
+        "frame_name": "MSG_52A"
+      },
+      "canonical": {
+        "id": "tire.pressure.front_right",
+        "label": "Front-right tire pressure",
+        "quantity": "pressure",
+        "preferred_unit": "bar",
+        "confidence": "heuristic",
+        "aliases": [
+          "FR_TirePress"
+        ]
+      }
+    },
+    {
+      "name": "RL_TirePress",
+      "decode": {
+        "start_bit": 31,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.04,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 10.200000000000001,
+        "unit": "bar",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 24,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1322,
+        "frame_id_hex": "0x52A",
+        "frame_name": "MSG_52A"
+      },
+      "canonical": {
+        "id": "tire.pressure.rear_left",
+        "label": "Rear-left tire pressure",
+        "quantity": "pressure",
+        "preferred_unit": "bar",
+        "confidence": "heuristic",
+        "aliases": [
+          "RL_TirePress"
+        ]
+      }
+    },
+    {
+      "name": "RR_TirePress",
+      "decode": {
+        "start_bit": 47,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.04,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 10.200000000000001,
+        "unit": "bar",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 40,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1322,
+        "frame_id_hex": "0x52A",
+        "frame_name": "MSG_52A"
+      },
+      "canonical": {
+        "id": "tire.pressure.rear_right",
+        "label": "Rear-right tire pressure",
+        "quantity": "pressure",
+        "preferred_unit": "bar",
+        "confidence": "heuristic",
+        "aliases": [
+          "RR_TirePress"
+        ]
+      }
+    },
+    {
+      "name": "FL_TireTemp",
+      "decode": {
+        "start_bit": 22,
+        "bit_length": 7,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": -20.0,
+        "minimum": -20.0,
+        "maximum": 107.0,
+        "unit": "C",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 16,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1323,
+        "frame_id_hex": "0x52B",
+        "frame_name": "MSG_52B"
+      },
+      "canonical": {
+        "id": "tire.temperature.front_left",
+        "label": "Front-left tire temperature",
+        "quantity": "temperature",
+        "preferred_unit": "C",
+        "confidence": "heuristic",
+        "aliases": [
+          "FL_TireTemp"
+        ]
+      }
+    },
+    {
+      "name": "FR_TireTemp",
+      "decode": {
+        "start_bit": 6,
+        "bit_length": 7,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": -20.0,
+        "minimum": -20.0,
+        "maximum": 107.0,
+        "unit": "C",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 0,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1323,
+        "frame_id_hex": "0x52B",
+        "frame_name": "MSG_52B"
+      },
+      "canonical": {
+        "id": "tire.temperature.front_right",
+        "label": "Front-right tire temperature",
+        "quantity": "temperature",
+        "preferred_unit": "C",
+        "confidence": "heuristic",
+        "aliases": [
+          "FR_TireTemp"
+        ]
+      }
+    },
+    {
+      "name": "RL_TireTemp",
+      "decode": {
+        "start_bit": 30,
+        "bit_length": 7,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": -20.0,
+        "minimum": -20.0,
+        "maximum": 107.0,
+        "unit": "C",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 24,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1323,
+        "frame_id_hex": "0x52B",
+        "frame_name": "MSG_52B"
+      },
+      "canonical": {
+        "id": "tire.temperature.rear_left",
+        "label": "Rear-left tire temperature",
+        "quantity": "temperature",
+        "preferred_unit": "C",
+        "confidence": "heuristic",
+        "aliases": [
+          "RL_TireTemp"
+        ]
+      }
+    },
+    {
+      "name": "RR_TireTemp",
+      "decode": {
+        "start_bit": 14,
+        "bit_length": 7,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": -20.0,
+        "minimum": -20.0,
+        "maximum": 107.0,
+        "unit": "C",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 8,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1323,
+        "frame_id_hex": "0x52B",
+        "frame_name": "MSG_52B"
+      },
+      "canonical": {
+        "id": "tire.temperature.rear_right",
+        "label": "Rear-right tire temperature",
+        "quantity": "temperature",
+        "preferred_unit": "C",
+        "confidence": "heuristic",
+        "aliases": [
+          "RR_TireTemp"
         ]
       }
     },
@@ -3949,9 +4139,9 @@
       }
     },
     {
-      "name": "RR_WheelSpd",
+      "name": "FL_WheelSpd",
       "decode": {
-        "start_bit": 21,
+        "start_bit": 5,
         "bit_length": 14,
         "byte_order": "big_endian",
         "signed": false,
@@ -3964,25 +4154,25 @@
       },
       "raw": {
         "cflag": 0,
-        "canp_start_bit": 24,
+        "canp_start_bit": 8,
         "signed_known": true,
         "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
         "bus": "can0",
-        "frame_id": 840,
-        "frame_id_hex": "0x348",
-        "frame_name": "MSG_348"
+        "frame_id": 842,
+        "frame_id_hex": "0x34A",
+        "frame_name": "MSG_34A"
       },
       "canonical": {
-        "id": "wheel.speed",
-        "label": "Wheel speed",
+        "id": "wheel.speed.front_left",
+        "label": "Front-left wheel speed",
         "quantity": "speed",
         "preferred_unit": "km/h",
         "confidence": "heuristic",
         "aliases": [
-          "RR_WheelSpd"
+          "FL_WheelSpd"
         ]
       }
     },
@@ -4014,8 +4204,8 @@
         "frame_name": "MSG_34A"
       },
       "canonical": {
-        "id": "wheel.speed",
-        "label": "Wheel speed",
+        "id": "wheel.speed.front_right",
+        "label": "Front-right wheel speed",
         "quantity": "speed",
         "preferred_unit": "km/h",
         "confidence": "heuristic",
@@ -4052,8 +4242,8 @@
         "frame_name": "MSG_348"
       },
       "canonical": {
-        "id": "wheel.speed",
-        "label": "Wheel speed",
+        "id": "wheel.speed.rear_left",
+        "label": "Rear-left wheel speed",
         "quantity": "speed",
         "preferred_unit": "km/h",
         "confidence": "heuristic",
@@ -4063,9 +4253,9 @@
       }
     },
     {
-      "name": "FL_WheelSpd",
+      "name": "RR_WheelSpd",
       "decode": {
-        "start_bit": 5,
+        "start_bit": 21,
         "bit_length": 14,
         "byte_order": "big_endian",
         "signed": false,
@@ -4078,25 +4268,25 @@
       },
       "raw": {
         "cflag": 0,
-        "canp_start_bit": 8,
+        "canp_start_bit": 24,
         "signed_known": true,
         "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
         "bus": "can0",
-        "frame_id": 842,
-        "frame_id_hex": "0x34A",
-        "frame_name": "MSG_34A"
+        "frame_id": 840,
+        "frame_id_hex": "0x348",
+        "frame_name": "MSG_348"
       },
       "canonical": {
-        "id": "wheel.speed",
-        "label": "Wheel speed",
+        "id": "wheel.speed.rear_right",
+        "label": "Rear-right wheel speed",
         "quantity": "speed",
         "preferred_unit": "km/h",
         "confidence": "heuristic",
         "aliases": [
-          "FL_WheelSpd"
+          "RR_WheelSpd"
         ]
       }
     },
@@ -4223,6 +4413,34 @@
       }
     },
     {
+      "name": "BrakePedalRate",
+      "decode": {
+        "start_bit": 23,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 40.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 10200.0,
+        "unit": "%/s",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 16,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 241,
+        "frame_id_hex": "0xF1",
+        "frame_name": "MSG_0F1"
+      }
+    },
+    {
       "name": "BrakesOverheated",
       "decode": {
         "start_bit": 8,
@@ -4304,6 +4522,34 @@
         "frame_id": 487,
         "frame_id_hex": "0x1E7",
         "frame_name": "MSG_1E7"
+      }
+    },
+    {
+      "name": "CommAirFuelRatio",
+      "decode": {
+        "start_bit": 55,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.000488281,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 31.999495335000002,
+        "unit": "AFR",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 56,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 493,
+        "frame_id_hex": "0x1ED",
+        "frame_name": "MSG_1ED"
       }
     },
     {
@@ -4649,62 +4895,6 @@
       }
     },
     {
-      "name": "FL_TirePress",
-      "decode": {
-        "start_bit": 23,
-        "bit_length": 8,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 0.04,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 10.200000000000001,
-        "unit": "bar",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 16,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1322,
-        "frame_id_hex": "0x52A",
-        "frame_name": "MSG_52A"
-      }
-    },
-    {
-      "name": "FL_TireTemp",
-      "decode": {
-        "start_bit": 22,
-        "bit_length": 7,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 1.0,
-        "offset": -20.0,
-        "minimum": -20.0,
-        "maximum": 107.0,
-        "unit": "C",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 16,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1323,
-        "frame_id_hex": "0x52B",
-        "frame_name": "MSG_52B"
-      }
-    },
-    {
       "name": "FLShock",
       "decode": {
         "start_bit": 16,
@@ -4733,62 +4923,6 @@
       }
     },
     {
-      "name": "FR_TirePress",
-      "decode": {
-        "start_bit": 39,
-        "bit_length": 8,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 0.04,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 10.200000000000001,
-        "unit": "bar",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 32,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1322,
-        "frame_id_hex": "0x52A",
-        "frame_name": "MSG_52A"
-      }
-    },
-    {
-      "name": "FR_TireTemp",
-      "decode": {
-        "start_bit": 6,
-        "bit_length": 7,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 1.0,
-        "offset": -20.0,
-        "minimum": -20.0,
-        "maximum": 107.0,
-        "unit": "C",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 0,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1323,
-        "frame_id_hex": "0x52B",
-        "frame_name": "MSG_52B"
-      }
-    },
-    {
       "name": "FRShock",
       "decode": {
         "start_bit": 39,
@@ -4814,6 +4948,34 @@
         "frame_id": 801,
         "frame_id_hex": "0x321",
         "frame_name": "MSG_321"
+      }
+    },
+    {
+      "name": "FuelDelivPressRq",
+      "decode": {
+        "start_bit": 1,
+        "bit_length": 10,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.01,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 10.23,
+        "unit": "bar",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 8,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 487,
+        "frame_id_hex": "0x1E7",
+        "frame_name": "MSG_1E7"
       }
     },
     {
@@ -5015,62 +5177,6 @@
       }
     },
     {
-      "name": "RL_TirePress",
-      "decode": {
-        "start_bit": 31,
-        "bit_length": 8,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 0.04,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 10.200000000000001,
-        "unit": "bar",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 24,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1322,
-        "frame_id_hex": "0x52A",
-        "frame_name": "MSG_52A"
-      }
-    },
-    {
-      "name": "RL_TireTemp",
-      "decode": {
-        "start_bit": 30,
-        "bit_length": 7,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 1.0,
-        "offset": -20.0,
-        "minimum": -20.0,
-        "maximum": 107.0,
-        "unit": "C",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 24,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1323,
-        "frame_id_hex": "0x52B",
-        "frame_name": "MSG_52B"
-      }
-    },
-    {
       "name": "RLShock",
       "decode": {
         "start_bit": 46,
@@ -5152,62 +5258,6 @@
         "frame_id": 564,
         "frame_id_hex": "0x234",
         "frame_name": "MSG_234"
-      }
-    },
-    {
-      "name": "RR_TirePress",
-      "decode": {
-        "start_bit": 47,
-        "bit_length": 8,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 0.04,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 10.200000000000001,
-        "unit": "bar",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 40,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1322,
-        "frame_id_hex": "0x52A",
-        "frame_name": "MSG_52A"
-      }
-    },
-    {
-      "name": "RR_TireTemp",
-      "decode": {
-        "start_bit": 14,
-        "bit_length": 7,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 1.0,
-        "offset": -20.0,
-        "minimum": -20.0,
-        "maximum": 107.0,
-        "unit": "C",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 8,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1323,
-        "frame_id_hex": "0x52B",
-        "frame_name": "MSG_52B"
       }
     },
     {

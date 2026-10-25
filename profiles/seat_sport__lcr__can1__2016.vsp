@@ -1487,51 +1487,13 @@
         "frame_name": "MSG_640"
       },
       "canonical": {
-        "id": "engine.coolant.temperature",
-        "label": "Engine coolant temperature",
+        "id": "engine.oil.temperature",
+        "label": "Engine oil temperature",
         "quantity": "temperature",
         "preferred_unit": "C",
         "confidence": "heuristic",
         "aliases": [
           "T_ENG_OIL"
-        ]
-      }
-    },
-    {
-      "name": "T_ENG_AIR",
-      "decode": {
-        "start_bit": 8,
-        "bit_length": 8,
-        "byte_order": "little_endian",
-        "signed": false,
-        "factor": 0.75,
-        "offset": -48.0,
-        "minimum": -48.0,
-        "maximum": 143.25,
-        "unit": "C",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 1,
-        "canp_start_bit": 8,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1600,
-        "frame_id_hex": "0x640",
-        "frame_name": "MSG_640"
-      },
-      "canonical": {
-        "id": "engine.coolant.temperature",
-        "label": "Engine coolant temperature",
-        "quantity": "temperature",
-        "preferred_unit": "C",
-        "confidence": "heuristic",
-        "aliases": [
-          "T_ENG_AIR"
         ]
       }
     },
@@ -1639,10 +1601,10 @@
         "frame_name": "MSG_44A"
       },
       "canonical": {
-        "id": "fuel.level",
-        "label": "Fuel level",
-        "quantity": "level",
-        "preferred_unit": "%",
+        "id": "fuel.remaining",
+        "label": "Fuel remaining",
+        "quantity": "volume",
+        "preferred_unit": "L",
         "confidence": "mapped",
         "aliases": [
           "FUEL_LEVEL"
@@ -1688,6 +1650,44 @@
       }
     },
     {
+      "name": "T_ENG_AIR",
+      "decode": {
+        "start_bit": 8,
+        "bit_length": 8,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 0.75,
+        "offset": -48.0,
+        "minimum": -48.0,
+        "maximum": 143.25,
+        "unit": "C",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 1,
+        "canp_start_bit": 8,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1600,
+        "frame_id_hex": "0x640",
+        "frame_name": "MSG_640"
+      },
+      "canonical": {
+        "id": "intake_air.temperature",
+        "label": "Intake air temperature",
+        "quantity": "temperature",
+        "preferred_unit": "C",
+        "confidence": "heuristic",
+        "aliases": [
+          "T_ENG_AIR"
+        ]
+      }
+    },
+    {
       "name": "T_AIR",
       "decode": {
         "start_bit": 56,
@@ -1722,44 +1722,6 @@
         "confidence": "heuristic",
         "aliases": [
           "T_AIR"
-        ]
-      }
-    },
-    {
-      "name": "TORQ_ESP",
-      "decode": {
-        "start_bit": 12,
-        "bit_length": 10,
-        "byte_order": "little_endian",
-        "signed": false,
-        "factor": 1.0,
-        "offset": -509.0,
-        "minimum": -509.0,
-        "maximum": 514.0,
-        "unit": "#",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 1,
-        "canp_start_bit": 12,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 253,
-        "frame_id_hex": "0xFD",
-        "frame_name": "MSG_0FD"
-      },
-      "canonical": {
-        "id": "stability_control.mode",
-        "label": "Stability control mode",
-        "quantity": "state",
-        "preferred_unit": "state",
-        "confidence": "mapped",
-        "aliases": [
-          "TORQ_ESP"
         ]
       }
     },
@@ -3327,6 +3289,34 @@
         "frame_id": 167,
         "frame_id_hex": "0xA7",
         "frame_name": "MSG_0A7"
+      }
+    },
+    {
+      "name": "TORQ_ESP",
+      "decode": {
+        "start_bit": 12,
+        "bit_length": 10,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": -509.0,
+        "minimum": -509.0,
+        "maximum": 514.0,
+        "unit": "#",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 1,
+        "canp_start_bit": 12,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 253,
+        "frame_id_hex": "0xFD",
+        "frame_name": "MSG_0FD"
       }
     },
     {

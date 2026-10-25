@@ -1558,6 +1558,49 @@
   "diagnostic_queries": [],
   "signals": [
     {
+      "name": "ExtT2",
+      "decode": {
+        "start_bit": 16,
+        "bit_length": 8,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 5.0,
+        "offset": -40.0,
+        "minimum": -40.0,
+        "maximum": 1235.0,
+        "unit": "C",
+        "mux": {
+          "value": 2,
+          "start_bit": 0,
+          "bit_length": 8,
+          "byte_order": "little_endian"
+        }
+      },
+      "raw": {
+        "cflag": 7,
+        "canp_start_bit": 16,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1907,
+        "frame_id_hex": "0x773",
+        "frame_name": "MSG_773"
+      },
+      "canonical": {
+        "id": "ambient_air.temperature",
+        "label": "Ambient air temperature",
+        "quantity": "temperature",
+        "preferred_unit": "C",
+        "confidence": "heuristic",
+        "aliases": [
+          "ExtT2"
+        ]
+      }
+    },
+    {
       "name": "BattVolt",
       "decode": {
         "start_bit": 56,
@@ -2188,49 +2231,6 @@
       }
     },
     {
-      "name": "LambdaCtr2",
-      "decode": {
-        "start_bit": 24,
-        "bit_length": 8,
-        "byte_order": "little_endian",
-        "signed": false,
-        "factor": 0.0078125,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 1.9921875,
-        "unit": "λ",
-        "mux": {
-          "value": 4,
-          "start_bit": 0,
-          "bit_length": 8,
-          "byte_order": "little_endian"
-        }
-      },
-      "raw": {
-        "cflag": 7,
-        "canp_start_bit": 24,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1906,
-        "frame_id_hex": "0x772",
-        "frame_name": "MSG_772"
-      },
-      "canonical": {
-        "id": "exhaust.lambda.bank2",
-        "label": "Lambda bank 2",
-        "quantity": "ratio",
-        "preferred_unit": "lambda",
-        "confidence": "heuristic",
-        "aliases": [
-          "LambdaCtr2"
-        ]
-      }
-    },
-    {
       "name": "Lambda2",
       "decode": {
         "start_bit": 32,
@@ -2485,49 +2485,6 @@
         "confidence": "heuristic",
         "aliases": [
           "MapBeT1"
-        ]
-      }
-    },
-    {
-      "name": "AirPress",
-      "decode": {
-        "start_bit": 56,
-        "bit_length": 8,
-        "byte_order": "little_endian",
-        "signed": false,
-        "factor": 0.0256,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 6.5280000000000005,
-        "unit": "bar",
-        "mux": {
-          "value": 2,
-          "start_bit": 0,
-          "bit_length": 8,
-          "byte_order": "little_endian"
-        }
-      },
-      "raw": {
-        "cflag": 7,
-        "canp_start_bit": 56,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1905,
-        "frame_id_hex": "0x771",
-        "frame_name": "MSG_771"
-      },
-      "canonical": {
-        "id": "intake_manifold.pressure",
-        "label": "Intake manifold pressure",
-        "quantity": "pressure",
-        "preferred_unit": "bar",
-        "confidence": "mapped",
-        "aliases": [
-          "AirPress"
         ]
       }
     },
@@ -3238,17 +3195,17 @@
       }
     },
     {
-      "name": "ExtT2",
+      "name": "AirPress",
       "decode": {
-        "start_bit": 16,
+        "start_bit": 56,
         "bit_length": 8,
         "byte_order": "little_endian",
         "signed": false,
-        "factor": 5.0,
-        "offset": -40.0,
-        "minimum": -40.0,
-        "maximum": 1235.0,
-        "unit": "C",
+        "factor": 0.0256,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 6.5280000000000005,
+        "unit": "bar",
         "mux": {
           "value": 2,
           "start_bit": 0,
@@ -3258,16 +3215,16 @@
       },
       "raw": {
         "cflag": 7,
-        "canp_start_bit": 16,
+        "canp_start_bit": 56,
         "signed_known": true,
         "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",
         "bus": "can0",
-        "frame_id": 1907,
-        "frame_id_hex": "0x773",
-        "frame_name": "MSG_773"
+        "frame_id": 1905,
+        "frame_id_hex": "0x771",
+        "frame_name": "MSG_771"
       }
     },
     {
@@ -3358,6 +3315,39 @@
       "raw": {
         "cflag": 7,
         "canp_start_bit": 16,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1906,
+        "frame_id_hex": "0x772",
+        "frame_name": "MSG_772"
+      }
+    },
+    {
+      "name": "LambdaCtr2",
+      "decode": {
+        "start_bit": 24,
+        "bit_length": 8,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 0.0078125,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 1.9921875,
+        "unit": "λ",
+        "mux": {
+          "value": 4,
+          "start_bit": 0,
+          "bit_length": 8,
+          "byte_order": "little_endian"
+        }
+      },
+      "raw": {
+        "cflag": 7,
+        "canp_start_bit": 24,
         "signed_known": true,
         "signed_reason": "rawfmt:unsigned"
       },

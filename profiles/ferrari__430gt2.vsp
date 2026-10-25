@@ -516,6 +516,82 @@
       }
     },
     {
+      "name": "FrontBrakeP",
+      "decode": {
+        "start_bit": 23,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": true,
+        "factor": 0.01,
+        "offset": 0.0,
+        "minimum": -327.68,
+        "maximum": 327.67,
+        "unit": "bar",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 24,
+        "signed_known": true,
+        "signed_reason": "rawfmt:signed"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 552,
+        "frame_id_hex": "0x228",
+        "frame_name": "MSG_228"
+      },
+      "canonical": {
+        "id": "brake.pressure.front",
+        "label": "Front brake pressure",
+        "quantity": "pressure",
+        "preferred_unit": "bar",
+        "confidence": "heuristic",
+        "aliases": [
+          "FrontBrakeP"
+        ]
+      }
+    },
+    {
+      "name": "RearBrakeP",
+      "decode": {
+        "start_bit": 39,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": true,
+        "factor": 0.01,
+        "offset": 0.0,
+        "minimum": -327.68,
+        "maximum": 327.67,
+        "unit": "bar",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 40,
+        "signed_known": true,
+        "signed_reason": "rawfmt:signed"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 552,
+        "frame_id_hex": "0x228",
+        "frame_name": "MSG_228"
+      },
+      "canonical": {
+        "id": "brake.pressure.rear",
+        "label": "Rear brake pressure",
+        "quantity": "pressure",
+        "preferred_unit": "bar",
+        "confidence": "heuristic",
+        "aliases": [
+          "RearBrakeP"
+        ]
+      }
+    },
+    {
       "name": "WaterTemp",
       "decode": {
         "start_bit": 7,
@@ -1200,34 +1276,6 @@
       }
     },
     {
-      "name": "FrontBrakeP",
-      "decode": {
-        "start_bit": 23,
-        "bit_length": 16,
-        "byte_order": "big_endian",
-        "signed": true,
-        "factor": 0.01,
-        "offset": 0.0,
-        "minimum": -327.68,
-        "maximum": 327.67,
-        "unit": "bar",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 24,
-        "signed_known": true,
-        "signed_reason": "rawfmt:signed"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 552,
-        "frame_id_hex": "0x228",
-        "frame_name": "MSG_228"
-      }
-    },
-    {
       "name": "Gyro",
       "decode": {
         "start_bit": 55,
@@ -1253,34 +1301,6 @@
         "frame_id": 544,
         "frame_id_hex": "0x220",
         "frame_name": "MSG_220"
-      }
-    },
-    {
-      "name": "RearBrakeP",
-      "decode": {
-        "start_bit": 39,
-        "bit_length": 16,
-        "byte_order": "big_endian",
-        "signed": true,
-        "factor": 0.01,
-        "offset": 0.0,
-        "minimum": -327.68,
-        "maximum": 327.67,
-        "unit": "bar",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 40,
-        "signed_known": true,
-        "signed_reason": "rawfmt:signed"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 552,
-        "frame_id_hex": "0x228",
-        "frame_name": "MSG_228"
       }
     }
   ]

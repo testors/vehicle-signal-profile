@@ -786,6 +786,44 @@
       }
     },
     {
+      "name": "ExtAirTemp",
+      "decode": {
+        "start_bit": 31,
+        "bit_length": 7,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": -40.0,
+        "minimum": -40.0,
+        "maximum": 87.0,
+        "unit": "C",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 25,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1376,
+        "frame_id_hex": "0x560",
+        "frame_name": "MSG_560"
+      },
+      "canonical": {
+        "id": "ambient_air.temperature",
+        "label": "Ambient air temperature",
+        "quantity": "temperature",
+        "preferred_unit": "C",
+        "confidence": "heuristic",
+        "aliases": [
+          "ExtAirTemp"
+        ]
+      }
+    },
+    {
       "name": "BrakePedalPos",
       "decode": {
         "start_bit": 38,
@@ -1238,44 +1276,6 @@
         "confidence": "mapped",
         "aliases": [
           "OverBoost"
-        ]
-      }
-    },
-    {
-      "name": "ExtAirTemp",
-      "decode": {
-        "start_bit": 31,
-        "bit_length": 7,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 1.0,
-        "offset": -40.0,
-        "minimum": -40.0,
-        "maximum": 87.0,
-        "unit": "C",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 25,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1376,
-        "frame_id_hex": "0x560",
-        "frame_name": "MSG_560"
-      },
-      "canonical": {
-        "id": "intake_air.temperature",
-        "label": "Intake air temperature",
-        "quantity": "temperature",
-        "preferred_unit": "C",
-        "confidence": "heuristic",
-        "aliases": [
-          "ExtAirTemp"
         ]
       }
     },

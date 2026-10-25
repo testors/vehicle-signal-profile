@@ -1258,7 +1258,7 @@
         "label": "Front-left wheel speed",
         "quantity": "speed",
         "preferred_unit": "km/h",
-        "confidence": "heuristic",
+        "confidence": "mapped",
         "aliases": [
           "WheSpdFL"
         ]
@@ -1296,9 +1296,85 @@
         "label": "Front-right wheel speed",
         "quantity": "speed",
         "preferred_unit": "km/h",
-        "confidence": "heuristic",
+        "confidence": "mapped",
         "aliases": [
           "WheSpdFR"
+        ]
+      }
+    },
+    {
+      "name": "PotWheRL",
+      "decode": {
+        "start_bit": 39,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": true,
+        "factor": 0.01,
+        "offset": 0.0,
+        "minimum": -327.68,
+        "maximum": 327.67,
+        "unit": "#",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 40,
+        "signed_known": true,
+        "signed_reason": "rawfmt:signed"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1283,
+        "frame_id_hex": "0x503",
+        "frame_name": "MSG_503"
+      },
+      "canonical": {
+        "id": "wheel.speed.rear_left",
+        "label": "Rear-left wheel speed",
+        "quantity": "speed",
+        "preferred_unit": "km/h",
+        "confidence": "heuristic",
+        "aliases": [
+          "PotWheRL"
+        ]
+      }
+    },
+    {
+      "name": "PotWheRR",
+      "decode": {
+        "start_bit": 55,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": true,
+        "factor": 0.01,
+        "offset": 0.0,
+        "minimum": -327.68,
+        "maximum": 327.67,
+        "unit": "#",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 56,
+        "signed_known": true,
+        "signed_reason": "rawfmt:signed"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1283,
+        "frame_id_hex": "0x503",
+        "frame_name": "MSG_503"
+      },
+      "canonical": {
+        "id": "wheel.speed.rear_right",
+        "label": "Rear-right wheel speed",
+        "quantity": "speed",
+        "preferred_unit": "km/h",
+        "confidence": "heuristic",
+        "aliases": [
+          "PotWheRR"
         ]
       }
     },
@@ -1347,62 +1423,6 @@
       "raw": {
         "cflag": 0,
         "canp_start_bit": 8,
-        "signed_known": true,
-        "signed_reason": "rawfmt:signed"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1283,
-        "frame_id_hex": "0x503",
-        "frame_name": "MSG_503"
-      }
-    },
-    {
-      "name": "PotWheRL",
-      "decode": {
-        "start_bit": 39,
-        "bit_length": 16,
-        "byte_order": "big_endian",
-        "signed": true,
-        "factor": 0.01,
-        "offset": 0.0,
-        "minimum": -327.68,
-        "maximum": 327.67,
-        "unit": "#",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 40,
-        "signed_known": true,
-        "signed_reason": "rawfmt:signed"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1283,
-        "frame_id_hex": "0x503",
-        "frame_name": "MSG_503"
-      }
-    },
-    {
-      "name": "PotWheRR",
-      "decode": {
-        "start_bit": 55,
-        "bit_length": 16,
-        "byte_order": "big_endian",
-        "signed": true,
-        "factor": 0.01,
-        "offset": 0.0,
-        "minimum": -327.68,
-        "maximum": 327.67,
-        "unit": "#",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 56,
         "signed_known": true,
         "signed_reason": "rawfmt:signed"
       },

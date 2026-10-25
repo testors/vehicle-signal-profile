@@ -846,22 +846,22 @@
       }
     },
     {
-      "name": "KLambda1",
+      "name": "Lambda1Avg",
       "decode": {
-        "start_bit": 16,
-        "bit_length": 16,
+        "start_bit": 0,
+        "bit_length": 8,
         "byte_order": "little_endian",
         "signed": false,
-        "factor": 0.00152439,
+        "factor": 0.001,
         "offset": 0.0,
         "minimum": 0.0,
-        "maximum": 99.90089865,
-        "unit": "#",
+        "maximum": 0.255,
+        "unit": "λ",
         "mux": null
       },
       "raw": {
         "cflag": 5,
-        "canp_start_bit": 16,
+        "canp_start_bit": 0,
         "signed_known": true,
         "signed_reason": "rawfmt:unsigned"
       },
@@ -879,7 +879,7 @@
         "preferred_unit": "lambda",
         "confidence": "heuristic",
         "aliases": [
-          "KLambda1"
+          "Lambda1Avg"
         ]
       }
     },
@@ -922,44 +922,6 @@
       }
     },
     {
-      "name": "Lambda1Avg",
-      "decode": {
-        "start_bit": 0,
-        "bit_length": 8,
-        "byte_order": "little_endian",
-        "signed": false,
-        "factor": 0.001,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 0.255,
-        "unit": "λ",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 5,
-        "canp_start_bit": 0,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 258,
-        "frame_id_hex": "0x102",
-        "frame_name": "MSG_102"
-      },
-      "canonical": {
-        "id": "exhaust.lambda",
-        "label": "Lambda",
-        "quantity": "ratio",
-        "preferred_unit": "lambda",
-        "confidence": "heuristic",
-        "aliases": [
-          "Lambda1Avg"
-        ]
-      }
-    },
-    {
       "name": "TAir",
       "decode": {
         "start_bit": 8,
@@ -994,44 +956,6 @@
         "confidence": "heuristic",
         "aliases": [
           "TAir"
-        ]
-      }
-    },
-    {
-      "name": "KInjTAir",
-      "decode": {
-        "start_bit": 31,
-        "bit_length": 8,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 0.0078125,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 1.9921875,
-        "unit": "#",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 24,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 263,
-        "frame_id_hex": "0x107",
-        "frame_name": "MSG_107"
-      },
-      "canonical": {
-        "id": "intake_air.temperature",
-        "label": "Intake air temperature",
-        "quantity": "temperature",
-        "preferred_unit": "C",
-        "confidence": "heuristic",
-        "aliases": [
-          "KInjTAir"
         ]
       }
     },
@@ -1071,44 +995,6 @@
         "confidence": "mapped",
         "aliases": [
           "MAP"
-        ]
-      }
-    },
-    {
-      "name": "MapAct",
-      "decode": {
-        "start_bit": 15,
-        "bit_length": 8,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 1.0,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 255.0,
-        "unit": "#",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 8,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 263,
-        "frame_id_hex": "0x107",
-        "frame_name": "MSG_107"
-      },
-      "canonical": {
-        "id": "intake_manifold.pressure",
-        "label": "Intake manifold pressure",
-        "quantity": "pressure",
-        "preferred_unit": "bar",
-        "confidence": "heuristic",
-        "aliases": [
-          "MapAct"
         ]
       }
     },
@@ -1537,6 +1423,34 @@
       }
     },
     {
+      "name": "KInjTAir",
+      "decode": {
+        "start_bit": 31,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.0078125,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 1.9921875,
+        "unit": "#",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 24,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 263,
+        "frame_id_hex": "0x107",
+        "frame_name": "MSG_107"
+      }
+    },
+    {
       "name": "KInjTBaro",
       "decode": {
         "start_bit": 39,
@@ -1590,6 +1504,34 @@
         "frame_id": 263,
         "frame_id_hex": "0x107",
         "frame_name": "MSG_107"
+      }
+    },
+    {
+      "name": "KLambda1",
+      "decode": {
+        "start_bit": 16,
+        "bit_length": 16,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 0.00152439,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 99.90089865,
+        "unit": "#",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 5,
+        "canp_start_bit": 16,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 258,
+        "frame_id_hex": "0x102",
+        "frame_name": "MSG_102"
       }
     },
     {
@@ -1667,6 +1609,34 @@
         "canp_start_bit": 40,
         "signed_known": true,
         "signed_reason": "rawfmt:signed"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 263,
+        "frame_id_hex": "0x107",
+        "frame_name": "MSG_107"
+      }
+    },
+    {
+      "name": "MapAct",
+      "decode": {
+        "start_bit": 15,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 255.0,
+        "unit": "#",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 8,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",

@@ -800,6 +800,44 @@
       }
     },
     {
+      "name": "ECU_OUT_AIR_T",
+      "decode": {
+        "start_bit": 31,
+        "bit_length": 7,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": -40.0,
+        "minimum": -40.0,
+        "maximum": 87.0,
+        "unit": "C",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 25,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1376,
+        "frame_id_hex": "0x560",
+        "frame_name": "MSG_560"
+      },
+      "canonical": {
+        "id": "ambient_air.temperature",
+        "label": "Ambient air temperature",
+        "quantity": "temperature",
+        "preferred_unit": "C",
+        "confidence": "heuristic",
+        "aliases": [
+          "ECU_OUT_AIR_T"
+        ]
+      }
+    },
+    {
       "name": "ECU_BRAKE_PRESS",
       "decode": {
         "start_bit": 9,
@@ -1028,82 +1066,6 @@
       }
     },
     {
-      "name": "ECU_CAT2_TEMP",
-      "decode": {
-        "start_bit": 15,
-        "bit_length": 8,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 5.0,
-        "offset": -50.0,
-        "minimum": -50.0,
-        "maximum": 1225.0,
-        "unit": "C",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 8,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1889,
-        "frame_id_hex": "0x761",
-        "frame_name": "MSG_761"
-      },
-      "canonical": {
-        "id": "exhaust.gas.temperature",
-        "label": "Exhaust gas temperature",
-        "quantity": "temperature",
-        "preferred_unit": "C",
-        "confidence": "heuristic",
-        "aliases": [
-          "ECU_CAT2_TEMP"
-        ]
-      }
-    },
-    {
-      "name": "ECU_CAT1_TEMP",
-      "decode": {
-        "start_bit": 7,
-        "bit_length": 8,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 5.0,
-        "offset": -50.0,
-        "minimum": -50.0,
-        "maximum": 1225.0,
-        "unit": "C",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 0,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1889,
-        "frame_id_hex": "0x761",
-        "frame_name": "MSG_761"
-      },
-      "canonical": {
-        "id": "exhaust.gas.temperature",
-        "label": "Exhaust gas temperature",
-        "quantity": "temperature",
-        "preferred_unit": "C",
-        "confidence": "heuristic",
-        "aliases": [
-          "ECU_CAT1_TEMP"
-        ]
-      }
-    },
-    {
       "name": "ECU_FUEL_CONS",
       "decode": {
         "start_bit": 39,
@@ -1176,44 +1138,6 @@
         "confidence": "heuristic",
         "aliases": [
           "ECU_FUEL_LEV"
-        ]
-      }
-    },
-    {
-      "name": "ECU_OUT_AIR_T",
-      "decode": {
-        "start_bit": 31,
-        "bit_length": 7,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 1.0,
-        "offset": -40.0,
-        "minimum": -40.0,
-        "maximum": 87.0,
-        "unit": "C",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 25,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1376,
-        "frame_id_hex": "0x560",
-        "frame_name": "MSG_560"
-      },
-      "canonical": {
-        "id": "intake_air.temperature",
-        "label": "Intake air temperature",
-        "quantity": "temperature",
-        "preferred_unit": "C",
-        "confidence": "heuristic",
-        "aliases": [
-          "ECU_OUT_AIR_T"
         ]
       }
     },
@@ -1718,6 +1642,62 @@
         "aliases": [
           "ECU_YAW_RATE"
         ]
+      }
+    },
+    {
+      "name": "ECU_CAT1_TEMP",
+      "decode": {
+        "start_bit": 7,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 5.0,
+        "offset": -50.0,
+        "minimum": -50.0,
+        "maximum": 1225.0,
+        "unit": "C",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 0,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1889,
+        "frame_id_hex": "0x761",
+        "frame_name": "MSG_761"
+      }
+    },
+    {
+      "name": "ECU_CAT2_TEMP",
+      "decode": {
+        "start_bit": 15,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 5.0,
+        "offset": -50.0,
+        "minimum": -50.0,
+        "maximum": 1225.0,
+        "unit": "C",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 8,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1889,
+        "frame_id_hex": "0x761",
+        "frame_name": "MSG_761"
       }
     },
     {

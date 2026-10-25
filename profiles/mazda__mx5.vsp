@@ -792,49 +792,6 @@
       }
     },
     {
-      "name": "ECU_Cat_Temp",
-      "decode": {
-        "start_bit": 39,
-        "bit_length": 16,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 0.1,
-        "offset": -40.0,
-        "minimum": -40.0,
-        "maximum": 6513.5,
-        "unit": "C",
-        "mux": {
-          "value": 60,
-          "start_bit": 31,
-          "bit_length": 8,
-          "byte_order": "big_endian"
-        }
-      },
-      "raw": {
-        "cflag": 2,
-        "canp_start_bit": 40,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 2024,
-        "frame_id_hex": "0x7E8",
-        "frame_name": "MSG_7E8"
-      },
-      "canonical": {
-        "id": "exhaust.gas.temperature",
-        "label": "Exhaust gas temperature",
-        "quantity": "temperature",
-        "preferred_unit": "C",
-        "confidence": "heuristic",
-        "aliases": [
-          "ECU_Cat_Temp"
-        ]
-      }
-    },
-    {
       "name": "ECU_Lambda",
       "decode": {
         "start_bit": 31,
@@ -1184,6 +1141,39 @@
         "aliases": [
           "ECU_Whe_Spd_RR"
         ]
+      }
+    },
+    {
+      "name": "ECU_Cat_Temp",
+      "decode": {
+        "start_bit": 39,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.1,
+        "offset": -40.0,
+        "minimum": -40.0,
+        "maximum": 6513.5,
+        "unit": "C",
+        "mux": {
+          "value": 60,
+          "start_bit": 31,
+          "bit_length": 8,
+          "byte_order": "big_endian"
+        }
+      },
+      "raw": {
+        "cflag": 2,
+        "canp_start_bit": 40,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 2024,
+        "frame_id_hex": "0x7E8",
+        "frame_name": "MSG_7E8"
       }
     },
     {

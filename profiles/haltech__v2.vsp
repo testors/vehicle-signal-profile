@@ -3044,44 +3044,6 @@
       }
     },
     {
-      "name": "ECU_GearbOilPres",
-      "decode": {
-        "start_bit": 7,
-        "bit_length": 16,
-        "byte_order": "big_endian",
-        "signed": true,
-        "factor": 0.001,
-        "offset": -1.013,
-        "minimum": -33.781,
-        "maximum": 31.754000000000005,
-        "unit": "bar",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 8,
-        "signed_known": true,
-        "signed_reason": "rawfmt:signed"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1002,
-        "frame_id_hex": "0x3EA",
-        "frame_name": "MSG_3EA"
-      },
-      "canonical": {
-        "id": "engine.oil.pressure",
-        "label": "Engine oil pressure",
-        "quantity": "pressure",
-        "preferred_unit": "bar",
-        "confidence": "heuristic",
-        "aliases": [
-          "ECU_GearbOilPres"
-        ]
-      }
-    },
-    {
       "name": "ECU_OilPress",
       "decode": {
         "start_bit": 23,
@@ -3386,44 +3348,6 @@
       }
     },
     {
-      "name": "ECU_FuelLevel",
-      "decode": {
-        "start_bit": 7,
-        "bit_length": 16,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 0.1,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 6553.5,
-        "unit": "l",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 8,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 994,
-        "frame_id_hex": "0x3E2",
-        "frame_name": "MSG_3E2"
-      },
-      "canonical": {
-        "id": "fuel.level",
-        "label": "Fuel level",
-        "quantity": "level",
-        "preferred_unit": "%",
-        "confidence": "heuristic",
-        "aliases": [
-          "ECU_FuelLevel"
-        ]
-      }
-    },
-    {
       "name": "ECU_FuelPress",
       "decode": {
         "start_bit": 7,
@@ -3458,6 +3382,44 @@
         "confidence": "heuristic",
         "aliases": [
           "ECU_FuelPress"
+        ]
+      }
+    },
+    {
+      "name": "ECU_FuelLevel",
+      "decode": {
+        "start_bit": 7,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.1,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 6553.5,
+        "unit": "l",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 8,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 994,
+        "frame_id_hex": "0x3E2",
+        "frame_name": "MSG_3E2"
+      },
+      "canonical": {
+        "id": "fuel.remaining",
+        "label": "Fuel remaining",
+        "quantity": "volume",
+        "preferred_unit": "L",
+        "confidence": "heuristic",
+        "aliases": [
+          "ECU_FuelLevel"
         ]
       }
     },
@@ -5215,6 +5177,34 @@
         "frame_id": 881,
         "frame_id_hex": "0x371",
         "frame_name": "MSG_371"
+      }
+    },
+    {
+      "name": "ECU_GearbOilPres",
+      "decode": {
+        "start_bit": 7,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": true,
+        "factor": 0.001,
+        "offset": -1.013,
+        "minimum": -33.781,
+        "maximum": 31.754000000000005,
+        "unit": "bar",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 8,
+        "signed_known": true,
+        "signed_reason": "rawfmt:signed"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1002,
+        "frame_id_hex": "0x3EA",
+        "frame_name": "MSG_3EA"
       }
     },
     {

@@ -654,6 +654,70 @@
       }
     },
     {
+      "name": "Air_Temperature",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1217,
+        "frame_id_hex": "0x4C1",
+        "frame_name": "MSG_4C1"
+      },
+      "decode": {
+        "start_bit": 31,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": -40.0,
+        "minimum": -40.0,
+        "maximum": 215.0,
+        "unit": "C",
+        "mux": null
+      },
+      "canonical": {
+        "id": "ambient_air.temperature",
+        "label": "Ambient air temperature",
+        "quantity": "temperature",
+        "preferred_unit": "C",
+        "confidence": "mapped",
+        "aliases": [
+          "Air_Temperature"
+        ]
+      }
+    },
+    {
+      "name": "Air_Temperature",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1009,
+        "frame_id_hex": "0x3F1",
+        "frame_name": "MSG_3F1"
+      },
+      "decode": {
+        "start_bit": 63,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.5,
+        "offset": -40.0,
+        "minimum": -40.0,
+        "maximum": 87.5,
+        "unit": "C",
+        "mux": null
+      },
+      "canonical": {
+        "id": "ambient_air.temperature",
+        "label": "Ambient air temperature",
+        "quantity": "temperature",
+        "preferred_unit": "C",
+        "confidence": "mapped",
+        "aliases": [
+          "Air_Temperature"
+        ]
+      }
+    },
+    {
       "name": "Brake_Light",
       "acquisition": {
         "type": "can_frame",
@@ -842,70 +906,6 @@
         "confidence": "mapped",
         "aliases": [
           "Fuel_Level"
-        ]
-      }
-    },
-    {
-      "name": "Air_Temperature",
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1217,
-        "frame_id_hex": "0x4C1",
-        "frame_name": "MSG_4C1"
-      },
-      "decode": {
-        "start_bit": 31,
-        "bit_length": 8,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 1.0,
-        "offset": -40.0,
-        "minimum": -40.0,
-        "maximum": 215.0,
-        "unit": "C",
-        "mux": null
-      },
-      "canonical": {
-        "id": "intake_air.temperature",
-        "label": "Intake air temperature",
-        "quantity": "temperature",
-        "preferred_unit": "C",
-        "confidence": "mapped",
-        "aliases": [
-          "Air_Temperature"
-        ]
-      }
-    },
-    {
-      "name": "Air_Temperature",
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1009,
-        "frame_id_hex": "0x3F1",
-        "frame_name": "MSG_3F1"
-      },
-      "decode": {
-        "start_bit": 63,
-        "bit_length": 8,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 0.5,
-        "offset": -40.0,
-        "minimum": -40.0,
-        "maximum": 87.5,
-        "unit": "C",
-        "mux": null
-      },
-      "canonical": {
-        "id": "intake_air.temperature",
-        "label": "Intake air temperature",
-        "quantity": "temperature",
-        "preferred_unit": "C",
-        "confidence": "mapped",
-        "aliases": [
-          "Air_Temperature"
         ]
       }
     },

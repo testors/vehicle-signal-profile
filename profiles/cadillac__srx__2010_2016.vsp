@@ -1144,6 +1144,70 @@
       }
     },
     {
+      "name": "Air_Pressure",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1217,
+        "frame_id_hex": "0x4C1",
+        "frame_name": "MSG_4C1"
+      },
+      "decode": {
+        "start_bit": 15,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.5,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 127.5,
+        "unit": "kPa",
+        "mux": null
+      },
+      "canonical": {
+        "id": "ambient_air.pressure",
+        "label": "Ambient air pressure",
+        "quantity": "pressure",
+        "preferred_unit": "bar",
+        "confidence": "mapped",
+        "aliases": [
+          "Air_Pressure"
+        ]
+      }
+    },
+    {
+      "name": "Air_Temperature",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1009,
+        "frame_id_hex": "0x3F1",
+        "frame_name": "MSG_3F1"
+      },
+      "decode": {
+        "start_bit": 63,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.5,
+        "offset": -40.0,
+        "minimum": -40.0,
+        "maximum": 87.5,
+        "unit": "C",
+        "mux": null
+      },
+      "canonical": {
+        "id": "ambient_air.temperature",
+        "label": "Ambient air temperature",
+        "quantity": "temperature",
+        "preferred_unit": "C",
+        "confidence": "mapped",
+        "aliases": [
+          "Air_Temperature"
+        ]
+      }
+    },
+    {
       "name": "Battery_Voltage",
       "acquisition": {
         "type": "can_frame",
@@ -1556,70 +1620,6 @@
         "confidence": "mapped",
         "aliases": [
           "Intake_Air_Temperature"
-        ]
-      }
-    },
-    {
-      "name": "Air_Temperature",
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1009,
-        "frame_id_hex": "0x3F1",
-        "frame_name": "MSG_3F1"
-      },
-      "decode": {
-        "start_bit": 63,
-        "bit_length": 8,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 0.5,
-        "offset": -40.0,
-        "minimum": -40.0,
-        "maximum": 87.5,
-        "unit": "C",
-        "mux": null
-      },
-      "canonical": {
-        "id": "intake_air.temperature",
-        "label": "Intake air temperature",
-        "quantity": "temperature",
-        "preferred_unit": "C",
-        "confidence": "mapped",
-        "aliases": [
-          "Air_Temperature"
-        ]
-      }
-    },
-    {
-      "name": "Air_Pressure",
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1217,
-        "frame_id_hex": "0x4C1",
-        "frame_name": "MSG_4C1"
-      },
-      "decode": {
-        "start_bit": 15,
-        "bit_length": 8,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 0.5,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 127.5,
-        "unit": "kPa",
-        "mux": null
-      },
-      "canonical": {
-        "id": "intake_manifold.pressure",
-        "label": "Intake manifold pressure",
-        "quantity": "pressure",
-        "preferred_unit": "bar",
-        "confidence": "mapped",
-        "aliases": [
-          "Air_Pressure"
         ]
       }
     },
@@ -2414,7 +2414,7 @@
       }
     },
     {
-      "name": "Cruise_Control_Set_Speed_mph",
+      "name": "Cruise_Control_Set_Speed_kph",
       "acquisition": {
         "type": "can_frame",
         "bus": "can0",
@@ -2427,11 +2427,11 @@
         "bit_length": 12,
         "byte_order": "big_endian",
         "signed": false,
-        "factor": 0.0388125,
+        "factor": 0.0625,
         "offset": 0.0,
         "minimum": 0.0,
-        "maximum": 158.9371875,
-        "unit": "mph",
+        "maximum": 255.9375,
+        "unit": "km/h",
         "mux": null
       }
     },

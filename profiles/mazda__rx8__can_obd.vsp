@@ -663,10 +663,10 @@
         "response_frame_id_hex": "0x7E8"
       },
       "canonical": {
-        "id": "exhaust.air_fuel_ratio",
-        "label": "Air/fuel ratio",
+        "id": "exhaust.lambda",
+        "label": "Lambda",
         "quantity": "ratio",
-        "preferred_unit": "ratio",
+        "preferred_unit": "lambda",
         "confidence": "mapped",
         "aliases": [
           "AFR"
@@ -676,60 +676,6 @@
         "confidence": "high",
         "reason": "exact_mode01_pid_mux",
         "record_offset": 5826
-      }
-    },
-    {
-      "name": "TempCat",
-      "decode": {
-        "start_bit": 39,
-        "bit_length": 16,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 0.1,
-        "offset": -40.0,
-        "minimum": -40.0,
-        "maximum": 6513.5,
-        "unit": "C",
-        "mux": {
-          "value": 60,
-          "start_bit": 31,
-          "bit_length": 8,
-          "byte_order": "big_endian"
-        }
-      },
-      "raw": {
-        "cflag": 2,
-        "canp_start_bit": 40,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "diagnostic_query",
-        "bus": "can0",
-        "query_id": "diag_7E0_22003C",
-        "tx_id": 2016,
-        "tx_id_hex": "0x7E0",
-        "rx_id": 2024,
-        "rx_id_hex": "0x7E8",
-        "request_hex": "22 00 3C",
-        "request_kind": "uds_read_data_by_identifier",
-        "response_frame_id": 2024,
-        "response_frame_id_hex": "0x7E8"
-      },
-      "canonical": {
-        "id": "exhaust.gas.temperature",
-        "label": "Exhaust gas temperature",
-        "quantity": "temperature",
-        "preferred_unit": "C",
-        "confidence": "heuristic",
-        "aliases": [
-          "TempCat"
-        ]
-      },
-      "match": {
-        "confidence": "high",
-        "reason": "exact_uds_did_mux_and_route_rx",
-        "record_offset": 5852
       }
     },
     {
@@ -1046,6 +992,50 @@
         "frame_id": 530,
         "frame_id_hex": "0x212",
         "frame_name": "MSG_212"
+      }
+    },
+    {
+      "name": "TempCat",
+      "decode": {
+        "start_bit": 39,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.1,
+        "offset": -40.0,
+        "minimum": -40.0,
+        "maximum": 6513.5,
+        "unit": "C",
+        "mux": {
+          "value": 60,
+          "start_bit": 31,
+          "bit_length": 8,
+          "byte_order": "big_endian"
+        }
+      },
+      "raw": {
+        "cflag": 2,
+        "canp_start_bit": 40,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "diagnostic_query",
+        "bus": "can0",
+        "query_id": "diag_7E0_22003C",
+        "tx_id": 2016,
+        "tx_id_hex": "0x7E0",
+        "rx_id": 2024,
+        "rx_id_hex": "0x7E8",
+        "request_hex": "22 00 3C",
+        "request_kind": "uds_read_data_by_identifier",
+        "response_frame_id": 2024,
+        "response_frame_id_hex": "0x7E8"
+      },
+      "match": {
+        "confidence": "high",
+        "reason": "exact_uds_did_mux_and_route_rx",
+        "record_offset": 5852
       }
     }
   ]

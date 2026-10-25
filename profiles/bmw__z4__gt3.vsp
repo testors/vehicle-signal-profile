@@ -1264,44 +1264,6 @@
       }
     },
     {
-      "name": "AirPress",
-      "decode": {
-        "start_bit": 23,
-        "bit_length": 8,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 0.001,
-        "offset": 0.9,
-        "minimum": 0.9,
-        "maximum": 1.155,
-        "unit": "bar",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 16,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 300,
-        "frame_id_hex": "0x12C",
-        "frame_name": "MSG_12C"
-      },
-      "canonical": {
-        "id": "intake_manifold.pressure",
-        "label": "Intake manifold pressure",
-        "quantity": "pressure",
-        "preferred_unit": "bar",
-        "confidence": "mapped",
-        "aliases": [
-          "AirPress"
-        ]
-      }
-    },
-    {
       "name": "Steering_Angle",
       "acquisition": {
         "type": "can_frame",
@@ -1406,82 +1368,6 @@
         "confidence": "heuristic",
         "aliases": [
           "ThrotPos1"
-        ]
-      }
-    },
-    {
-      "name": "Tps2ADC",
-      "decode": {
-        "start_bit": 13,
-        "bit_length": 10,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 1.0,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 1023.0,
-        "unit": "#",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 20,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 280,
-        "frame_id_hex": "0x118",
-        "frame_name": "MSG_118"
-      },
-      "canonical": {
-        "id": "throttle.position",
-        "label": "Throttle position",
-        "quantity": "position",
-        "preferred_unit": "%",
-        "confidence": "heuristic",
-        "aliases": [
-          "Tps2ADC"
-        ]
-      }
-    },
-    {
-      "name": "Tps1ADC",
-      "decode": {
-        "start_bit": 7,
-        "bit_length": 10,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 1.0,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 1023.0,
-        "unit": "#",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 14,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 280,
-        "frame_id_hex": "0x118",
-        "frame_name": "MSG_118"
-      },
-      "canonical": {
-        "id": "throttle.position",
-        "label": "Throttle position",
-        "quantity": "position",
-        "preferred_unit": "%",
-        "confidence": "heuristic",
-        "aliases": [
-          "Tps1ADC"
         ]
       }
     },
@@ -1730,6 +1616,34 @@
       }
     },
     {
+      "name": "AirPress",
+      "decode": {
+        "start_bit": 23,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.001,
+        "offset": 0.9,
+        "minimum": 0.9,
+        "maximum": 1.155,
+        "unit": "bar",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 16,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 300,
+        "frame_id_hex": "0x12C",
+        "frame_name": "MSG_12C"
+      }
+    },
+    {
       "name": "BrkFLPress",
       "decode": {
         "start_bit": 39,
@@ -1895,6 +1809,62 @@
         "frame_id": 340,
         "frame_id_hex": "0x154",
         "frame_name": "MSG_154"
+      }
+    },
+    {
+      "name": "Tps1ADC",
+      "decode": {
+        "start_bit": 7,
+        "bit_length": 10,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 1023.0,
+        "unit": "#",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 14,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 280,
+        "frame_id_hex": "0x118",
+        "frame_name": "MSG_118"
+      }
+    },
+    {
+      "name": "Tps2ADC",
+      "decode": {
+        "start_bit": 13,
+        "bit_length": 10,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 1023.0,
+        "unit": "#",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 20,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 280,
+        "frame_id_hex": "0x118",
+        "frame_name": "MSG_118"
       }
     }
   ]

@@ -1126,49 +1126,6 @@
       }
     },
     {
-      "name": "FuelUsedLap",
-      "decode": {
-        "start_bit": 49,
-        "bit_length": 15,
-        "byte_order": "little_endian",
-        "signed": false,
-        "factor": 0.0262,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 858.4954,
-        "unit": "#",
-        "mux": {
-          "value": 0,
-          "start_bit": 0,
-          "bit_length": 8,
-          "byte_order": "little_endian"
-        }
-      },
-      "raw": {
-        "cflag": 7,
-        "canp_start_bit": 49,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1906,
-        "frame_id_hex": "0x772",
-        "frame_name": "MSG_772"
-      },
-      "canonical": {
-        "id": "fuel.used",
-        "label": "Fuel used",
-        "quantity": "volume",
-        "preferred_unit": "L",
-        "confidence": "heuristic",
-        "aliases": [
-          "FuelUsedLap"
-        ]
-      }
-    },
-    {
       "name": "FuelUsedAll",
       "decode": {
         "start_bit": 49,
@@ -1617,6 +1574,39 @@
         "canp_start_bit": 40,
         "signed_known": true,
         "signed_reason": "rawfmt:bitfield"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1906,
+        "frame_id_hex": "0x772",
+        "frame_name": "MSG_772"
+      }
+    },
+    {
+      "name": "FuelUsedLap",
+      "decode": {
+        "start_bit": 49,
+        "bit_length": 15,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 0.0262,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 858.4954,
+        "unit": "#",
+        "mux": {
+          "value": 0,
+          "start_bit": 0,
+          "bit_length": 8,
+          "byte_order": "little_endian"
+        }
+      },
+      "raw": {
+        "cflag": 7,
+        "canp_start_bit": 49,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",

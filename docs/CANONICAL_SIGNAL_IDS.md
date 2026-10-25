@@ -30,6 +30,7 @@ Powertrain:
 | `engine.speed` | `rpm` |
 | `engine.coolant.temperature` | `C` |
 | `engine.coolant.pressure` | `bar` |
+| `engine.crankcase.pressure` | `bar` |
 | `engine.oil.temperature` | `C` |
 | `engine.oil.pressure` | `bar` |
 | `engine.oil.level` | `%` |

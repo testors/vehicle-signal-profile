@@ -1181,6 +1181,44 @@
       }
     },
     {
+      "name": "KTM_GBOX_TEMP",
+      "decode": {
+        "start_bit": 16,
+        "bit_length": 8,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 255.0,
+        "unit": "C",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 5,
+        "canp_start_bit": 16,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1088,
+        "frame_id_hex": "0x440",
+        "frame_name": "MSG_440"
+      },
+      "canonical": {
+        "id": "transmission.oil.temperature",
+        "label": "Transmission oil temperature",
+        "quantity": "temperature",
+        "preferred_unit": "C",
+        "confidence": "heuristic",
+        "aliases": [
+          "KTM_GBOX_TEMP"
+        ]
+      }
+    },
+    {
       "name": "Transmission_Oil_Temperature",
       "acquisition": {
         "type": "can_frame",
@@ -1573,34 +1611,6 @@
       "raw": {
         "cflag": 5,
         "canp_start_bit": 32,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1088,
-        "frame_id_hex": "0x440",
-        "frame_name": "MSG_440"
-      }
-    },
-    {
-      "name": "KTM_GBOX_TEMP",
-      "decode": {
-        "start_bit": 16,
-        "bit_length": 8,
-        "byte_order": "little_endian",
-        "signed": false,
-        "factor": 1.0,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 255.0,
-        "unit": "C",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 5,
-        "canp_start_bit": 16,
         "signed_known": true,
         "signed_reason": "rawfmt:unsigned"
       },

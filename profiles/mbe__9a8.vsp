@@ -1267,92 +1267,6 @@
       }
     },
     {
-      "name": "TarLambda",
-      "decode": {
-        "start_bit": 47,
-        "bit_length": 8,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 0.001,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 0.255,
-        "unit": "λ",
-        "mux": {
-          "value": 4,
-          "start_bit": 7,
-          "bit_length": 8,
-          "byte_order": "big_endian"
-        }
-      },
-      "raw": {
-        "cflag": 2,
-        "canp_start_bit": 40,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 814,
-        "frame_id_hex": "0x32E",
-        "frame_name": "MSG_32E"
-      },
-      "canonical": {
-        "id": "exhaust.lambda",
-        "label": "Lambda",
-        "quantity": "ratio",
-        "preferred_unit": "lambda",
-        "confidence": "heuristic",
-        "aliases": [
-          "TarLambda"
-        ]
-      }
-    },
-    {
-      "name": "TarBoost",
-      "decode": {
-        "start_bit": 55,
-        "bit_length": 8,
-        "byte_order": "big_endian",
-        "signed": true,
-        "factor": 0.025698,
-        "offset": -1.0,
-        "minimum": -4.289344,
-        "maximum": 2.2636459999999996,
-        "unit": "bar",
-        "mux": {
-          "value": 4,
-          "start_bit": 7,
-          "bit_length": 8,
-          "byte_order": "big_endian"
-        }
-      },
-      "raw": {
-        "cflag": 2,
-        "canp_start_bit": 48,
-        "signed_known": true,
-        "signed_reason": "rawfmt:signed"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 814,
-        "frame_id_hex": "0x32E",
-        "frame_name": "MSG_32E"
-      },
-      "canonical": {
-        "id": "intake_air.boost_pressure",
-        "label": "Boost pressure",
-        "quantity": "pressure",
-        "preferred_unit": "bar",
-        "confidence": "mapped",
-        "aliases": [
-          "TarBoost"
-        ]
-      }
-    },
-    {
       "name": "AirTemp",
       "decode": {
         "start_bit": 63,
@@ -1435,49 +1349,6 @@
         "confidence": "mapped",
         "aliases": [
           "MAP"
-        ]
-      }
-    },
-    {
-      "name": "MAPSide",
-      "decode": {
-        "start_bit": 47,
-        "bit_length": 8,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 0.062745,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 15.999975,
-        "unit": "#",
-        "mux": {
-          "value": 2,
-          "start_bit": 7,
-          "bit_length": 8,
-          "byte_order": "big_endian"
-        }
-      },
-      "raw": {
-        "cflag": 2,
-        "canp_start_bit": 40,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 814,
-        "frame_id_hex": "0x32E",
-        "frame_name": "MSG_32E"
-      },
-      "canonical": {
-        "id": "intake_manifold.pressure",
-        "label": "Intake manifold pressure",
-        "quantity": "pressure",
-        "preferred_unit": "bar",
-        "confidence": "heuristic",
-        "aliases": [
-          "MAPSide"
         ]
       }
     },
@@ -2055,6 +1926,39 @@
       }
     },
     {
+      "name": "MAPSide",
+      "decode": {
+        "start_bit": 47,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.062745,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 15.999975,
+        "unit": "#",
+        "mux": {
+          "value": 2,
+          "start_bit": 7,
+          "bit_length": 8,
+          "byte_order": "big_endian"
+        }
+      },
+      "raw": {
+        "cflag": 2,
+        "canp_start_bit": 40,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 814,
+        "frame_id_hex": "0x32E",
+        "frame_name": "MSG_32E"
+      }
+    },
+    {
       "name": "RadFan1",
       "decode": {
         "start_bit": 8,
@@ -2175,6 +2079,72 @@
       "raw": {
         "cflag": 2,
         "canp_start_bit": 56,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 814,
+        "frame_id_hex": "0x32E",
+        "frame_name": "MSG_32E"
+      }
+    },
+    {
+      "name": "TarBoost",
+      "decode": {
+        "start_bit": 55,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": true,
+        "factor": 0.025698,
+        "offset": -1.0,
+        "minimum": -4.289344,
+        "maximum": 2.2636459999999996,
+        "unit": "bar",
+        "mux": {
+          "value": 4,
+          "start_bit": 7,
+          "bit_length": 8,
+          "byte_order": "big_endian"
+        }
+      },
+      "raw": {
+        "cflag": 2,
+        "canp_start_bit": 48,
+        "signed_known": true,
+        "signed_reason": "rawfmt:signed"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 814,
+        "frame_id_hex": "0x32E",
+        "frame_name": "MSG_32E"
+      }
+    },
+    {
+      "name": "TarLambda",
+      "decode": {
+        "start_bit": 47,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.001,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 0.255,
+        "unit": "λ",
+        "mux": {
+          "value": 4,
+          "start_bit": 7,
+          "bit_length": 8,
+          "byte_order": "big_endian"
+        }
+      },
+      "raw": {
+        "cflag": 2,
+        "canp_start_bit": 40,
         "signed_known": true,
         "signed_reason": "rawfmt:unsigned"
       },

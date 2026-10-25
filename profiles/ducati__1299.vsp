@@ -479,6 +479,44 @@
   "diagnostic_queries": [],
   "signals": [
     {
+      "name": "ECU_TPS_HAND",
+      "decode": {
+        "start_bit": 39,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.5,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 127.5,
+        "unit": "%",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 32,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 128,
+        "frame_id_hex": "0x80",
+        "frame_name": "MSG_080"
+      },
+      "canonical": {
+        "id": "accelerator.pedal.position",
+        "label": "Accelerator pedal position",
+        "quantity": "position",
+        "preferred_unit": "%",
+        "confidence": "heuristic",
+        "aliases": [
+          "ECU_TPS_HAND"
+        ]
+      }
+    },
+    {
       "name": "ECU_BARO",
       "decode": {
         "start_bit": 2,
@@ -696,10 +734,10 @@
         "frame_name": "MSG_651"
       },
       "canonical": {
-        "id": "exhaust.air_fuel_ratio",
-        "label": "Air/fuel ratio",
+        "id": "exhaust.lambda",
+        "label": "Lambda",
         "quantity": "ratio",
-        "preferred_unit": "ratio",
+        "preferred_unit": "lambda",
         "confidence": "heuristic",
         "aliases": [
           "ECU_AFR_VER"
@@ -734,10 +772,10 @@
         "frame_name": "MSG_650"
       },
       "canonical": {
-        "id": "exhaust.air_fuel_ratio",
-        "label": "Air/fuel ratio",
+        "id": "exhaust.lambda",
+        "label": "Lambda",
         "quantity": "ratio",
-        "preferred_unit": "ratio",
+        "preferred_unit": "lambda",
         "confidence": "heuristic",
         "aliases": [
           "ECU_AFR_HOR"
@@ -779,44 +817,6 @@
         "confidence": "heuristic",
         "aliases": [
           "ECU_INT_AIR_TEMP"
-        ]
-      }
-    },
-    {
-      "name": "ECU_TPS_HAND",
-      "decode": {
-        "start_bit": 39,
-        "bit_length": 8,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 0.5,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 127.5,
-        "unit": "%",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 32,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 128,
-        "frame_id_hex": "0x80",
-        "frame_name": "MSG_080"
-      },
-      "canonical": {
-        "id": "throttle.position",
-        "label": "Throttle position",
-        "quantity": "position",
-        "preferred_unit": "%",
-        "confidence": "heuristic",
-        "aliases": [
-          "ECU_TPS_HAND"
         ]
       }
     },

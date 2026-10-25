@@ -2394,44 +2394,6 @@
       }
     },
     {
-      "name": "FuelLevel",
-      "decode": {
-        "start_bit": 0,
-        "bit_length": 32,
-        "byte_order": "little_endian",
-        "signed": false,
-        "factor": 1.0,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 4294967295.0,
-        "unit": "l",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 5,
-        "canp_start_bit": 0,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1523,
-        "frame_id_hex": "0x5F3",
-        "frame_name": "MSG_5F3"
-      },
-      "canonical": {
-        "id": "fuel.level",
-        "label": "Fuel level",
-        "quantity": "level",
-        "preferred_unit": "%",
-        "confidence": "mapped",
-        "aliases": [
-          "FuelLevel"
-        ]
-      }
-    },
-    {
       "name": "FuelPress",
       "decode": {
         "start_bit": 0,
@@ -2470,6 +2432,44 @@
       }
     },
     {
+      "name": "FuelLevel",
+      "decode": {
+        "start_bit": 0,
+        "bit_length": 32,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 4294967295.0,
+        "unit": "l",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 5,
+        "canp_start_bit": 0,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1523,
+        "frame_id_hex": "0x5F3",
+        "frame_name": "MSG_5F3"
+      },
+      "canonical": {
+        "id": "fuel.remaining",
+        "label": "Fuel remaining",
+        "quantity": "volume",
+        "preferred_unit": "L",
+        "confidence": "mapped",
+        "aliases": [
+          "FuelLevel"
+        ]
+      }
+    },
+    {
       "name": "AirTemp",
       "decode": {
         "start_bit": 0,
@@ -2497,8 +2497,8 @@
         "frame_name": "MSG_5F1"
       },
       "canonical": {
-        "id": "intake_air.temperature",
-        "label": "Intake air temperature",
+        "id": "ambient_air.temperature",
+        "label": "Ambient air temperature",
         "quantity": "temperature",
         "preferred_unit": "C",
         "confidence": "mapped",
@@ -2542,44 +2542,6 @@
         "confidence": "mapped",
         "aliases": [
           "ManifoldPress"
-        ]
-      }
-    },
-    {
-      "name": "AirPressure",
-      "decode": {
-        "start_bit": 32,
-        "bit_length": 32,
-        "byte_order": "little_endian",
-        "signed": true,
-        "factor": 1.0,
-        "offset": 0.0,
-        "minimum": -2147483648.0,
-        "maximum": 2147483647.0,
-        "unit": "bar",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 5,
-        "canp_start_bit": 32,
-        "signed_known": true,
-        "signed_reason": "rawfmt:signed"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1520,
-        "frame_id_hex": "0x5F0",
-        "frame_name": "MSG_5F0"
-      },
-      "canonical": {
-        "id": "intake_manifold.pressure",
-        "label": "Intake manifold pressure",
-        "quantity": "pressure",
-        "preferred_unit": "bar",
-        "confidence": "mapped",
-        "aliases": [
-          "AirPressure"
         ]
       }
     },
@@ -3035,6 +2997,44 @@
         "frame_id": 1520,
         "frame_id_hex": "0x5F0",
         "frame_name": "MSG_5F0"
+      }
+    },
+    {
+      "name": "AirPressure",
+      "decode": {
+        "start_bit": 32,
+        "bit_length": 32,
+        "byte_order": "little_endian",
+        "signed": true,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": -2147483648.0,
+        "maximum": 2147483647.0,
+        "unit": "bar",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 5,
+        "canp_start_bit": 32,
+        "signed_known": true,
+        "signed_reason": "rawfmt:signed"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1520,
+        "frame_id_hex": "0x5F0",
+        "frame_name": "MSG_5F0"
+      },
+      "canonical": {
+        "id": "ambient_air.pressure",
+        "label": "Ambient air pressure",
+        "quantity": "pressure",
+        "preferred_unit": "bar",
+        "confidence": "mapped",
+        "aliases": [
+          "AirPressure"
+        ]
       }
     },
     {
