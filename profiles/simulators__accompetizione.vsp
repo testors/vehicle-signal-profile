@@ -43,6 +43,22 @@
             "unit": "C",
             "mux": null
           }
+        },
+        {
+          "name": "WaterTemp",
+          "decode": {
+            "start_bit": 0,
+            "bit_length": 32,
+            "byte_order": "little_endian",
+            "signed": false,
+            "value_type": "float32",
+            "factor": 1.0,
+            "offset": 0.0,
+            "minimum": -1000000.0,
+            "maximum": 1000000.0,
+            "unit": "C",
+            "mux": null
+          }
         }
       ]
     },
@@ -254,6 +270,22 @@
       "name": "MSG_5F6",
       "dlc": 8,
       "signals": [
+        {
+          "name": "UsedFuel",
+          "decode": {
+            "start_bit": 0,
+            "bit_length": 32,
+            "byte_order": "little_endian",
+            "signed": false,
+            "value_type": "float32",
+            "factor": 1.0,
+            "offset": 0.0,
+            "minimum": -1000000.0,
+            "maximum": 1000000.0,
+            "unit": "l",
+            "mux": null
+          }
+        },
         {
           "name": "YawRate",
           "decode": {
@@ -966,6 +998,22 @@
             "minimum": -128.0,
             "maximum": 127.0,
             "unit": "#",
+            "mux": null
+          }
+        },
+        {
+          "name": "fuelXlap",
+          "decode": {
+            "start_bit": 32,
+            "bit_length": 32,
+            "byte_order": "little_endian",
+            "signed": false,
+            "value_type": "float32",
+            "factor": 1.0,
+            "offset": 0.0,
+            "minimum": -1000000.0,
+            "maximum": 1000000.0,
+            "unit": "l",
             "mux": null
           }
         }
@@ -2006,6 +2054,45 @@
       }
     },
     {
+      "name": "WaterTemp",
+      "decode": {
+        "start_bit": 0,
+        "bit_length": 32,
+        "byte_order": "little_endian",
+        "signed": false,
+        "value_type": "float32",
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": -1000000.0,
+        "maximum": 1000000.0,
+        "unit": "C",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 5,
+        "canp_start_bit": 0,
+        "signed_known": true,
+        "signed_reason": "rawfmt:float"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1520,
+        "frame_id_hex": "0x5F0",
+        "frame_name": "MSG_5F0"
+      },
+      "canonical": {
+        "id": "engine.coolant.temperature",
+        "label": "Engine coolant temperature",
+        "quantity": "temperature",
+        "preferred_unit": "C",
+        "confidence": "mapped",
+        "aliases": [
+          "WaterTemp"
+        ]
+      }
+    },
+    {
       "name": "RPM",
       "decode": {
         "start_bit": 32,
@@ -2116,6 +2203,83 @@
         "confidence": "mapped",
         "aliases": [
           "FuelLevel"
+        ]
+      }
+    },
+    {
+      "name": "UsedFuel",
+      "decode": {
+        "start_bit": 0,
+        "bit_length": 32,
+        "byte_order": "little_endian",
+        "signed": false,
+        "value_type": "float32",
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": -1000000.0,
+        "maximum": 1000000.0,
+        "unit": "l",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 5,
+        "canp_start_bit": 0,
+        "signed_known": true,
+        "signed_reason": "rawfmt:float"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1526,
+        "frame_id_hex": "0x5F6",
+        "frame_name": "MSG_5F6"
+      },
+      "canonical": {
+        "id": "fuel.used",
+        "label": "Fuel used",
+        "quantity": "volume",
+        "preferred_unit": "L",
+        "confidence": "heuristic",
+        "aliases": [
+          "UsedFuel"
+        ]
+      }
+    },
+    {
+      "name": "StatusBits_IgnitionOn",
+      "decode": {
+        "start_bit": 35,
+        "bit_length": 1,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "unit": "",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 5,
+        "canp_start_bit": 35,
+        "signed_known": true,
+        "signed_reason": "rawfmt:bitfield"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1547,
+        "frame_id_hex": "0x60B",
+        "frame_name": "MSG_60B"
+      },
+      "canonical": {
+        "id": "ignition.on",
+        "label": "Ignition on",
+        "quantity": "state",
+        "preferred_unit": "bool",
+        "confidence": "mapped",
+        "aliases": [
+          "StatusBits_IgnitionOn"
         ]
       }
     },
@@ -3188,6 +3352,35 @@
         "frame_id": 1531,
         "frame_id_hex": "0x5FB",
         "frame_name": "MSG_5FB"
+      }
+    },
+    {
+      "name": "fuelXlap",
+      "decode": {
+        "start_bit": 32,
+        "bit_length": 32,
+        "byte_order": "little_endian",
+        "signed": false,
+        "value_type": "float32",
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": -1000000.0,
+        "maximum": 1000000.0,
+        "unit": "l",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 5,
+        "canp_start_bit": 32,
+        "signed_known": true,
+        "signed_reason": "rawfmt:float"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1539,
+        "frame_id_hex": "0x603",
+        "frame_name": "MSG_603"
       }
     },
     {
@@ -4589,34 +4782,6 @@
       "raw": {
         "cflag": 5,
         "canp_start_bit": 39,
-        "signed_known": true,
-        "signed_reason": "rawfmt:bitfield"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1547,
-        "frame_id_hex": "0x60B",
-        "frame_name": "MSG_60B"
-      }
-    },
-    {
-      "name": "StatusBits_IgnitionOn",
-      "decode": {
-        "start_bit": 35,
-        "bit_length": 1,
-        "byte_order": "little_endian",
-        "signed": false,
-        "factor": 1.0,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "unit": "",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 5,
-        "canp_start_bit": 35,
         "signed_known": true,
         "signed_reason": "rawfmt:bitfield"
       },

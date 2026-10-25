@@ -2573,6 +2573,44 @@
       }
     },
     {
+      "name": "TelemStatusBits_HEADLIGHTS",
+      "decode": {
+        "start_bit": 18,
+        "bit_length": 1,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "unit": "",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 5,
+        "canp_start_bit": 18,
+        "signed_known": true,
+        "signed_reason": "rawfmt:bitfield"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1547,
+        "frame_id_hex": "0x60B",
+        "frame_name": "MSG_60B"
+      },
+      "canonical": {
+        "id": "lighting.headlight",
+        "label": "Headlight",
+        "quantity": "state",
+        "preferred_unit": "bool",
+        "confidence": "mapped",
+        "aliases": [
+          "TelemStatusBits_HEADLIGHTS"
+        ]
+      }
+    },
+    {
       "name": "StabilityCtrl",
       "decode": {
         "start_bit": 48,
@@ -5094,34 +5132,6 @@
       "raw": {
         "cflag": 5,
         "canp_start_bit": 20,
-        "signed_known": true,
-        "signed_reason": "rawfmt:bitfield"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1547,
-        "frame_id_hex": "0x60B",
-        "frame_name": "MSG_60B"
-      }
-    },
-    {
-      "name": "TelemStatusBits_HEADLIGHTS",
-      "decode": {
-        "start_bit": 18,
-        "bit_length": 1,
-        "byte_order": "little_endian",
-        "signed": false,
-        "factor": 1.0,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "unit": "",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 5,
-        "canp_start_bit": 18,
         "signed_known": true,
         "signed_reason": "rawfmt:bitfield"
       },

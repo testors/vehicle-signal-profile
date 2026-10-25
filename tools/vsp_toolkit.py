@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import copy
 import json
+import math
 import re
 from collections import defaultdict
 from dataclasses import dataclass, replace
@@ -52,10 +53,17 @@ class DbcSignal:
     unit: str
     sign_bit: int | None = None
     values: tuple[tuple[int, str], ...] = ()
+    value_type: str = "integer"
+    polynomial: tuple[float, ...] = ()
 
 
 DBC_VAL_RE = re.compile(r"^VAL_\s+(?P<id>\d+)\s+(?P<name>\w+)\s+(?P<body>(?:-?\d+\s+\"[^\"]*\"\s*)*);", re.M)
 DBC_VAL_ENTRY_RE = re.compile(r"(-?\d+)\s+\"([^\"]*)\"")
+# SIG_VALTYPE_ <id> <name> : 1 (IEEE float) | 2 (IEEE double)
+DBC_VALTYPE_RE = re.compile(r"^SIG_VALTYPE_\s+(?P<id>\d+)\s+(?P<name>\w+)\s*:\s*(?P<type>[12])\s*;", re.M)
+DBC_VALUE_TYPES = {"1": "float32", "2": "float64"}
+# profile_to_dbc keeps a polynomial conversion in a signal comment.
+DBC_POLYNOMIAL_RE = re.compile(r'^CM_\s+SG_\s+(?P<id>\d+)\s+(?P<name>\w+)\s+"VSP polynomial c0\.\.cn: (?P<terms>[^"]*)"\s*;', re.M)
 
 
 def hex_id(value: int | None) -> str | None:
@@ -145,6 +153,28 @@ def parse_dbc(path: Path) -> tuple[dict[int, DbcMessage], list[DbcSignal]]:
         else signal
         for signal in signals
     ]
+    value_types: dict[tuple[int, str], str] = {}
+    for valtype in DBC_VALTYPE_RE.finditer(text):
+        raw_frame_id = int(valtype.group("id"))
+        frame_id = raw_frame_id & 0x1FFFFFFF if raw_frame_id & 0x80000000 else raw_frame_id
+        value_types[(frame_id, valtype.group("name"))] = DBC_VALUE_TYPES[valtype.group("type")]
+    signals = [
+        replace(signal, value_type=value_types[(signal.frame_id, signal.name)], signed=False)
+        if (signal.frame_id, signal.name) in value_types
+        else signal
+        for signal in signals
+    ]
+    polynomials: dict[tuple[int, str], tuple[float, ...]] = {}
+    for comment in DBC_POLYNOMIAL_RE.finditer(text):
+        raw_frame_id = int(comment.group("id"))
+        frame_id = raw_frame_id & 0x1FFFFFFF if raw_frame_id & 0x80000000 else raw_frame_id
+        polynomials[(frame_id, comment.group("name"))] = tuple(float(t) for t in comment.group("terms").split())
+    signals = [
+        replace(signal, polynomial=polynomials[(signal.frame_id, signal.name)], factor=1.0, offset=0.0)
+        if (signal.frame_id, signal.name) in polynomials
+        else signal
+        for signal in signals
+    ]
     return messages, fold_sign_signals(signals)
 
 
@@ -204,12 +234,15 @@ def dbc_signal_decode(signal: DbcSignal) -> dict[str, Any]:
         "byte_order": byte_order_name(signal.byte_order),
         "signed": signal.signed,
     }
+    if signal.value_type != "integer":
+        decode["value_type"] = signal.value_type
     if signal.sign_bit is not None:
         decode["sign_bit"] = signal.sign_bit
     decode.update(
         {
             "factor": signal.factor,
             "offset": signal.offset,
+            **({"polynomial": list(signal.polynomial)} if signal.polynomial else {}),
             "minimum": signal.minimum,
             "maximum": signal.maximum,
             "unit": signal.unit,
@@ -317,6 +350,9 @@ def dbc_mux_suffix(decode: dict[str, Any]) -> str:
     return ""
 
 
+DBC_VALUE_TYPE_CODES = {"float32": 1, "float64": 2}
+
+
 def dbc_signal_line(signal: dict[str, Any], name: str) -> str:
     decode = signal.get("decode") or {}
     byte_order = 1 if decode.get("byte_order") == "little_endian" else 0
@@ -403,6 +439,8 @@ def profile_to_dbc(profile: dict[str, Any], *, include_diagnostic_responses: boo
     ]
 
     value_tables: list[str] = []
+    comments: list[str] = []
+    value_types: list[str] = []
     for frame in sorted(profile.get("can_frames") or [], key=lambda item: (str(item.get("bus")), int(item.get("frame_id") or 0))):
         key = (str(frame.get("bus")), int(frame.get("frame_id") or 0))
         if key not in frame_keys:
@@ -436,13 +474,22 @@ def profile_to_dbc(profile: dict[str, Any], *, include_diagnostic_responses: boo
                     suffix += 1
                 used_names.add(sign_name)
                 lines.append(dbc_sign_signal_line(signal, sign_name))
-            values = (signal.get("decode") or {}).get("values") or []
+            decode = signal.get("decode") or {}
+            values = decode.get("values") or []
             if values:
                 labels = " ".join(f'{int(v["raw"])} "{v["label"]}"' for v in values)
                 value_tables.append(f"VAL_ {dbc_frame_id(frame)} {signal_name} {labels} ;")
+            if decode.get("value_type") in DBC_VALUE_TYPE_CODES:
+                value_types.append(f"SIG_VALTYPE_ {dbc_frame_id(frame)} {signal_name} : {DBC_VALUE_TYPE_CODES[decode['value_type']]};")
+            if decode.get("polynomial"):
+                # DBC has no polynomial conversion: the signal exports as raw (1,0).
+                terms = " ".join(dbc_number(c, 0) for c in decode["polynomial"])
+                comments.append(f'CM_ SG_ {dbc_frame_id(frame)} {signal_name} "VSP polynomial c0..cn: {terms}";')
         lines.append("")
 
+    lines.extend(comments)
     lines.extend(value_tables)
+    lines.extend(value_types)
     return "\n".join(lines).rstrip() + "\n"
 
 
@@ -457,7 +504,8 @@ def canonical_number(value: Any) -> Any:
 
 
 def canonical_decode(decode: dict[str, Any]) -> dict[str, Any]:
-    keys = ("start_bit", "bit_length", "byte_order", "signed", "sign_bit", "factor", "offset", "minimum", "maximum", "unit", "values", "mux")
+    keys = ("start_bit", "bit_length", "byte_order", "signed", "value_type", "sign_bit", "factor", "offset",
+            "polynomial", "minimum", "maximum", "unit", "values", "mux")
     result = {key: canonical_number(decode.get(key)) for key in keys if key in decode}
     if result.get("mux") is None:
         result["mux"] = None
@@ -465,6 +513,12 @@ def canonical_decode(decode: dict[str, Any]) -> dict[str, Any]:
         result.pop("sign_bit", None)
     if not result.get("values"):
         result.pop("values", None)
+    if result.get("value_type") in (None, "integer"):
+        result.pop("value_type", None)
+    if result.get("polynomial"):
+        result["polynomial"] = [canonical_number(c) for c in result["polynomial"]]
+    else:
+        result.pop("polynomial", None)
     return result
 
 
@@ -543,6 +597,31 @@ def signal_matches_frame(signal: dict[str, Any], frame: dict[str, Any]) -> bool:
 
 
 MUX_BYTE_ORDERS = {"little_endian", "big_endian"}
+VALUE_TYPE_BITS = {"float32": 32, "float64": 64}
+
+
+def validate_value_type(label: str, decode: dict[str, Any], errors: list[str]) -> None:
+    value_type = decode.get("value_type")
+    if value_type is not None and value_type != "integer":
+        if value_type not in VALUE_TYPE_BITS:
+            errors.append(f"{label}: value_type must be integer, float32 or float64")
+        else:
+            if decode.get("bit_length") != VALUE_TYPE_BITS[value_type]:
+                errors.append(f"{label}: {value_type} needs bit_length {VALUE_TYPE_BITS[value_type]}")
+            if decode.get("signed") or decode.get("sign_bit") is not None or decode.get("values"):
+                errors.append(f"{label}: a float field has signed false and no sign_bit or values")
+    polynomial = decode.get("polynomial")
+    if polynomial is not None:
+        if (
+            not isinstance(polynomial, list)
+            or len(polynomial) < 3
+            or not all(isinstance(c, (int, float)) and not isinstance(c, bool) and math.isfinite(c) for c in polynomial)
+        ):
+            errors.append(f"{label}: polynomial must list at least three finite coefficients")
+        if decode.get("factor") != 1 or decode.get("offset") != 0:
+            errors.append(f"{label}: a polynomial signal has factor 1 and offset 0")
+        if value_type not in (None, "integer"):
+            errors.append(f"{label}: polynomial applies to integer fields only")
 
 
 def validate_mux(label: str, decode: dict[str, Any], errors: list[str]) -> None:
@@ -614,6 +693,7 @@ def validate_profile(profile: dict[str, Any]) -> dict[str, Any]:
             validate_sign_bit(frame_label, frame_signal.get("decode") or {}, errors)
             validate_values(frame_label, frame_signal.get("decode") or {}, errors)
             validate_mux(frame_label, frame_signal.get("decode") or {}, errors)
+            validate_value_type(frame_label, frame_signal.get("decode") or {}, errors)
         expected_format = id_format(int(frame_id))
         if frame.get("id_format") and frame.get("id_format") != expected_format:
             errors.append(f"frame {frame.get('name') or frame_id}: id_format should be {expected_format}")
@@ -647,6 +727,7 @@ def validate_profile(profile: dict[str, Any]) -> dict[str, Any]:
         validate_sign_bit(f"signal {name}", signal.get("decode") or {}, errors)
         validate_values(f"signal {name}", signal.get("decode") or {}, errors)
         validate_mux(f"signal {name}", signal.get("decode") or {}, errors)
+        validate_value_type(f"signal {name}", signal.get("decode") or {}, errors)
 
         if canonical is not None:
             if not isinstance(canonical, dict):

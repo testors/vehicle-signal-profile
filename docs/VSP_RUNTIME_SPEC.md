@@ -136,6 +136,27 @@ Rules:
   inside the field's raw range.
 - `mux` is optional. When present, the signal is valid only when the mux field
   equals `mux.value`. See [Mux Objects](#mux-objects).
+- `value_type` is optional: `integer` (the default when absent), `float32` or
+  `float64`. A float field is the IEEE 754 binary32 (`bit_length` 32) or
+  binary64 (`bit_length` 64) bit pattern, read with `byte_order` like any field
+  and then reinterpreted as a float; `signed` is `false`, and `sign_bit` and
+  `values` are absent. Runtime value is `float * factor + offset`.
+- `polynomial` is optional: coefficients `[c0, c1, c2, ...]` (at least three)
+  of a non-linear conversion, such as a thermistor curve. Runtime value is
+  `c0 + c1 * raw + c2 * raw^2 + ...`, where `raw` is the integer after
+  `signed` / `sign_bit` interpretation. `factor` is `1` and `offset` is `0`.
+- An application that does not implement `value_type` or `polynomial` must
+  skip the signals that use them, not decode them as plain integers.
+
+Float and polynomial examples:
+
+```json
+"decode": {"start_bit": 0, "bit_length": 32, "byte_order": "little_endian", "signed": false,
+           "value_type": "float32", "factor": 1, "offset": 0, "unit": "C", "mux": null}
+"decode": {"start_bit": 16, "bit_length": 8, "byte_order": "little_endian", "signed": false,
+           "factor": 1, "offset": 0, "polynomial": [163.4003, -2.240209, 0.0153881, -4.4224167e-05, 2.3601227e-08],
+           "unit": "C", "mux": null}
+```
 
 Value table example (BMW F-series 0x3F9 gear nibble):
 
@@ -304,5 +325,6 @@ Applications do not need source provenance. Select the profile by `vehicle` and
 - Select runtime mode: CAN sniffing or OBD/query.
 - Filter `signals[]` by `acquisition.type`.
 - Map required features by `canonical.id`.
-- Decode using `decode`.
+- Decode using `decode`; skip signals whose `value_type` or `polynomial` you
+  do not implement.
 - Ignore unknown fields.

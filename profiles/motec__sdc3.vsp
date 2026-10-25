@@ -1291,6 +1291,49 @@
   "diagnostic_queries": [],
   "signals": [
     {
+      "name": "Fault_Codes3_ABS_St_ACTIVE",
+      "decode": {
+        "start_bit": 47,
+        "bit_length": 1,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "unit": "",
+        "mux": {
+          "value": 3,
+          "start_bit": 7,
+          "bit_length": 8,
+          "byte_order": "big_endian"
+        }
+      },
+      "raw": {
+        "cflag": 2,
+        "canp_start_bit": 47,
+        "signed_known": true,
+        "signed_reason": "rawfmt:bitfield"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 500,
+        "frame_id_hex": "0x1F4",
+        "frame_name": "MSG_1F4"
+      },
+      "canonical": {
+        "id": "abs.active",
+        "label": "ABS active",
+        "quantity": "state",
+        "preferred_unit": "bool",
+        "confidence": "heuristic",
+        "aliases": [
+          "Fault_Codes3_ABS_St_ACTIVE"
+        ]
+      }
+    },
+    {
       "name": "Battery_Voltage",
       "decode": {
         "start_bit": 39,
@@ -2701,39 +2744,6 @@
         "canp_start_bit": 40,
         "signed_known": true,
         "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 500,
-        "frame_id_hex": "0x1F4",
-        "frame_name": "MSG_1F4"
-      }
-    },
-    {
-      "name": "Fault_Codes3_ABS_St_ACTIVE",
-      "decode": {
-        "start_bit": 47,
-        "bit_length": 1,
-        "byte_order": "little_endian",
-        "signed": false,
-        "factor": 1.0,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "unit": "",
-        "mux": {
-          "value": 3,
-          "start_bit": 7,
-          "bit_length": 8,
-          "byte_order": "big_endian"
-        }
-      },
-      "raw": {
-        "cflag": 2,
-        "canp_start_bit": 47,
-        "signed_known": true,
-        "signed_reason": "rawfmt:bitfield"
       },
       "acquisition": {
         "type": "can_frame",

@@ -56,6 +56,12 @@ is exported as an unsigned magnitude signal `<Name>` plus a 1-bit `<Name>_Sign`
 signal in the same message. `dbc2vsp.py` folds such a pair back into one
 signal with `sign_bit`.
 
+Float fields (`decode.value_type`) map to DBC `SIG_VALTYPE_` in both
+directions. DBC has no polynomial conversion, so a `decode.polynomial` signal
+is exported as its raw field (factor 1, offset 0) with the coefficients in a
+`CM_ SG_ ... "VSP polynomial c0..cn: ..."` comment, which `dbc2vsp.py` reads
+back.
+
 Value tables (`decode.values`) map to DBC `VAL_` tables in both directions.
 DBC keeps only the labels; the optional numeric `value` overrides are lost on
 export.
