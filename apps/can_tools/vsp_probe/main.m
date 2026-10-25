@@ -69,6 +69,8 @@ typedef struct {
 @property (nonatomic, assign) double testDurationS;
 @property (nonatomic, assign) double lastValue;
 @property (nonatomic, assign) BOOL hasLastValue;
+@property (nonatomic, assign) BOOL lastValueNull;      /* value table state without a number */
+@property (nonatomic, copy) NSString *lastLabel;        /* value table label, if any */
 @property (nonatomic, copy) NSString *lastPayloadHex;
 @end
 
@@ -481,7 +483,9 @@ static uint64_t extract_bits_big_dbc(const uint8_t *data, int len, int startBit,
 static bool decode_signal_value(NSDictionary *signal,
                                 const uint8_t *data,
                                 int dataLen,
-                                double *valueOut) {
+                                double *valueOut,
+                                BOOL *hasNumberOut,
+                                NSString **labelOut) {
     NSDictionary *decode = signal[@"decode"];
     if (![decode isKindOfClass:[NSDictionary class]]) return false;
 
@@ -522,7 +526,29 @@ static bool decode_signal_value(NSDictionary *signal,
                     [decode[@"factor"] doubleValue] : 1.0;
     double offset = [decode[@"offset"] respondsToSelector:@selector(doubleValue)] ?
                     [decode[@"offset"] doubleValue] : 0.0;
-    if (valueOut) *valueOut = signedRaw * factor + offset;
+    double value = signedRaw * factor + offset;
+    BOOL hasNumber = YES;
+    NSString *label = nil;
+
+    /* Value table: label for the raw code, optional numeric override (null = none). */
+    NSArray *values = decode[@"values"];
+    if ([values isKindOfClass:[NSArray class]]) {
+        long long rawCode = llround(signedRaw);
+        for (NSDictionary *entry in values) {
+            if (![entry isKindOfClass:[NSDictionary class]]) continue;
+            NSNumber *entryRaw = num_or_nil(entry[@"raw"]);
+            if (!entryRaw || entryRaw.longLongValue != rawCode) continue;
+            if ([entry[@"label"] isKindOfClass:[NSString class]]) label = entry[@"label"];
+            id override = entry[@"value"];
+            if (override == [NSNull null]) hasNumber = NO;
+            else if ([override isKindOfClass:[NSNumber class]]) value = [override doubleValue];
+            break;
+        }
+    }
+
+    if (valueOut) *valueOut = value;
+    if (hasNumberOut) *hasNumberOut = hasNumber;
+    if (labelOut) *labelOut = label;
     return true;
 }
 
@@ -679,10 +705,14 @@ static void mark_sample(VSPProbeItem *item,
     if (payload && payloadLen > 0) item.lastPayloadHex = format_bytes_hex(payload, payloadLen);
 
     double value = 0.0;
+    BOOL hasNumber = YES;
+    NSString *label = nil;
     if (decodeBytes && decodeLen > 0 &&
-        decode_signal_value(item.signal, decodeBytes, decodeLen, &value)) {
+        decode_signal_value(item.signal, decodeBytes, decodeLen, &value, &hasNumber, &label)) {
         item.lastValue = value;
-        item.hasLastValue = YES;
+        item.hasLastValue = hasNumber;
+        item.lastValueNull = !hasNumber;
+        item.lastLabel = label;
     }
 }
 
@@ -1175,6 +1205,8 @@ static NSDictionary *result_for_item(VSPProbeItem *item,
     d[@"status"] = item.samples > 0 ? (met ? @"pass" : @"under_target") : @"no_samples";
     if (item.lastPayloadHex) d[@"last_payload_hex"] = item.lastPayloadHex;
     if (item.hasLastValue) d[@"last_value"] = @(item.lastValue);
+    else if (item.lastValueNull) d[@"last_value"] = [NSNull null];
+    if (item.lastLabel) d[@"last_label"] = item.lastLabel;
     if (item.firstSampleMs > 0.0) d[@"first_sample_ms"] = @((long long)item.firstSampleMs);
     if (item.lastSampleMs > 0.0) d[@"last_sample_ms"] = @((long long)item.lastSampleMs);
     return d;
