@@ -243,6 +243,7 @@ static uint8_t crc8(const uint8_t *d, int n) {
  * (every g_sm_steer_div ticks) instead of the signed 0x0A5 message. */
 static uint32_t g_sm_steer_id = 0;
 static int g_sm_steer_div = 1;
+static bool g_bmw_gear = false;   /* gear on 0x3F9 48|4 with BMW codes instead of 0x3FD */
 
 static void gen_coupled(int p, int k, double t, sink_t *sink) {
     phys_t ph;
@@ -301,8 +302,20 @@ static void gen_coupled(int p, int k, double t, sink_t *sink) {
         sink_push(sink, 0x173, d, 8, ts);
     }
 
+    /* BMW F-series 0x3F9, 5 Hz: gear nibble at bit 48 with codes P=3 R=2 N=1 1st=5,
+     * coolant/oil temperatures in bytes 4-5 (VSP prior with a value table). */
+    if (g_bmw_gear && k % 20 == 0) {
+        static const uint8_t bmw_codes[4] = { 3, 2, 1, 5 };
+        memset(d, 0, 8);
+        d[4] = (uint8_t)(g_coolant + 48);
+        d[5] = 0x67;
+        put_field(d, 48, 4, 1, bmw_codes[ph.gear]);
+        d[7] = 0x93;
+        sink_push(sink, 0x3F9, d, 8, ts);
+    }
+
     /* 0x3FD gear, 10 Hz: counter b0 nibble, gear 4-bit @8 with codes P=1 R=2 N=3 D=4 */
-    if (k % 10 == 0) {
+    if (!g_bmw_gear && k % 10 == 0) {
         static const uint8_t codes[4] = { 1, 2, 3, 4 };
         memset(d, 0, 8);
         d[0] = (uint8_t)((k / 10) & 0xF);
@@ -344,6 +357,13 @@ static void gen_sm_prior(int p, int k, double t, sink_t *sink) {
     g_sm_steer_div = 10;
     gen_coupled(p, k, t, sink);
     g_sm_steer_id = 0;
+}
+
+/* BMW 0x3F9 gear: the matched prior's value table must reach the draft VSP/DBC. */
+static void gen_bmw_gear(int p, int k, double t, sink_t *sink) {
+    g_bmw_gear = true;
+    gen_coupled(p, k, t, sink);
+    g_bmw_gear = false;
 }
 
 static void gen_sm_no_prior(int p, int k, double t, sink_t *sink) {
@@ -623,6 +643,14 @@ static scenario_t g_scenarios[] = {
         EXPECT1(FIELD(0x0D9, 16, 12, 1)),
         EXPECT1(FIELD(0x173, 0, 12, 1)),
         EXPECT1(FIELD(0x3FD, 8, 4, 1)),
+        EXPECT4(FIELD(0x254, 0, 16, 1), FIELD(0x254, 16, 16, 1),
+                FIELD(0x254, 32, 16, 1), FIELD(0x254, 48, 16, 1)) } },
+    { "bmw_gear_value_table", gen_bmw_gear, 100, DUR_DEFAULT, {
+        EXPECT1(FIELD(0x0A5, 16, 16, 1)),
+        EXPECT1(FIELD(0x0F3, 39, 16, 0)),
+        EXPECT1(FIELD(0x0D9, 16, 12, 1)),
+        EXPECT1(FIELD(0x173, 0, 12, 1)),
+        EXPECT1(FIELD(0x3F9, 48, 4, 1)),
         EXPECT4(FIELD(0x254, 0, 16, 1), FIELD(0x254, 16, 16, 1),
                 FIELD(0x254, 32, 16, 1), FIELD(0x254, 48, 16, 1)) } },
     { "sign_magnitude_steering_no_prior", gen_sm_no_prior, 100, DUR_DEFAULT, {
@@ -1003,6 +1031,17 @@ static bool run_scenario(int index, double *elapsed_ms) {
             if (paren && sscanf(paren, "(%lf,", &factor) == 1) {
                 CHECK(factor > 0, "DBC field with non-positive factor: %.40s", sg + 1);
             }
+        }
+        if (strcmp(sc->name, "bmw_gear_value_table") == 0) {
+            /* raw 5 = 1st (value 1), raw 2 = R (-1), raw 3 = P (no value) */
+            CHECK(strstr(vsp, "{\"raw\": 5, \"label\": \"1\", \"value\": 1}") != NULL,
+                  "draft VSP lacks the 0x3F9 gear value table (raw 5 = 1st)");
+            CHECK(strstr(vsp, "{\"raw\": 2, \"label\": \"R\", \"value\": -1}") != NULL,
+                  "draft VSP lacks raw 2 = R (-1)");
+            CHECK(strstr(vsp, "{\"raw\": 3, \"label\": \"P\", \"value\": null}") != NULL,
+                  "draft VSP lacks raw 3 = P (null)");
+            CHECK(strstr(dbc, "VAL_ 1017 ") != NULL && strstr(dbc, " 5 \"1\"") != NULL,
+                  "draft DBC lacks the 0x3F9 VAL_ table");
         }
         if (getenv("SHOW_DBC")) puts(dbc);
         if (getenv("SHOW_VSP")) puts(vsp);

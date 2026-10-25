@@ -242,6 +242,27 @@ def field_bytes(start_bit: int, bit_length: int, byte_order: int) -> list[int]:
     return [bit // 8 for bit in field_bits(start_bit, bit_length, byte_order)]
 
 
+def value_table_strings(values) -> tuple[str, str]:
+    """decode.values as (VSP JSON array, DBC VAL_ pairs), or ("", "") when absent.
+
+    Both are carried to discovered signals, so a matched prior keeps its raw code
+    meanings (BMW 0x3F9 gear: raw 5 = 1st, value 1; raw 3 = P, value null).
+    """
+    if not isinstance(values, list) or not values:
+        return "", ""
+    entries = []
+    for entry in values:
+        if not isinstance(entry, dict) or not isinstance(entry.get("raw"), int) or "label" not in entry:
+            return "", ""
+        item = {"raw": entry["raw"], "label": str(entry["label"])}
+        if "value" in entry:
+            item["value"] = entry["value"]
+        entries.append(item)
+    values_json = json.dumps(entries, ensure_ascii=False, separators=(", ", ": "))
+    values_dbc = " ".join(f'{e["raw"]} "{e["label"].replace(chr(34), chr(39))}"' for e in entries)
+    return values_json, values_dbc
+
+
 def prior_key(signal: dict, frame_dlcs: dict[tuple[str | None, int], int]):
     """Return (row key, None) for a usable signal, or (None, skip reason)."""
     acquisition = signal.get("acquisition") or {}
@@ -324,6 +345,7 @@ def prior_key(signal: dict, frame_dlcs: dict[tuple[str | None, int], int]):
     for field, limit in STRING_LIMITS.items():
         if len(strings[field].encode("utf-8", errors="replace")) > limit:
             return None, f"string_too_long:{field}"
+    values_json, values_dbc = value_table_strings(decode.get("values"))
 
     key = (
         sig_enum,
@@ -341,6 +363,8 @@ def prior_key(signal: dict, frame_dlcs: dict[tuple[str | None, int], int]):
         strings["max"],
         strings["unit"],
         strings["canonical"],
+        values_json,
+        values_dbc,
     )
     return key, None
 
@@ -407,7 +431,7 @@ def parse_vsps(profiles_path: Path):
     rows = [(*key, count) for key, count in support.items()]
     # Most supported layout first per (signal, can_id); the trailing full
     # row makes the order total, so it never depends on file order.
-    rows.sort(key=lambda r: (r[0], r[1], -r[15], r[3], r[4], r[8], r))
+    rows.sort(key=lambda r: (r[0], r[1], -r[-1], r[3], r[4], r[8], r))
     stats.rows = len(rows)
 
     provenance = Provenance(
@@ -453,11 +477,14 @@ def emit_header(rows, provenance: Provenance) -> str:
             max_val,
             unit,
             canonical,
+            values_json,
+            values_dbc,
             support_count,
         ) = row
 
+        values = ", %s, %s" % (c_string(values_json), c_string(values_dbc)) if values_json else ", NULL, NULL"
         lines.append(
-            "    { %s, %du, %uu, %d, %d, %d, '%s', %d, %s, %s, %s, %s, %s, %s, %s, %d },"
+            "    { %s, %du, %uu, %d, %d, %d, '%s', %d, %s, %s, %s, %s, %s, %s, %s, %d%s },"
             % (
                 sig_enum,
                 can_id,
@@ -475,6 +502,7 @@ def emit_header(rows, provenance: Provenance) -> str:
                 c_string(unit),
                 c_string(canonical),
                 support_count,
+                values,
             )
         )
 

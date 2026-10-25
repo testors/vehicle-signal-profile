@@ -61,6 +61,8 @@ typedef struct {
     char     unit[DISC_PRIOR_UNIT_LEN];
     char     canonical[DISC_PRIOR_CANON_LEN];
     int      support_count;
+    const char *values_json;   /* VSP decode.values JSON array, NULL if none */
+    const char *values_dbc;    /* DBC VAL_ pairs ("5 \"1\" 1 \"N\""), NULL if none */
 } disc_discover_prior_t;
 
 typedef struct {
@@ -93,6 +95,8 @@ typedef struct {
     char unit[DISC_PRIOR_UNIT_LEN];
     char canonical[DISC_PRIOR_CANON_LEN];
     bool canonical_mapped;   /* canonical id came from a matched prior */
+    const char *values_json; /* value table of the matched prior, NULL if none */
+    const char *values_dbc;
     disc_signal_t signal;
     uint32_t can_id;
     uint64_t bitmask;
@@ -3071,6 +3075,8 @@ static void export_from_field(disc_ctx_t *ctx, disc_export_signal_t *out,
         snprintf(out->canonical, sizeof(out->canonical), "%s",
                  p->canonical[0] ? p->canonical : signal_canonical_id(sig));
         out->canonical_mapped = p->canonical[0] != '\0';
+        out->values_json = p->values_json;
+        out->values_dbc = p->values_dbc;
         return;
     }
 
@@ -3332,6 +3338,11 @@ char *disc_render_draft_dbc(const disc_phase_t phases[DISC_NUM_PHASES],
 
     for (int i = 0; i < plan->field_count; i++) {
         const disc_export_signal_t *sig = &plan->fields[i];
+        if (sig->values_dbc && sig->values_dbc[0]) {
+            /* The matched prior's value table (raw code -> label). */
+            OUT("\nVAL_ %u %s %s ;\n", sig->can_id, sig->name, sig->values_dbc);
+            continue;
+        }
         if (sig->signal != DISC_SIG_GEAR) continue;
         int values[16];
         int value_count = collect_gear_values(ctx_view(&ctx, DISC_PHASE_GEAR, sig->can_id),
@@ -3386,6 +3397,8 @@ static bool disc_sb_append_decode(disc_string_builder_t *sb, const char *indent,
            disc_sb_appendf(sb, "%s\"maximum\": %s,\n", indent, sig->max_val[0] ? sig->max_val : "0") &&
            disc_sb_appendf(sb, "%s\"unit\": ", indent) &&
            disc_sb_append_json_string(sb, sig->unit) &&
+           (!sig->values_json || !sig->values_json[0] ||
+            disc_sb_appendf(sb, ",\n%s\"values\": %s", indent, sig->values_json)) &&
            disc_sb_appendf(sb, ",\n%s\"mux\": null\n", indent);
 }
 
