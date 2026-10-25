@@ -211,3 +211,19 @@ Environment:
 | --- | --- |
 | `ambient_air.temperature` | `C` |
 | `ambient_air.pressure` | `bar` |
+
+## Gear Values
+
+`transmission.gear.selected` and `transmission.gear.requested` use one numeric
+convention across vehicles:
+
+| Gear | Value |
+| --- | --- |
+| Reverse | `-1` |
+| Neutral | `0` |
+| Forward gears | `1`, `2`, ... |
+| Park and other states (`P`, `-`, invalid) | no numeric value (`null`) |
+
+When a vehicle encodes gears differently (for example raw `5` for first gear),
+the signal's `decode.values` table maps each raw code to its label and, where
+the decoded value would differ, to the convention value.

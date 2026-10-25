@@ -51,6 +51,11 @@ class DbcSignal:
     maximum: float
     unit: str
     sign_bit: int | None = None
+    values: tuple[tuple[int, str], ...] = ()
+
+
+DBC_VAL_RE = re.compile(r"^VAL_\s+(?P<id>\d+)\s+(?P<name>\w+)\s+(?P<body>(?:-?\d+\s+\"[^\"]*\"\s*)*);", re.M)
+DBC_VAL_ENTRY_RE = re.compile(r"(-?\d+)\s+\"([^\"]*)\"")
 
 
 def hex_id(value: int | None) -> str | None:
@@ -91,8 +96,9 @@ def parse_dbc(path: Path) -> tuple[dict[int, DbcMessage], list[DbcSignal]]:
     messages: dict[int, DbcMessage] = {}
     signals: list[DbcSignal] = []
     current: DbcMessage | None = None
+    text = path.read_text(errors="ignore")
 
-    for line in path.read_text(errors="ignore").splitlines():
+    for line in text.splitlines():
         bo = BO_RE.match(line)
         if bo:
             raw_frame_id = int(bo.group("id"))
@@ -125,6 +131,20 @@ def parse_dbc(path: Path) -> tuple[dict[int, DbcMessage], list[DbcSignal]]:
                 )
             )
 
+    value_tables: dict[tuple[int, str], tuple[tuple[int, str], ...]] = {}
+    for val in DBC_VAL_RE.finditer(text):
+        raw_frame_id = int(val.group("id"))
+        frame_id = raw_frame_id & 0x1FFFFFFF if raw_frame_id & 0x80000000 else raw_frame_id
+        entries = [(int(raw), label.strip()) for raw, label in DBC_VAL_ENTRY_RE.findall(val.group("body"))]
+        entries = [(raw, label) for raw, label in entries if label]
+        if entries:
+            value_tables[(frame_id, val.group("name"))] = tuple(sorted(dict(entries).items()))
+    signals = [
+        replace(signal, values=value_tables[(signal.frame_id, signal.name)])
+        if (signal.frame_id, signal.name) in value_tables
+        else signal
+        for signal in signals
+    ]
     return messages, fold_sign_signals(signals)
 
 
@@ -196,7 +216,23 @@ def dbc_signal_decode(signal: DbcSignal) -> dict[str, Any]:
             "mux": mux,
         }
     )
+    if signal.values:
+        decode = with_decode_values(decode, [{"raw": raw, "label": label} for raw, label in signal.values])
     return decode
+
+
+def with_decode_values(decode: dict[str, Any], values: list[dict[str, Any]]) -> dict[str, Any]:
+    """Return decode with "values" placed right before "mux" (spec field order)."""
+    result: dict[str, Any] = {}
+    for key, item in decode.items():
+        if key == "values":
+            continue
+        if key == "mux":
+            result["values"] = values
+        result[key] = item
+    if "values" not in result:
+        result["values"] = values
+    return result
 
 
 def profile_from_dbc(path: Path, *, manufacturer: str, model: str, bitrate: int) -> dict[str, Any]:
@@ -365,6 +401,7 @@ def profile_to_dbc(profile: dict[str, Any], *, include_diagnostic_responses: boo
         "",
     ]
 
+    value_tables: list[str] = []
     for frame in sorted(profile.get("can_frames") or [], key=lambda item: (str(item.get("bus")), int(item.get("frame_id") or 0))):
         key = (str(frame.get("bus")), int(frame.get("frame_id") or 0))
         if key not in frame_keys:
@@ -398,8 +435,13 @@ def profile_to_dbc(profile: dict[str, Any], *, include_diagnostic_responses: boo
                     suffix += 1
                 used_names.add(sign_name)
                 lines.append(dbc_sign_signal_line(signal, sign_name))
+            values = (signal.get("decode") or {}).get("values") or []
+            if values:
+                labels = " ".join(f'{int(v["raw"])} "{v["label"]}"' for v in values)
+                value_tables.append(f"VAL_ {dbc_frame_id(frame)} {signal_name} {labels} ;")
         lines.append("")
 
+    lines.extend(value_tables)
     return "\n".join(lines).rstrip() + "\n"
 
 
@@ -414,12 +456,14 @@ def canonical_number(value: Any) -> Any:
 
 
 def canonical_decode(decode: dict[str, Any]) -> dict[str, Any]:
-    keys = ("start_bit", "bit_length", "byte_order", "signed", "sign_bit", "factor", "offset", "minimum", "maximum", "unit", "mux")
+    keys = ("start_bit", "bit_length", "byte_order", "signed", "sign_bit", "factor", "offset", "minimum", "maximum", "unit", "values", "mux")
     result = {key: canonical_number(decode.get(key)) for key in keys if key in decode}
     if result.get("mux") is None:
         result["mux"] = None
     if result.get("sign_bit") is None:
         result.pop("sign_bit", None)
+    if not result.get("values"):
+        result.pop("values", None)
     return result
 
 
@@ -435,6 +479,45 @@ def decode_bit_positions(decode: dict[str, Any]) -> set[int]:
             pos = pos + 15 if pos % 8 == 0 else pos - 1
         return positions
     return set(range(start, start + length))
+
+
+def decode_raw_range(decode: dict[str, Any]) -> tuple[int, int]:
+    bits = int(decode.get("bit_length") or 0)
+    if decode.get("sign_bit") is not None:
+        return -((1 << bits) - 1), (1 << bits) - 1
+    if decode.get("signed"):
+        return -(1 << (bits - 1)), (1 << (bits - 1)) - 1
+    return 0, (1 << bits) - 1
+
+
+def validate_values(label: str, decode: dict[str, Any], errors: list[str]) -> None:
+    values = decode.get("values")
+    if values is None:
+        return
+    if not isinstance(values, list) or not values:
+        errors.append(f"{label}: values must be a non-empty list")
+        return
+    lo, hi = decode_raw_range(decode)
+    seen: set[int] = set()
+    for entry in values:
+        if not isinstance(entry, dict):
+            errors.append(f"{label}: values entries must be objects")
+            continue
+        raw = entry.get("raw")
+        if isinstance(raw, bool) or not isinstance(raw, int):
+            errors.append(f"{label}: values raw must be an integer")
+            continue
+        if not lo <= raw <= hi:
+            errors.append(f"{label}: values raw {raw} is outside the field range {lo}..{hi}")
+        if raw in seen:
+            errors.append(f"{label}: duplicate values raw {raw}")
+        seen.add(raw)
+        if not isinstance(entry.get("label"), str) or not entry["label"]:
+            errors.append(f"{label}: values raw {raw} needs a non-empty label")
+        if "value" in entry and entry["value"] is not None and (
+            isinstance(entry["value"], bool) or not isinstance(entry["value"], (int, float))
+        ):
+            errors.append(f"{label}: values raw {raw} value must be a number or null")
 
 
 def validate_sign_bit(label: str, decode: dict[str, Any], errors: list[str]) -> None:
@@ -484,11 +567,9 @@ def validate_profile(profile: dict[str, Any]) -> dict[str, Any]:
             errors.append(f"duplicate frame on {bus} id=0x{int(frame_id):X}")
         frames[key] = frame
         for frame_signal in frame.get("signals") or []:
-            validate_sign_bit(
-                f"frame {frame.get('name') or frame_id} signal {frame_signal.get('name') or '<unnamed>'}",
-                frame_signal.get("decode") or {},
-                errors,
-            )
+            frame_label = f"frame {frame.get('name') or frame_id} signal {frame_signal.get('name') or '<unnamed>'}"
+            validate_sign_bit(frame_label, frame_signal.get("decode") or {}, errors)
+            validate_values(frame_label, frame_signal.get("decode") or {}, errors)
         expected_format = id_format(int(frame_id))
         if frame.get("id_format") and frame.get("id_format") != expected_format:
             errors.append(f"frame {frame.get('name') or frame_id}: id_format should be {expected_format}")
@@ -520,6 +601,7 @@ def validate_profile(profile: dict[str, Any]) -> dict[str, Any]:
         acquisition_type = acquisition.get("type")
         canonical = signal.get("canonical")
         validate_sign_bit(f"signal {name}", signal.get("decode") or {}, errors)
+        validate_values(f"signal {name}", signal.get("decode") or {}, errors)
 
         if canonical is not None:
             if not isinstance(canonical, dict):

@@ -124,8 +124,32 @@ Rules:
 - Runtime value is `raw * factor + offset`, where `raw` is the magnitude,
   negated when `sign_bit` is set.
 - `unit` is the unit of the decoded runtime value.
+- `values` is optional: a value table for enumerated raw codes (gear, mode,
+  status), the VSP form of a DBC `VAL_` table. Each entry has an integer `raw`
+  (after `signed` / `sign_bit` interpretation, before scaling), a display
+  `label`, and an optional `value`:
+  - `value` absent: the runtime value is `raw * factor + offset` as usual.
+  - `value` a number: use it as the runtime value for this raw code.
+  - `value` `null`: this raw code is a state with no numeric value; show the
+    label only.
+  Raw codes without an entry decode normally. `raw` values are unique and
+  inside the field's raw range.
 - `mux` is optional. When present, the signal is valid only when the mux field
   equals `mux.value`.
+
+Value table example (BMW F-series 0x3F9 gear nibble):
+
+```json
+"values": [
+  {"raw": 1, "label": "N", "value": 0},
+  {"raw": 2, "label": "R", "value": -1},
+  {"raw": 3, "label": "P", "value": null},
+  {"raw": 5, "label": "1", "value": 1}
+]
+```
+
+Gear signals follow the numeric convention in
+[CANONICAL_SIGNAL_IDS.md](CANONICAL_SIGNAL_IDS.md#gear-values).
 
 ## Diagnostic Queries
 

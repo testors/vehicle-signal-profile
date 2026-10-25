@@ -56,6 +56,10 @@ is exported as an unsigned magnitude signal `<Name>` plus a 1-bit `<Name>_Sign`
 signal in the same message. `dbc2vsp.py` folds such a pair back into one
 signal with `sign_bit`.
 
+Value tables (`decode.values`) map to DBC `VAL_` tables in both directions.
+DBC keeps only the labels; the optional numeric `value` overrides are lost on
+export.
+
 Compose multiple VSP files:
 
 ```bash
