@@ -33,13 +33,14 @@
           "name": "Steering_Angle",
           "decode": {
             "start_bit": 32,
-            "bit_length": 13,
+            "bit_length": 12,
             "byte_order": "little_endian",
             "signed": false,
+            "sign_bit": 44,
             "factor": -0.12,
             "offset": 0.0,
-            "minimum": -720.0,
-            "maximum": 720.0,
+            "minimum": -491.4,
+            "maximum": 491.4,
             "unit": "deg",
             "mux": null
           }
@@ -66,31 +67,6 @@
             "minimum": 0.0,
             "maximum": 8000.0,
             "unit": "rpm",
-            "mux": null
-          }
-        }
-      ]
-    },
-    {
-      "bus": "can0",
-      "frame_id": 189,
-      "frame_id_hex": "0xBD",
-      "id_format": "standard11",
-      "name": "MSG_0BD",
-      "dlc": 8,
-      "signals": [
-        {
-          "name": "Brake_Position",
-          "decode": {
-            "start_bit": 33,
-            "bit_length": 11,
-            "byte_order": "little_endian",
-            "signed": false,
-            "factor": 0.0625,
-            "offset": -20.0,
-            "minimum": 0.0,
-            "maximum": 100.0,
-            "unit": "%",
             "mux": null
           }
         }
@@ -246,6 +222,46 @@
             "minimum": 0.0,
             "maximum": 100.0,
             "unit": "%",
+            "mux": null
+          }
+        }
+      ]
+    },
+    {
+      "bus": "can0",
+      "frame_id": 262,
+      "frame_id_hex": "0x106",
+      "id_format": "standard11",
+      "name": "MSG_106",
+      "dlc": 8,
+      "signals": [
+        {
+          "name": "Brake_Pressure",
+          "decode": {
+            "start_bit": 16,
+            "bit_length": 10,
+            "byte_order": "little_endian",
+            "signed": false,
+            "factor": 0.3,
+            "offset": -30.0,
+            "minimum": -30.0,
+            "maximum": 276.9,
+            "unit": "bar",
+            "mux": null
+          }
+        },
+        {
+          "name": "Brake_Switch",
+          "decode": {
+            "start_bit": 59,
+            "bit_length": 1,
+            "byte_order": "little_endian",
+            "signed": false,
+            "factor": 1.0,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 1.0,
+            "unit": "on/off",
             "mux": null
           }
         }
@@ -1501,34 +1517,34 @@
       }
     },
     {
-      "name": "Brake_Position",
+      "name": "Brake_Pressure",
       "acquisition": {
         "type": "can_frame",
         "bus": "can0",
-        "frame_id": 189,
-        "frame_id_hex": "0xBD",
-        "frame_name": "MSG_0BD"
+        "frame_id": 262,
+        "frame_id_hex": "0x106",
+        "frame_name": "MSG_106"
       },
       "decode": {
-        "start_bit": 33,
-        "bit_length": 11,
+        "start_bit": 16,
+        "bit_length": 10,
         "byte_order": "little_endian",
         "signed": false,
-        "factor": 0.0625,
-        "offset": -20.0,
-        "minimum": 0.0,
-        "maximum": 100.0,
-        "unit": "%",
+        "factor": 0.3,
+        "offset": -30.0,
+        "minimum": -30.0,
+        "maximum": 276.9,
+        "unit": "bar",
         "mux": null
       },
       "canonical": {
-        "id": "brake.pedal.position",
-        "label": "Brake pedal position",
-        "quantity": "position",
-        "preferred_unit": "%",
+        "id": "brake.pressure",
+        "label": "Brake pressure",
+        "quantity": "pressure",
+        "preferred_unit": "bar",
         "confidence": "mapped",
         "aliases": [
-          "Brake_Position"
+          "Brake_Pressure"
         ]
       }
     },
@@ -1583,6 +1599,38 @@
         "confidence": "high",
         "reason": "exact_uds_did_mux",
         "record_offset": 7696
+      }
+    },
+    {
+      "name": "Brake_Switch",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 262,
+        "frame_id_hex": "0x106",
+        "frame_name": "MSG_106"
+      },
+      "decode": {
+        "start_bit": 59,
+        "bit_length": 1,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "unit": "on/off",
+        "mux": null
+      },
+      "canonical": {
+        "id": "brake.switch",
+        "label": "Brake switch",
+        "quantity": "state",
+        "preferred_unit": "bool",
+        "confidence": "mapped",
+        "aliases": [
+          "Brake_Switch"
+        ]
       }
     },
     {
@@ -2085,13 +2133,14 @@
       },
       "decode": {
         "start_bit": 32,
-        "bit_length": 13,
+        "bit_length": 12,
         "byte_order": "little_endian",
         "signed": false,
+        "sign_bit": 44,
         "factor": -0.12,
         "offset": 0.0,
-        "minimum": -720.0,
-        "maximum": 720.0,
+        "minimum": -491.4,
+        "maximum": 491.4,
         "unit": "deg",
         "mux": null
       },

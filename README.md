@@ -51,6 +51,11 @@ python3 tools/vsp2dbc.py profiles/<profile>.vsp -o out/<profile>.dbc
 diagnostic queries, so diagnostic response frame layouts are omitted unless
 `--include-diagnostic-responses` is passed.
 
+DBC also has no sign-magnitude type. A sign-magnitude VSP signal (`sign_bit`)
+is exported as an unsigned magnitude signal `<Name>` plus a 1-bit `<Name>_Sign`
+signal in the same message. `dbc2vsp.py` folds such a pair back into one
+signal with `sign_bit`.
+
 Compose multiple VSP files:
 
 ```bash

@@ -7,7 +7,7 @@ import copy
 import json
 import re
 from collections import defaultdict
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 
@@ -50,6 +50,7 @@ class DbcSignal:
     minimum: float
     maximum: float
     unit: str
+    sign_bit: int | None = None
 
 
 def hex_id(value: int | None) -> str | None:
@@ -124,7 +125,50 @@ def parse_dbc(path: Path) -> tuple[dict[int, DbcMessage], list[DbcSignal]]:
                 )
             )
 
-    return messages, signals
+    return messages, fold_sign_signals(signals)
+
+
+DBC_SIGN_SUFFIX = "_Sign"
+
+
+def dbc_signal_bits(signal: DbcSignal) -> set[int]:
+    """Payload bit positions covered by a DBC signal (DBC bit numbering)."""
+    if signal.byte_order == 1:
+        return set(range(signal.start_bit, signal.start_bit + signal.bit_length))
+    positions: set[int] = set()
+    pos = signal.start_bit
+    for _ in range(signal.bit_length):
+        positions.add(pos)
+        pos = pos + 15 if pos % 8 == 0 else pos - 1
+    return positions
+
+
+def fold_sign_signals(signals: list[DbcSignal]) -> list[DbcSignal]:
+    """Fold a 1-bit `<name>_Sign` signal into `<name>` as a sign-magnitude sign_bit.
+
+    DBC has no sign-magnitude type, so `<name>` carries the unsigned magnitude and
+    `<name>_Sign` (same message and mux) carries the sign; profile_to_dbc emits the same pair.
+    """
+    by_key = {(signal.frame_id, signal.name): signal for signal in signals}
+    sign_bits: dict[tuple[int, str], int] = {}
+    consumed: set[tuple[int, str]] = set()
+    for signal in signals:
+        if signal.bit_length != 1 or not signal.name.endswith(DBC_SIGN_SUFFIX):
+            continue
+        base = by_key.get((signal.frame_id, signal.name[: -len(DBC_SIGN_SUFFIX)]))
+        if base is None or base.signed or base.mux != signal.mux:
+            continue
+        if signal.start_bit in dbc_signal_bits(base):
+            continue
+        sign_bits[(base.frame_id, base.name)] = signal.start_bit
+        consumed.add((signal.frame_id, signal.name))
+    return [
+        replace(signal, sign_bit=sign_bits[(signal.frame_id, signal.name)])
+        if (signal.frame_id, signal.name) in sign_bits
+        else signal
+        for signal in signals
+        if (signal.frame_id, signal.name) not in consumed
+    ]
 
 
 def dbc_signal_decode(signal: DbcSignal) -> dict[str, Any]:
@@ -134,18 +178,25 @@ def dbc_signal_decode(signal: DbcSignal) -> dict[str, Any]:
     elif signal.mux and signal.mux.startswith("m"):
         mux = {"value": int(signal.mux[1:])}
 
-    return {
+    decode: dict[str, Any] = {
         "start_bit": signal.start_bit,
         "bit_length": signal.bit_length,
         "byte_order": byte_order_name(signal.byte_order),
         "signed": signal.signed,
-        "factor": signal.factor,
-        "offset": signal.offset,
-        "minimum": signal.minimum,
-        "maximum": signal.maximum,
-        "unit": signal.unit,
-        "mux": mux,
     }
+    if signal.sign_bit is not None:
+        decode["sign_bit"] = signal.sign_bit
+    decode.update(
+        {
+            "factor": signal.factor,
+            "offset": signal.offset,
+            "minimum": signal.minimum,
+            "maximum": signal.maximum,
+            "unit": signal.unit,
+            "mux": mux,
+        }
+    )
+    return decode
 
 
 def profile_from_dbc(path: Path, *, manufacturer: str, model: str, bitrate: int) -> dict[str, Any]:
@@ -243,6 +294,15 @@ def dbc_signal_line(signal: dict[str, Any], name: str) -> str:
     )
 
 
+def dbc_sign_signal_line(signal: dict[str, Any], name: str) -> str:
+    """Export a sign-magnitude sign bit as its own 1-bit DBC signal."""
+    decode = signal.get("decode") or {}
+    return (
+        f" SG_ {name}{dbc_mux_suffix(decode)} : "
+        f"{int(decode['sign_bit'])}|1@1+ (1,0) [0|1] \"\" Vector__XXX"
+    )
+
+
 def dbc_muxor_signal_line(mux: dict[str, Any], name: str) -> str:
     start_bit = int(mux.get("start_bit") or 0)
     bit_length = int(mux.get("bit_length") or 1)
@@ -330,6 +390,14 @@ def profile_to_dbc(profile: dict[str, Any], *, include_diagnostic_responses: boo
                 suffix += 1
             used_names.add(signal_name)
             lines.append(dbc_signal_line(signal, signal_name))
+            if (signal.get("decode") or {}).get("sign_bit") is not None:
+                sign_name = dbc_identifier(f"{signal_name}_Sign", "SIGN")
+                suffix = 2
+                while sign_name in used_names:
+                    sign_name = dbc_identifier(f"{signal_name}_Sign_{suffix}", "SIGN")
+                    suffix += 1
+                used_names.add(sign_name)
+                lines.append(dbc_sign_signal_line(signal, sign_name))
         lines.append("")
 
     return "\n".join(lines).rstrip() + "\n"
@@ -346,11 +414,40 @@ def canonical_number(value: Any) -> Any:
 
 
 def canonical_decode(decode: dict[str, Any]) -> dict[str, Any]:
-    keys = ("start_bit", "bit_length", "byte_order", "signed", "factor", "offset", "minimum", "maximum", "unit", "mux")
+    keys = ("start_bit", "bit_length", "byte_order", "signed", "sign_bit", "factor", "offset", "minimum", "maximum", "unit", "mux")
     result = {key: canonical_number(decode.get(key)) for key in keys if key in decode}
     if result.get("mux") is None:
         result["mux"] = None
+    if result.get("sign_bit") is None:
+        result.pop("sign_bit", None)
     return result
+
+
+def decode_bit_positions(decode: dict[str, Any]) -> set[int]:
+    """Payload bit positions covered by a decode field (DBC bit numbering)."""
+    start = int(decode.get("start_bit") or 0)
+    length = int(decode.get("bit_length") or 0)
+    if decode.get("byte_order") == "big_endian":
+        positions: set[int] = set()
+        pos = start
+        for _ in range(length):
+            positions.add(pos)
+            pos = pos + 15 if pos % 8 == 0 else pos - 1
+        return positions
+    return set(range(start, start + length))
+
+
+def validate_sign_bit(label: str, decode: dict[str, Any], errors: list[str]) -> None:
+    sign_bit = decode.get("sign_bit")
+    if sign_bit is None:
+        return
+    if isinstance(sign_bit, bool) or not isinstance(sign_bit, int) or not 0 <= sign_bit < 64:
+        errors.append(f"{label}: sign_bit must be an integer bit position 0..63")
+        return
+    if decode.get("signed"):
+        errors.append(f"{label}: sign_bit requires signed=false")
+    if sign_bit in decode_bit_positions(decode):
+        errors.append(f"{label}: sign_bit {sign_bit} overlaps the magnitude field")
 
 
 def signal_matches_frame(signal: dict[str, Any], frame: dict[str, Any]) -> bool:
@@ -386,6 +483,12 @@ def validate_profile(profile: dict[str, Any]) -> dict[str, Any]:
         if key in frames:
             errors.append(f"duplicate frame on {bus} id=0x{int(frame_id):X}")
         frames[key] = frame
+        for frame_signal in frame.get("signals") or []:
+            validate_sign_bit(
+                f"frame {frame.get('name') or frame_id} signal {frame_signal.get('name') or '<unnamed>'}",
+                frame_signal.get("decode") or {},
+                errors,
+            )
         expected_format = id_format(int(frame_id))
         if frame.get("id_format") and frame.get("id_format") != expected_format:
             errors.append(f"frame {frame.get('name') or frame_id}: id_format should be {expected_format}")
@@ -416,6 +519,7 @@ def validate_profile(profile: dict[str, Any]) -> dict[str, Any]:
         acquisition = signal.get("acquisition") or {}
         acquisition_type = acquisition.get("type")
         canonical = signal.get("canonical")
+        validate_sign_bit(f"signal {name}", signal.get("decode") or {}, errors)
 
         if canonical is not None:
             if not isinstance(canonical, dict):

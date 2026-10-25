@@ -116,7 +116,13 @@ Rules:
   payload or diagnostic response frame.
 - `byte_order` is `little_endian` or `big_endian`.
 - `signed` controls signed integer interpretation before scaling.
-- Runtime value is `raw * factor + offset`.
+- `sign_bit` is optional. When present, the field is sign-magnitude: the bit
+  field is an unsigned magnitude, and if payload bit `sign_bit` is `1` the
+  magnitude is negated before scaling. `sign_bit` uses the same bit numbering
+  as `start_bit` (`byte_index * 8 + bit_in_byte`, bit 0 = LSB of byte 0), it
+  must not overlap the magnitude field, and `signed` must be `false`.
+- Runtime value is `raw * factor + offset`, where `raw` is the magnitude,
+  negated when `sign_bit` is set.
 - `unit` is the unit of the decoded runtime value.
 - `mux` is optional. When present, the signal is valid only when the mux field
   equals `mux.value`.
