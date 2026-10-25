@@ -554,15 +554,6 @@
     },
     {
       "bus": "can0",
-      "frame_id": 1928,
-      "frame_id_hex": "0x788",
-      "id_format": "standard11",
-      "name": "MSG_788",
-      "dlc": 8,
-      "signals": []
-    },
-    {
-      "bus": "can0",
       "frame_id": 1957,
       "frame_id_hex": "0x7A5",
       "id_format": "standard11",
@@ -582,6 +573,26 @@
             "maximum": 19630.5,
             "unit": "bar",
             "mux": null
+          }
+        },
+        {
+          "name": "BRAKE_PRESS",
+          "decode": {
+            "start_bit": 39,
+            "bit_length": 16,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 0.3,
+            "offset": -30.0,
+            "minimum": -30.0,
+            "maximum": 19630.5,
+            "unit": "bar",
+            "mux": {
+              "value": 6443265,
+              "start_bit": 15,
+              "bit_length": 24,
+              "byte_order": "big_endian"
+            }
           }
         }
       ]
@@ -878,9 +889,115 @@
           }
         },
         {
+          "name": "GearBK",
+          "decode": {
+            "start_bit": 35,
+            "bit_length": 4,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 1.0,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 15.0,
+            "unit": "gear",
+            "values": [
+              {
+                "raw": 0,
+                "label": "N"
+              },
+              {
+                "raw": 1,
+                "label": "1"
+              },
+              {
+                "raw": 2,
+                "label": "2"
+              },
+              {
+                "raw": 3,
+                "label": "3"
+              },
+              {
+                "raw": 4,
+                "label": "4"
+              },
+              {
+                "raw": 5,
+                "label": "5"
+              },
+              {
+                "raw": 6,
+                "label": "6"
+              },
+              {
+                "raw": 7,
+                "label": "7"
+              },
+              {
+                "raw": 8,
+                "label": "8"
+              },
+              {
+                "raw": 9,
+                "label": "9"
+              },
+              {
+                "raw": 15,
+                "label": "R"
+              }
+            ],
+            "mux": {
+              "value": 6426633,
+              "start_bit": 15,
+              "bit_length": 24,
+              "byte_order": "big_endian"
+            }
+          }
+        },
+        {
           "name": "_7e9_b4MSB",
           "decode": {
             "start_bit": 39,
+            "bit_length": 4,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 1.0,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 15.0,
+            "unit": "#",
+            "mux": {
+              "value": 6426633,
+              "start_bit": 15,
+              "bit_length": 24,
+              "byte_order": "big_endian"
+            }
+          }
+        },
+        {
+          "name": "_7e9_b4MSB",
+          "decode": {
+            "start_bit": 39,
+            "bit_length": 4,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 1.0,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 15.0,
+            "unit": "#",
+            "mux": {
+              "value": 6426633,
+              "start_bit": 15,
+              "bit_length": 24,
+              "byte_order": "big_endian"
+            }
+          }
+        },
+        {
+          "name": "_7e9_b5LSB",
+          "decode": {
+            "start_bit": 43,
             "bit_length": 4,
             "byte_order": "big_endian",
             "signed": false,
@@ -938,9 +1055,69 @@
           }
         },
         {
+          "name": "_7e9_b5MSB",
+          "decode": {
+            "start_bit": 47,
+            "bit_length": 4,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 1.0,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 15.0,
+            "unit": "#",
+            "mux": {
+              "value": 6426633,
+              "start_bit": 15,
+              "bit_length": 24,
+              "byte_order": "big_endian"
+            }
+          }
+        },
+        {
           "name": "_7e9_b6",
           "decode": {
             "start_bit": 55,
+            "bit_length": 8,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 1.0,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 255.0,
+            "unit": "#",
+            "mux": {
+              "value": 6426633,
+              "start_bit": 15,
+              "bit_length": 24,
+              "byte_order": "big_endian"
+            }
+          }
+        },
+        {
+          "name": "_7e9_b6",
+          "decode": {
+            "start_bit": 55,
+            "bit_length": 8,
+            "byte_order": "big_endian",
+            "signed": false,
+            "factor": 1.0,
+            "offset": 0.0,
+            "minimum": 0.0,
+            "maximum": 255.0,
+            "unit": "#",
+            "mux": {
+              "value": 6426633,
+              "start_bit": 15,
+              "bit_length": 24,
+              "byte_order": "big_endian"
+            }
+          }
+        },
+        {
+          "name": "_7e9_b7",
+          "decode": {
+            "start_bit": 63,
             "bit_length": 8,
             "byte_order": "big_endian",
             "signed": false,
@@ -1429,7 +1606,12 @@
         "minimum": -30.0,
         "maximum": 19630.5,
         "unit": "bar",
-        "mux": null
+        "mux": {
+          "value": 6443265,
+          "start_bit": 15,
+          "bit_length": 24,
+          "byte_order": "big_endian"
+        }
       },
       "raw": {
         "cflag": 0,
