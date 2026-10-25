@@ -227,3 +227,35 @@ convention across vehicles:
 When a vehicle encodes gears differently (for example raw `5` for first gear),
 the signal's `decode.values` table maps each raw code to its label and, where
 the decoded value would differ, to the convention value.
+
+## Sign Conventions
+
+Signed motion values follow ISO 8855 (vehicle axes: x forward, y left, z up;
+positive rotation is counterclockwise seen from above):
+
+| Canonical ID | Positive when |
+| --- | --- |
+| `steering.wheel.angle` | the wheel is turned left (counterclockwise) |
+| `steering.wheel.speed` | the wheel turns toward the left |
+| `vehicle.yaw_rate` | the vehicle turns left |
+| `vehicle.acceleration.longitudinal` | the vehicle speeds up (forward) |
+| `vehicle.acceleration.lateral` | the acceleration points left (left turn) |
+| `vehicle.acceleration.vertical` | the acceleration points up |
+
+Sources do not agree on signs. A profile only guarantees the convention for a
+signal checked on a vehicle; see [Confidence](#confidence).
+
+## Confidence
+
+`signals[].canonical.confidence` tells how the canonical mapping was made:
+
+| Value | Meaning |
+| --- | --- |
+| `measured` | Checked on a vehicle: meaning, scale and, for the signed quantities above, the sign convention. |
+| `mapped` | From a reviewed name table. |
+| `heuristic` | From name and unit rules. |
+| `contextual` | From the other signals of the same profile. |
+
+Only `measured` signals are known to follow the sign conventions; others carry
+the source's sign.
+
