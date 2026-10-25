@@ -273,6 +273,8 @@ def prior_key(signal: dict, frame_dlcs: dict[tuple[str | None, int], int]):
 
     if decode.get("mux"):
         return None, "multiplexed"
+    if decode.get("value_type") not in (None, "integer") or decode.get("polynomial"):
+        return None, "non_integer_decode"   # priors describe linear integer fields
 
     try:
         frame_id = int_or_none(acquisition.get("frame_id"))

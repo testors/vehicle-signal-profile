@@ -508,7 +508,11 @@ static bool decode_signal_value(NSDictionary *signal,
 
     NSNumber *start = num_or_nil(decode[@"start_bit"]);
     NSNumber *bits = num_or_nil(decode[@"bit_length"]);
-    if (!start || !bits || bits.intValue <= 0 || bits.intValue > 63) return false;
+    NSString *valueType = [decode[@"value_type"] isKindOfClass:[NSString class]] ? decode[@"value_type"] : @"integer";
+    bool isFloat = [valueType isEqualToString:@"float32"] || [valueType isEqualToString:@"float64"];
+    if (!isFloat && ![valueType isEqualToString:@"integer"]) return false;   /* unknown type: skip */
+    int maxBits = isFloat ? 64 : 63;
+    if (!start || !bits || bits.intValue <= 0 || bits.intValue > maxBits) return false;
 
     NSString *order = decode[@"byte_order"] ?: @"little_endian";
     uint64_t raw = 0;
@@ -516,6 +520,30 @@ static bool decode_signal_value(NSDictionary *signal,
         raw = extract_bits_big_dbc(data, dataLen, start.intValue, bits.intValue);
     } else {
         raw = extract_bits_little(data, dataLen, start.intValue, bits.intValue);
+    }
+
+    double factor = [decode[@"factor"] respondsToSelector:@selector(doubleValue)] ?
+                    [decode[@"factor"] doubleValue] : 1.0;
+    double offset = [decode[@"offset"] respondsToSelector:@selector(doubleValue)] ?
+                    [decode[@"offset"] doubleValue] : 0.0;
+
+    /* IEEE 754 field (VSP decode.value_type): the bits are the float itself. */
+    if (isFloat) {
+        double fv;
+        if (bits.intValue == 32) {
+            uint32_t b32 = (uint32_t)raw;
+            float f32;
+            memcpy(&f32, &b32, sizeof(f32));
+            fv = f32;
+        } else if (bits.intValue == 64) {
+            memcpy(&fv, &raw, sizeof(fv));
+        } else {
+            return false;
+        }
+        if (valueOut) *valueOut = fv * factor + offset;
+        if (hasNumberOut) *hasNumberOut = YES;
+        if (labelOut) *labelOut = nil;
+        return true;
     }
 
     BOOL isSigned = [decode[@"signed"] respondsToSelector:@selector(boolValue)] ?
@@ -539,11 +567,17 @@ static bool decode_signal_value(NSDictionary *signal,
         }
     }
 
-    double factor = [decode[@"factor"] respondsToSelector:@selector(doubleValue)] ?
-                    [decode[@"factor"] doubleValue] : 1.0;
-    double offset = [decode[@"offset"] respondsToSelector:@selector(doubleValue)] ?
-                    [decode[@"offset"] doubleValue] : 0.0;
     double value = signedRaw * factor + offset;
+    /* Non-linear conversion (VSP decode.polynomial): c0 + c1 * raw + c2 * raw^2 ... */
+    NSArray *poly = decode[@"polynomial"];
+    if ([poly isKindOfClass:[NSArray class]] && poly.count > 0) {
+        value = 0.0;
+        for (NSInteger i = (NSInteger)poly.count - 1; i >= 0; i--) {
+            NSNumber *c = num_or_nil(poly[(NSUInteger)i]);
+            if (!c) return false;
+            value = value * signedRaw + c.doubleValue;   /* Horner */
+        }
+    }
     BOOL hasNumber = YES;
     NSString *label = nil;
 
