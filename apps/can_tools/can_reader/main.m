@@ -59,19 +59,68 @@ typedef enum { OBD_TRANSPORT_BLE, OBD_TRANSPORT_CLASSIC } OBDTransportType;
 
 static bool g_cli_mode = false;
 
-#define CLI_MAX_CAN_FRAMES 20000
-static can_frame_t g_cli_can_frames[CLI_MAX_CAN_FRAMES];
+/** The capture buffer starts small and doubles on demand up to the cap.
+ *  Cap: 1,000,000 frames x sizeof(can_frame_t) (32 bytes) = ~32 MB worst case,
+ *  about 8 minutes of a saturated 500 kbit/s bus (~2000 frames/s). Frames past
+ *  the cap (or after a failed allocation) are counted as dropped. */
+#define CLI_CAN_FRAMES_INITIAL_CAPACITY 4096
+#define CLI_CAN_FRAMES_MAX              1000000
+
+static can_frame_t *g_cli_can_frames = NULL;
 static int g_cli_can_frame_count = 0;
+static int g_cli_can_frame_capacity = 0;
+static int g_cli_can_dropped_frames = 0;      /**< Frames not stored since last reset */
+static int64_t g_cli_can_last_stored_ms = 0;  /**< Timestamp of newest stored frame */
 static const char *g_cli_monitor_out_path = NULL;
+
+/** Empty the capture buffer and its drop counter (keeps the allocation). */
+static void cli_can_frames_reset(void) {
+    g_cli_can_frame_count = 0;
+    g_cli_can_dropped_frames = 0;
+    g_cli_can_last_stored_ms = 0;
+}
+
+/** Store a frame, growing the buffer if needed; counts it as dropped if the
+ *  buffer is at its cap or cannot grow. */
+static void cli_can_frames_append(const can_frame_t *frame) {
+    if (g_cli_can_frame_count >= g_cli_can_frame_capacity) {
+        int new_capacity = g_cli_can_frame_capacity > 0
+                           ? g_cli_can_frame_capacity * 2
+                           : CLI_CAN_FRAMES_INITIAL_CAPACITY;
+        if (new_capacity > CLI_CAN_FRAMES_MAX) new_capacity = CLI_CAN_FRAMES_MAX;
+        can_frame_t *grown = NULL;
+        if (new_capacity > g_cli_can_frame_capacity) {
+            grown = (can_frame_t *)realloc(g_cli_can_frames,
+                                           (size_t)new_capacity * sizeof(*grown));
+        }
+        if (!grown) {
+            g_cli_can_dropped_frames++;
+            return;
+        }
+        g_cli_can_frames = grown;
+        g_cli_can_frame_capacity = new_capacity;
+    }
+    g_cli_can_frames[g_cli_can_frame_count++] = *frame;
+    g_cli_can_last_stored_ms = frame->timestamp_ms;
+}
+
+static void cli_can_frames_free(void) {
+    free(g_cli_can_frames);
+    g_cli_can_frames = NULL;
+    g_cli_can_frame_capacity = 0;
+    cli_can_frames_reset();
+}
 
 typedef struct {
     bool   skipped;
     bool   captured;
     int    planned_duration_s;
-    double actual_duration_s;
+    double actual_duration_s;       /**< Wall-clock capture duration */
+    double analyzed_duration_s;     /**< Duration used for Hz (covered by stored frames) */
     int    total_frames;
     int    id_count;
-    int    dropped_frames;
+    int    dropped_frames;          /**< Total frames not analyzed */
+    int    capture_dropped_frames;  /**< Frames the capture buffer could not store */
     char   dump_file[64];
 } disc_phase_dump_meta_t;
 
@@ -347,9 +396,7 @@ didDiscoverCharacteristicsForService:(CBService *)service
                         g_can_frame_count++;
                         if (g_cli_mode) {
                             /* CLI mode: store frames for JSON output */
-                            if (g_cli_can_frame_count < CLI_MAX_CAN_FRAMES) {
-                                g_cli_can_frames[g_cli_can_frame_count++] = frame;
-                            }
+                            cli_can_frames_append(&frame);
                         } else {
                             printf("  %03X [%d] ", frame.can_id, frame.dlc);
                             for (int j = 0; j < frame.dlc; j++) {
@@ -3483,7 +3530,7 @@ static int cli_p992_fastlog(const char *device,
     cli_log("Starting raw monitor (%s) for %d seconds...", monitor_cmd, seconds);
     g_ble->_canLineLen = 0;
     g_ble.canMonitorActive = YES;
-    g_cli_can_frame_count = 0;
+    cli_can_frames_reset();
     memset(g_ble->_responseBuf, 0, sizeof(g_ble->_responseBuf));
     g_ble->_responseLen = 0;
     g_ble->_responseReady = NO;
@@ -3506,6 +3553,10 @@ static int cli_p992_fastlog(const char *device,
     run_loop_for(0.2);
 
     cli_log("Fastlog stopped. Frames: %d", g_cli_can_frame_count);
+    if (g_cli_can_dropped_frames > 0) {
+        fprintf(stderr, "[WARN] Capture buffer full: %d frames dropped\n",
+                g_cli_can_dropped_frames);
+    }
     cli_p992_fastlog_cleanup();
 
     int ret = cli_p992_fastlog_write_json(out_path,
@@ -4516,28 +4567,23 @@ static bool disc_ensure_dir(const char *path) {
     return ok == YES;
 }
 
-static void disc_make_draft_dbc_path(char *buf, size_t len, const char *dump_dir) {
+/** Draft output path: <dump_dir>/ptcan_discover_draft.<ext>, or
+ *  ptcan_discover_draft_YYYYMMDD_HHMMSS.<ext> in the cwd without a dump dir. */
+static void disc_make_draft_path(char *buf, size_t len,
+                                 const char *dump_dir, const char *ext) {
     if (dump_dir && dump_dir[0]) {
-        disc_join_path(buf, len, dump_dir, "ptcan_discover_draft.dbc");
+        char leaf[64];
+        snprintf(leaf, sizeof(leaf), "ptcan_discover_draft.%s", ext);
+        disc_join_path(buf, len, dump_dir, leaf);
         return;
     }
 
     time_t now = time(NULL);
     struct tm tm_now;
     localtime_r(&now, &tm_now);
-    strftime(buf, len, "ptcan_discover_draft_%Y%m%d_%H%M%S.dbc", &tm_now);
-}
-
-static void disc_make_draft_vsp_path(char *buf, size_t len, const char *dump_dir) {
-    if (dump_dir && dump_dir[0]) {
-        disc_join_path(buf, len, dump_dir, "ptcan_discover_draft.vsp");
-        return;
-    }
-
-    time_t now = time(NULL);
-    struct tm tm_now;
-    localtime_r(&now, &tm_now);
-    strftime(buf, len, "ptcan_discover_draft_%Y%m%d_%H%M%S.vsp", &tm_now);
+    char stamp[32];
+    strftime(stamp, sizeof(stamp), "%Y%m%d_%H%M%S", &tm_now);
+    snprintf(buf, len, "ptcan_discover_draft_%s.%s", stamp, ext);
 }
 
 static void disc_make_result_json_path(char *buf, size_t len, const char *dump_dir) {
@@ -4653,6 +4699,7 @@ static void disc_write_result_json_object(FILE *f,
         if (c->signedness != DISC_SIGN_UNKNOWN) {
             fprintf(f, ",\"signed\":%s",
                     c->signedness == DISC_SIGN_SIGNED ? "true" : "false");
+            if (c->sign_char == 'S') fprintf(f, ",\"sign_bit\":%d", c->sign_bit);
             fprintf(f, ",\"raw_min\":%d,\"raw_max\":%d", c->raw_min, c->raw_max);
         }
         fprintf(f, "}");
@@ -4733,9 +4780,11 @@ static bool disc_write_manifest(const char *path,
         fprintf(f, ",\"skipped\":%s", meta->skipped ? "true" : "false");
         fprintf(f, ",\"captured\":%s", meta->captured ? "true" : "false");
         fprintf(f, ",\"actual_duration_s\":%.3f", meta->actual_duration_s);
+        fprintf(f, ",\"analyzed_duration_s\":%.3f", meta->analyzed_duration_s);
         fprintf(f, ",\"frame_count\":%d", meta->total_frames);
         fprintf(f, ",\"id_count\":%d", meta->id_count);
         fprintf(f, ",\"dropped_frames\":%d", meta->dropped_frames);
+        fprintf(f, ",\"capture_dropped_frames\":%d", meta->capture_dropped_frames);
         fprintf(f, ",\"dump_file\":");
         if (meta->dump_file[0]) json_print_string(f, meta->dump_file);
         else fputs("null", f);
@@ -5272,7 +5321,7 @@ static int cli_monitor(const char *device, int seconds,
 
     g_ble->_canLineLen = 0;
     g_ble.canMonitorActive = YES;
-    g_cli_can_frame_count = 0;
+    cli_can_frames_reset();
 
     /* Clear response state */
     memset(g_ble->_responseBuf, 0, sizeof(g_ble->_responseBuf));
@@ -5301,6 +5350,10 @@ static int cli_monitor(const char *device, int seconds,
     run_loop_for(0.2);
 
     cli_log("CAN monitor stopped. Frames: %d", g_cli_can_frame_count);
+    if (g_cli_can_dropped_frames > 0) {
+        fprintf(stderr, "[WARN] Capture buffer full: %d frames dropped\n",
+                g_cli_can_dropped_frames);
+    }
     cli_monitor_cue_after_stop();
 
     /* JSON output */
@@ -5414,7 +5467,7 @@ static int cli_detect(const char *device) {
 
     g_ble->_canLineLen = 0;
     g_ble.canMonitorActive = YES;
-    g_cli_can_frame_count = 0;
+    cli_can_frames_reset();
 
     memset(g_ble->_responseBuf, 0, sizeof(g_ble->_responseBuf));
     g_ble->_responseLen = 0;
@@ -5605,12 +5658,15 @@ static int disc_read_char(void) {
     return ch;
 }
 
-/** Capture one phase. Returns false if connection lost. */
+/** Capture one phase. Returns false if connection lost.
+ *  wall_duration_s receives the wall-clock capture time and capture_dropped the
+ *  number of frames the capture buffer could not store (both optional). */
 static bool disc_capture_phase(disc_phase_t *phase, disc_raw_phase_t *raw_phase,
-                                 int duration_s, const char *monitor_cmd) {
+                                 int duration_s, const char *monitor_cmd,
+                                 double *wall_duration_s, int *capture_dropped) {
     g_ble->_canLineLen = 0;
     g_ble.canMonitorActive = YES;
-    g_cli_can_frame_count = 0;
+    cli_can_frames_reset();
 
     memset(g_ble->_responseBuf, 0, sizeof(g_ble->_responseBuf));
     g_ble->_responseLen = 0;
@@ -5643,7 +5699,21 @@ static bool disc_capture_phase(disc_phase_t *phase, disc_raw_phase_t *raw_phase,
                               g_cli_can_frames[i].data,
                               g_cli_can_frames[i].dlc);
     }
-    disc_phase_finalize(phase, (double)(end_ms - start_ms) / 1000.0);
+
+    /* Hz = stored frames / analyzed duration. If frames were dropped, the
+       stored frames only cover capture start -> last stored frame. */
+    double wall_s = (double)(end_ms - start_ms) / 1000.0;
+    double analyzed_s = wall_s;
+    int dropped = g_cli_can_dropped_frames;
+    if (dropped > 0 && g_cli_can_frame_count > 0) {
+        double covered_s = (double)(g_cli_can_last_stored_ms - start_ms) / 1000.0;
+        if (covered_s > 0) analyzed_s = covered_s;
+    }
+    disc_phase_finalize(phase, analyzed_s);
+    phase->dropped_frames += dropped;
+    if (wall_duration_s) *wall_duration_s = wall_s;
+    if (capture_dropped) *capture_dropped = dropped;
+
     if (raw_phase &&
         !disc_raw_phase_set(raw_phase, g_cli_can_frames, g_cli_can_frame_count)) {
         fprintf(stderr, "\n[WARN] Failed to store raw frames for DBC draft output\n");
@@ -5653,6 +5723,32 @@ static bool disc_capture_phase(disc_phase_t *phase, disc_raw_phase_t *raw_phase,
     g_interrupt = NO;
 
     return g_ble.isConnected;
+}
+
+/** Finish the "Capturing..." console line and record the phase in the manifest. */
+static void disc_report_captured_phase(const disc_phase_t *phase,
+                                       double wall_duration_s,
+                                       int capture_dropped,
+                                       disc_phase_dump_meta_t *meta) {
+    fprintf(stderr, " %d frames, %d CAN IDs", phase->total_frames, phase->id_count);
+    if (phase->dropped_frames > 0) {
+        fprintf(stderr, " (%d dropped)", phase->dropped_frames);
+    }
+    fprintf(stderr, "\n");
+    if (capture_dropped > 0) {
+        fprintf(stderr, "[WARN] Capture buffer full: %d frames dropped (%d not analyzed in total); "
+                "Hz computed over %.3f s of %.3f s captured\n",
+                capture_dropped, phase->dropped_frames,
+                phase->duration_s, wall_duration_s);
+    }
+
+    meta->captured = true;
+    meta->actual_duration_s = wall_duration_s;
+    meta->analyzed_duration_s = phase->duration_s;
+    meta->total_frames = phase->total_frames;
+    meta->id_count = phase->id_count;
+    meta->dropped_frames = phase->dropped_frames;
+    meta->capture_dropped_frames = capture_dropped;
 }
 
 /** Print a candidate result line to stderr */
@@ -5672,10 +5768,12 @@ static void disc_print_candidate(const char *name, const disc_candidate_t *c) {
                 disc_sign_name(c->signedness), c->raw_min, c->raw_max);
     }
     if (c->start_bit >= 0 && c->bit_length > 0) {
+        char sign_note[24] = "";
+        if (c->sign_char == 'S') snprintf(sign_note, sizeof(sign_note), " sign_bit=%d", c->sign_bit);
         fprintf(stderr,
-                "                 bit=%d|%d@%d%c  evidence=%.1f specificity=%.1f shape=%.1f prior=%.1f margin=%.1f\n",
+                "                 bit=%d|%d@%d%c%s  evidence=%.1f specificity=%.1f shape=%.1f prior=%.1f margin=%.1f\n",
                 c->start_bit, c->bit_length, c->byte_order,
-                c->sign_char == '-' ? '-' : '+',
+                c->sign_char == '-' ? '-' : '+', sign_note,
                 c->evidence_score, c->specificity_score, c->shape_score,
                 c->prior_score, c->ambiguity_margin);
     }
@@ -5730,17 +5828,15 @@ static int cli_discover(const char *device, const char *dump_dir_override) {
 
     fprintf(stderr, "  Capturing %d seconds...", s_disc_phases[0].duration_s);
     fflush(stderr);
+    double wall_s = 0.0;
+    int capture_dropped = 0;
     if (!disc_capture_phase(&phases[DISC_PHASE_BASELINE],
                             &raw_phases[DISC_PHASE_BASELINE],
-                            s_disc_phases[0].duration_s, monitor_cmd))
+                            s_disc_phases[0].duration_s, monitor_cmd,
+                            &wall_s, &capture_dropped))
         goto disconnected;
-    fprintf(stderr, " %d frames, %d CAN IDs",
-            phases[DISC_PHASE_BASELINE].total_frames,
-            phases[DISC_PHASE_BASELINE].id_count);
-    if (phases[DISC_PHASE_BASELINE].dropped_frames > 0) {
-        fprintf(stderr, " (%d dropped)", phases[DISC_PHASE_BASELINE].dropped_frames);
-    }
-    fprintf(stderr, "\n");
+    disc_report_captured_phase(&phases[DISC_PHASE_BASELINE], wall_s, capture_dropped,
+                               &phase_meta[DISC_PHASE_BASELINE]);
 
     /* Detect bus mode (D-CAN gateway vs direct PT-CAN) */
     bus_mode = disc_detect_bus_mode(&phases[DISC_PHASE_BASELINE]);
@@ -5750,12 +5846,6 @@ static int cli_discover(const char *device, const char *dump_dir_override) {
             bus_mode == DISC_BUS_GATEWAY ? "D-CAN" : "PT-CAN");
 
     result.bus_mode = bus_mode;
-    phase_meta[DISC_PHASE_BASELINE].captured = true;
-    phase_meta[DISC_PHASE_BASELINE].actual_duration_s = phases[DISC_PHASE_BASELINE].duration_s;
-    phase_meta[DISC_PHASE_BASELINE].total_frames = phases[DISC_PHASE_BASELINE].total_frames;
-    phase_meta[DISC_PHASE_BASELINE].id_count = phases[DISC_PHASE_BASELINE].id_count;
-    phase_meta[DISC_PHASE_BASELINE].dropped_frames =
-        phases[DISC_PHASE_BASELINE].dropped_frames;
     if (dump_enabled) {
         char phase_path[DISC_PATH_MAX];
         disc_make_phase_dump_path(phase_path, sizeof(phase_path),
@@ -5794,19 +5884,10 @@ static int cli_discover(const char *device, const char *dump_dir_override) {
         fprintf(stderr, "  Capturing %d seconds...", s_disc_phases[p].duration_s);
         fflush(stderr);
         if (!disc_capture_phase(active, &raw_phases[p],
-                                s_disc_phases[p].duration_s, monitor_cmd))
+                                s_disc_phases[p].duration_s, monitor_cmd,
+                                &wall_s, &capture_dropped))
             goto disconnected;
-        fprintf(stderr, " %d frames, %d CAN IDs",
-                active->total_frames, active->id_count);
-        if (active->dropped_frames > 0) {
-            fprintf(stderr, " (%d dropped)", active->dropped_frames);
-        }
-        fprintf(stderr, "\n");
-        phase_meta[p].captured = true;
-        phase_meta[p].actual_duration_s = active->duration_s;
-        phase_meta[p].total_frames = active->total_frames;
-        phase_meta[p].id_count = active->id_count;
-        phase_meta[p].dropped_frames = active->dropped_frames;
+        disc_report_captured_phase(active, wall_s, capture_dropped, &phase_meta[p]);
         if (dump_enabled) {
             char phase_path[DISC_PATH_MAX];
             disc_make_phase_dump_path(phase_path, sizeof(phase_path), dump_dir, p);
@@ -5823,8 +5904,8 @@ static int cli_discover(const char *device, const char *dump_dir_override) {
     fprintf(stderr, "\n[INFO] Analyzing captures with automatic scoring...\n");
     disc_analyze_with_raw(phases, raw_phases, &result);
 
-    disc_make_draft_dbc_path(dbc_path, sizeof(dbc_path),
-                             dump_enabled ? dump_dir : NULL);
+    disc_make_draft_path(dbc_path, sizeof(dbc_path),
+                         dump_enabled ? dump_dir : NULL, "dbc");
     bool dbc_written = disc_write_draft_dbc(dbc_path, phases, raw_phases, &result);
     if (dbc_written) {
         cli_log("Draft DBC written: %s", dbc_path);
@@ -5832,8 +5913,8 @@ static int cli_discover(const char *device, const char *dump_dir_override) {
         fprintf(stderr, "[WARN] Failed to write draft DBC: %s\n", dbc_path);
     }
 
-    disc_make_draft_vsp_path(vsp_path, sizeof(vsp_path),
-                             dump_enabled ? dump_dir : NULL);
+    disc_make_draft_path(vsp_path, sizeof(vsp_path),
+                         dump_enabled ? dump_dir : NULL, "vsp");
     bool vsp_written = disc_write_draft_vsp(vsp_path, phases, raw_phases, &result);
     if (vsp_written) {
         cli_log("Draft VSP written: %s", vsp_path);
@@ -6092,7 +6173,9 @@ int main(int argc, const char *argv[]) {
     @autoreleasepool {
         /* CLI mode: if any arguments given, run non-interactive */
         if (argc >= 2) {
-            return cli_main(argc, argv);
+            int ret = cli_main(argc, argv);
+            cli_can_frames_free();
+            return ret;
         }
 
         /* Interactive mode (original behavior) */

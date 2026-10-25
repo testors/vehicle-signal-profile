@@ -12,8 +12,11 @@
  *   3. For each CAN ID + byte, compute change score =
  *      max(0, active_range - baseline_range) +
  *      max(0, active_unique - baseline_unique) * 0.5
- *   4. Classify signals by combining phase evidence, bitfield shape, phase
- *      specificity, and VSP corpus priors
+ *   4. Search bitfields inside regions of changing bytes and score each
+ *      field: field-level evidence, specificity (quiet in phases where the
+ *      signal must not move), shape/role fit, and VSP corpus priors that
+ *      match the same ID and layout
+ *   5. Choose one field per signal jointly so no two signals share bits
  */
 
 #pragma once
@@ -96,15 +99,21 @@ typedef struct {
  * Phase Capture
  ******************************************************************************/
 
-/** Accumulated statistics for one capture phase */
+/**
+ * Accumulated statistics for one capture phase.
+ *
+ * Owns heap storage: initialize with disc_phase_init() and release with
+ * disc_phase_free(). Copying the struct copies the pointer, not the storage.
+ */
 typedef struct {
     disc_id_t  *ids;                /**< Per-ID statistics */
     int         id_count;           /**< Number of unique CAN IDs seen */
     int         id_capacity;        /**< Allocated ID slots */
-    double      duration_s;         /**< Capture duration in seconds */
-    int         total_frames;       /**< Total frames captured */
-    int         dropped_frames;     /**< Frames dropped because ID storage was full */
-    bool        id_overflow;        /**< Whether any IDs/frames were dropped */
+    double      duration_s;         /**< Time span the analyzed frames cover */
+    int         total_frames;       /**< Frames accumulated into statistics */
+    int         dropped_frames;     /**< Frames not analyzed: ID-table overflow,
+                                         plus capture-buffer overflow when the
+                                         caller adds it */
 } disc_phase_t;
 
 /*******************************************************************************
@@ -135,7 +144,8 @@ typedef enum {
 typedef enum {
     DISC_SIGN_UNKNOWN = 0,
     DISC_SIGN_UNSIGNED,
-    DISC_SIGN_SIGNED
+    DISC_SIGN_SIGNED,           /**< Two's complement */
+    DISC_SIGN_SIGN_MAGNITUDE    /**< Unsigned magnitude + separate sign bit */
 } disc_sign_t;
 
 /*******************************************************************************
@@ -160,12 +170,15 @@ typedef struct {
     int           start_bit;    /**< DBC/VSP start bit (-1 if unknown) */
     int           bit_length;   /**< Bit length (0 if unknown) */
     int           byte_order;   /**< DBC byte order: 0=big, 1=little, -1 unknown */
-    char          sign_char;    /**< '+' unsigned, '-' signed, '?' unknown */
-    double        evidence_score;     /**< Phase-local evidence score */
-    double        specificity_score;  /**< Target-phase-vs-other-phase score */
-    double        shape_score;        /**< Bitfield/shape score */
-    double        prior_score;        /**< VSP corpus prior score */
-    double        ambiguity_margin;   /**< Best score minus runner-up */
+    char          sign_char;    /**< '+' unsigned, '-' two's complement,
+                                     'S' sign-magnitude, '?' unknown */
+    int           sign_bit;     /**< Sign-magnitude sign bit (DBC numbering);
+                                     valid only when sign_char == 'S' */
+    double        evidence_score;     /**< Field change in its phase vs baseline */
+    double        specificity_score;  /**< Quiet in phases where it must not move */
+    double        shape_score;        /**< Bit width / rate / sign / role fit */
+    double        prior_score;        /**< VSP corpus prior (same ID and layout) */
+    double        ambiguity_margin;   /**< Score minus best unexplained alternative */
     int           prior_support;      /**< Matched VSP prior support count */
 } disc_candidate_t;
 
@@ -187,7 +200,7 @@ typedef struct {
  ******************************************************************************/
 
 /**
- * @brief Initialize a phase for capturing
+ * @brief Initialize a phase for capturing (allocates; pair with disc_phase_free)
  * @param phase Phase structure to initialize
  */
 void disc_phase_init(disc_phase_t *phase);
@@ -260,9 +273,11 @@ void disc_analyze(const disc_phase_t phases[DISC_NUM_PHASES],
 /**
  * @brief Analyze all phases with raw-frame assistance
  *
- * Performs the same end-to-end discovery as disc_analyze(), but also uses
- * per-phase raw frame sequences to suppress rolling counters and improve
- * bitfield selection. Detected candidates are characterized in-place.
+ * Preferred entry point. Uses per-phase raw frames to search real bitfields,
+ * suppress rolling counters, measure field-level change in every phase, and
+ * check VSP priors against the observed bits. Each found candidate carries
+ * its final layout (start_bit/bit_length/byte_order/sign_char), the same one
+ * the draft DBC/VSP exporters write.
  *
  * @param phases Aggregate phase statistics
  * @param raw_phases Raw frames captured for each phase

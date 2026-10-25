@@ -140,20 +140,80 @@ Phase 5: Gear        (10초)  — P → R → N → D 시프트 [스킵 가능]
 Phase 6: Wheel Speed (15초)  — 저속 주행 30+ km/h [스킵 가능]
 ```
 
-각 Phase 후 사람이 CAN 후보를 고르지 않는다. 캡처가 끝나면 툴이 phase 특이성,
-raw bitfield shape, VSP corpus prior를 합산해 자동 추정한다.
+각 Phase 후 사람이 CAN 후보를 고르지 않는다. 캡처가 끝나면 툴이 자동으로 추정한다:
+
+1. phase마다 CAN ID별 raw frame을 baseline과 비교하고, counter/checksum/상수 바이트를 걸러낸다.
+2. 신호별로 해당 phase에서 많이 변한 ID를 고르고, 변하는 바이트 묶음(region) 안에서 실제 bitfield
+   (시작 비트, 길이, byte order, 부호)를 탐색한다. steering은 unsigned·2의 보수 외에 sign-magnitude
+   (크기 + 별도 부호 비트, 예: Porsche/Audi 0x0A0 `32|12` + 부호 bit 44)도 시도한다.
+3. 후보 필드마다 점수를 매긴다.
+   - **evidence**: 해당 phase에서 그 필드가 baseline 대비 얼마나 변했는지
+   - **specificity**: 그 신호가 움직이면 안 되는 phase에서 조용한지
+     (예: 정차 phase의 wheel speed). 원래 같이 움직이는 phase(주행 중 RPM, 기어 변경 중 브레이크)는 감점하지 않는다.
+   - **shape**: 비트 폭·주기·부호·바이트 순서가 신호 종류에 맞는지. 부호를 허용하는 신호(steering, brake)는
+     부호(최상위) 비트가 바뀌는 순간 값이 이어지는지도 본다. 부호 방식을 잘못 읽으면 0 부근에서 범위
+     절반만큼 튄다(2의 보수를 sign-magnitude로 읽거나 그 반대).
+   - **prior**: VSP corpus에 **같은 ID와 같은 layout**의 신호가 있는지 (ID만 같은 경우는 거의 점수 없음)
+4. 필드 단위 최소 변화량을 넘지 못한 후보(예: 50→51 한 번 바뀐 바이트)는 버린다.
+5. 모든 신호를 함께 배정해 두 신호가 같은 비트를 쓰지 않게 한다. 어떤 신호의 1순위 필드가 다른 신호에
+   더 잘 맞으면 그 신호는 다음 후보로 넘어간다 (예: RPM과 throttle이 같은 phase에서 움직이는 경우).
+
+`confidence`는 증거의 강도와 2순위 후보와의 차이로 정한다. 단독 후보라도 증거가 강하면 HIGH가 될 수 있고,
+비슷한 후보가 남아 있으면 MEDIUM/LOW로 낮아진다. JSON의 `evidence` 객체와 VSP의 `discovery` 블록에서
+점수 구성을 확인할 수 있다.
 
 완료 시 JSON 결과와 함께 작업 디렉터리에 draft DBC와 draft VSP를 생성한다.
 DBC는 raw 값 기준의 호환 초안이고, VSP는 정보가 없는 차량의 profile 시작점이다.
-내장된 prior table과 exact CAN ID/layout이 맞으면 signal layout/scale/unit을 보강한다.
-prior가 없더라도 raw frame을 다시 스캔해 bitfield 길이/시작 비트를 보정하고,
-counter처럼 보이는 증가 필드를 억제한다. wheel speed는 가능한 경우 4개 신호로 분해해 출력한다.
+두 파일은 같은 최종 필드 목록에서 만들어지므로 내용이 서로 같고, JSON에 보고된 layout도 그대로 들어간다.
+prior는 관측한 bitfield와 layout·부호가 맞을 때만 이름/scale/unit/canonical id를 채운다.
+(prior가 관측 필드를 포함하고 남는 비트가 캡처 내내 변하지 않으면 prior layout을 채택한다.)
+scale도 관측값으로 검사한다: 관측 raw 범위가 prior의 min/max 안에 들어야 하고, 브레이크·페달을 뗀 상태,
+idle, 정차 상태(baseline)가 물리값 범위의 아래쪽에 와야 한다. 맞지 않는 prior는 쓰지 않는다.
+DLC는 항상 관측값을 쓴다. wheel speed는 가능한 경우 바퀴별 4개 신호로 분해해 출력한다.
 discover 실행 시에는 기본적으로 `captures/YYYYMMDD_HHMMSS/` 세션 폴더를 만들고,
 각 phase raw dump(`*.frames.tsv`), `manifest.json`, `result.json`,
 `ptcan_discover_draft.dbc`, `ptcan_discover_draft.vsp`를 함께 저장한다.
 원하면 `--dump-dir <DIR>`로 저장 위치를 덮어쓸 수 있다.
-이 prior table은 `tools/gen_can_discover_priors.py`로 `../vehicle-signal-profile/profiles/*.vsp`에서 생성하며, 런타임에는 VSP 저장소가 없어도 된다.
-그래도 low confidence/unresolved 성격의 결과와 checksum/counter, 나머지 bit-packed field는 사람이 검토해 보정해야 한다.
+캡처 버퍼가 넘쳐 버린 frame이 있으면 콘솔에 경고하고 manifest의 `capture_dropped_frames`에 기록하며,
+Hz는 실제로 저장된 frame이 덮는 시간으로 계산한다.
+그래도 LOW confidence 결과, checksum/counter, 나머지 bit-packed field는 사람이 검토해 보정해야 한다.
+
+### 저장된 캡처 다시 분석 (discover_replay)
+
+차량 없이 저장된 세션 폴더로 탐색을 다시 돌릴 수 있다. 엔진을 고친 뒤 실제 캡처로 검증할 때 쓴다:
+
+```bash
+./build/discover_replay captures/20260408_153012            # 결과는 <세션>/replay/ 에 저장
+./build/discover_replay captures/20260408_153012 --out-dir /tmp/replay
+```
+
+phase 길이는 manifest의 `analyzed_duration_s` → `actual_duration_s` → frame timestamp 순으로 정한다.
+캡처 버퍼가 고정 크기였던 예전 세션은 frame이 앞부분만 남아 있으므로, frame이 덮는 시간이 manifest 시간의
+80% 미만이면 그 시간으로 Hz를 계산하고 경고한다.
+
+### Prior table 생성
+
+prior table(`common/can_discover_priors.h`)은 `tools/gen_can_discover_priors.py`로
+`../vehicle-signal-profile/profiles/*.vsp`에서 생성하며, 런타임에는 VSP 저장소가 없어도 된다.
+헤더 상단에 원본 저장소 commit, 파일 수, 입력 digest가 기록된다. DLC가 8을 넘거나 필드가 frame을
+벗어나는 신호, multiplexed 신호는 제외한다. VSP `decode.sign_bit`(sign-magnitude) 신호는 부호 `'S'`와
+부호 비트 위치로 들어가며, 같은 비트를 다른 부호 방식으로 읽은 후보도 부호 전환이 더 매끄러울 때만 이 prior를 채택한다.
+
+```bash
+python3 tools/gen_can_discover_priors.py            # 재생성
+python3 tools/gen_can_discover_priors.py --check    # 현재 헤더가 원본과 일치하는지 확인
+```
+
+### 회귀 테스트
+
+합성 캡처로 탐색 엔진을 검증한다 (RPM/throttle 분리, 같은 메시지의 두 신호, 저속 gateway,
+잡음만 있는 캡처, skip된 phase, 묶음 timestamp, DBC/VSP 일치, cycle time, 512 KB 스레드 스택 등):
+
+```bash
+cd build && ctest --output-on-failure      # 또는 ./build/discover_regression
+```
+
+합성 데이터는 회귀를 막기 위한 것이고 실제 차량 정확도를 보장하지 않는다. 실제 캡처는 `discover_replay`로 확인한다.
 
 ### D-CAN / PT-CAN 자동 감지
 
@@ -177,8 +237,12 @@ JSON 출력에도 `"bus_mode"` 필드가 포함된다.
 
 캡처 중 풀 레인지 입력으로 데이터 타입도 함께 분석:
 
-- **Endianness**: Big/Little-endian (2바이트 시그널)
-- **Signedness**: Signed/Unsigned
+- **Layout**: `start_bit` / `bit_length` / `byte_order`(0=big, 1=little) — DBC 표기 그대로
+- **byte / byte2**: 필드가 걸친 가장 상위 바이트와 그다음 하위 바이트
+- **Endianness**: Big/Little-endian (여러 바이트에 걸친 시그널)
+- **Signedness**: Signed/Unsigned/Sign-magnitude. sign-magnitude는 `sign_char` `'S'`와 `sign_bit`로 보고하고,
+  JSON에는 `"signed":false,"sign_bit":N`, draft VSP에는 `"sign_bit"`, draft DBC에는 크기 신호와 1비트
+  `<Name>_Sign` 신호로 쓴다(vehicle-signal-profile의 `dbc2vsp`/`vsp2dbc`와 같은 규칙).
 - **Raw Range**: 관측 최솟값/최댓값
 - **Confidence**: HIGH/MEDIUM/LOW
 
@@ -189,11 +253,9 @@ JSON 출력에도 `"bus_mode"` 필드가 포함된다.
   "bus_mode":"direct",
   "dbc_path":"ptcan_discover_draft_20260408_153012.dbc",
   "vsp_path":"ptcan_discover_draft_20260408_153012.vsp",
-  "steering":{"can_id":"0x0A5","dlc":8,"hz":100.0,"byte":2,"byte2":3,"score":48.5,"confidence":"HIGH","endian":"big","signed":true,"raw_min":-5420,"raw_max":5380},
-  "rpm":{"can_id":"0x316","dlc":8,"hz":50.0,"byte":2,"byte2":3,"score":35.2,"confidence":"HIGH","endian":"big","signed":false,"raw_min":780,"raw_max":6200},
-  "throttle":{"can_id":"0x1A0","dlc":8,"hz":50.0,"byte":5,"score":28.0,"confidence":"HIGH","signed":false,"raw_min":0,"raw_max":255},
-  "brake":{"can_id":"0x1A0","dlc":8,"hz":50.0,"byte":4,"score":22.0,"confidence":"HIGH","signed":false,"raw_min":0,"raw_max":180},
-  "wheel_speed":{"can_id":"0x1A6","dlc":8,"hz":50.0,"byte":0,"byte2":1,"score":42.0,"confidence":"HIGH","endian":"big","signed":false,"raw_min":0,"raw_max":892}
+  "steering":{"can_id":"0x0A5","dlc":8,"hz":100.0,"byte":3,"byte2":2,"start_bit":16,"bit_length":16,"byte_order":1,"score":104.0,"confidence":"HIGH","evidence":{"phase":60.0,"specificity":20.0,"shape":24.0,"prior":0.0,"prior_support":0,"ambiguity_margin":104.0},"endian":"little","signed":true,"raw_min":-4500,"raw_max":4500},
+  "rpm":{"can_id":"0x0F3","dlc":8,"hz":50.0,"byte":4,"byte2":5,"start_bit":39,"bit_length":16,"byte_order":0,"score":117.0,"confidence":"HIGH","evidence":{"phase":50.0,"specificity":20.0,"shape":47.0,"prior":0.0,"prior_support":0,"ambiguity_margin":27.0},"endian":"big","signed":false,"raw_min":2988,"raw_max":23800},
+  "throttle":{"can_id":"0x0D9","dlc":6,"hz":20.0,"byte":3,"byte2":2,"start_bit":16,"bit_length":12,"byte_order":1,"score":123.0,"confidence":"HIGH","evidence":{"phase":56.0,"specificity":20.0,"shape":31.0,"prior":16.0,"prior_support":7,"ambiguity_margin":44.0},"endian":"little","signed":false,"raw_min":0,"raw_max":4000}
 }
 ```
 
@@ -205,13 +267,16 @@ can_tools/
 │   ├── elm327.c/h       # ELM327 프로토콜 핸들러
 │   ├── stn2255.c/h      # STN2255 확장 (배치 쿼리, STMA 등)
 │   ├── obd_adapter.m/h  # BLE/Classic BT OBD 어댑터 연결
-│   └── can_discover.c/h # PT-CAN 시그널 자동 탐색 엔진
+│   ├── can_discover.c/h # PT-CAN 시그널 자동 탐색 엔진
+│   └── can_discover_priors.h # VSP corpus prior table (생성 파일)
 ├── can_reader/          # 다목적 CAN 도구
 │   └── main.m
 ├── can_discover/        # 시그널 탐색 전용 도구
 │   └── main.m
 ├── vsp_probe/           # VSP acquisition Hz 검증 도구
 │   └── main.m
+├── tools/               # prior 생성기, discover_replay, ref2dbc
+├── tests/               # 탐색 엔진 회귀 테스트 (합성 캡처)
 ├── CMakeLists.txt
 └── build.sh
 ```

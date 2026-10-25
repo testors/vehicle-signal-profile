@@ -19,6 +19,7 @@ add_library(can_discover_core STATIC
 target_include_directories(can_discover_core PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/common
 )
+target_link_libraries(can_discover_core PUBLIC m)
 
 # Shared transport / protocol sources
 set(COMMON_SOURCES
@@ -68,6 +69,28 @@ target_link_libraries(vsp_probe
     "-framework Foundation"
     m
 )
+
+# --- discover_replay (offline re-analysis of a capture session; plain C) ---
+add_executable(discover_replay
+    tools/discover_replay.c
+)
+target_link_libraries(discover_replay
+    can_discover_core
+    m
+)
+
+# --- discover_regression (synthetic engine tests; run with ctest) ---
+enable_testing()
+find_package(Threads REQUIRED)
+add_executable(discover_regression
+    tests/discover_regression.c
+)
+target_link_libraries(discover_regression
+    can_discover_core
+    Threads::Threads
+    m
+)
+add_test(NAME discover_regression COMMAND discover_regression)
 
 message(STATUS "CAN Tools Build Configuration")
 message(STATUS "  Build type: ${CMAKE_BUILD_TYPE}")
