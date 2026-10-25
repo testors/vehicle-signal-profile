@@ -49,7 +49,7 @@ VSP의 `signals[].canonical.id`와 `signals[].acquisition`을 기준으로 CAN f
 
 진단 응답은 VSP 규칙대로 CAN 프레임 하나씩(ISO-TP PCI 포함, 재조립 없음) 해석한다. `decode.mux`가 있으면 mux로 프레임을 고르고(멀티프레임 응답의 CF 순번, 첫 프레임의 `62 DID` 등), 없으면 단일/첫 프레임 앞의 긍정응답 표식(`41 PID`, `62 DID`, `61 LID`)으로 고른다. 수동 CAN도 mux와 `can_frames[].frame_id_mask`를 적용한다. 29-bit CAN ID는 아직 지원하지 않는다.
 
-`--mode auto`는 CAN phase와 OBD phase를 순차 실행한다. `--signals`에는 `rpm,gear,steering,throttle,brake` 같은 의미군, canonical id, 또는 VSP signal name을 지정할 수 있다. STN/OBDLink 계열은 raw periodic scheduler를 사용한다. vLinker 계열은 제조사 확인상 `ATMA`/`STM`/`STMA` monitor mode에서 버스를 silent로 유지하며 periodic message(PM)도 송신하지 않으므로, auto에서는 poll 방식으로 fallback한다.
+`--mode auto`는 CAN phase와 OBD phase를 순차 실행한다. 단, auto는 버스에 상시 송신 프레임이 들리면(PT-CAN 직결 가능성) OBD phase를 건너뛰고 아무것도 송신하지 않는다. OBD 포트에서 질의하려면 `--mode obd`를 명시한다. 차량 버스에 직결한 상태에서는 `--mode can`만 쓴다. `--signals`에는 `rpm,gear,steering,throttle,brake` 같은 의미군, canonical id, 또는 VSP signal name을 지정할 수 있다. STN/OBDLink 계열은 raw periodic scheduler를 사용한다. vLinker 계열은 제조사 확인상 `ATMA`/`STM`/`STMA` monitor mode에서 버스를 silent로 유지하며 periodic message(PM)도 송신하지 않으므로, auto에서는 poll 방식으로 fallback한다.
 
 ## can_reader
 
@@ -61,8 +61,10 @@ D-CAN(OBD 포트) 액티브 쿼리와 PT-CAN 패시브 모니터링을 모두 �
 # BLE 스캔
 ./build/can_reader scan
 
-# D-CAN vs PT-CAN 자동 감지
+# 버스 종류 감지 (수신만 함; 상시 송신 프레임 유무)
 ./build/can_reader detect OBDLink
+# OBD 포트에서만: 01 00 질의까지 보내 D-CAN 여부 확인 (직결 버스에서는 쓰지 말 것)
+./build/can_reader detect OBDLink --probe
 
 # 지원 PID 목록 (D-CAN)
 ./build/can_reader supported OBDLink

@@ -5423,7 +5423,7 @@ static int cli_monitor(const char *device, int seconds,
  *   4. If probe response → "dcan" (confirmed)
  *   5. If no probe response → "unknown" (IGN OFF or not connected)
  */
-static int cli_detect(const char *device) {
+static int cli_detect(const char *device, bool allow_probe) {
     int matchIdx = cli_ble_connect(device);
     char resp[512];
 
@@ -5502,23 +5502,29 @@ static int cli_detect(const char *device) {
         cli_log("Phase 1 result: No CAN frames");
     }
 
-    /* === Phase 2: Probe query (always run) ===
-     * 0100 is a read-only diagnostic request, safe on any bus.
-     * Determines whether standard OBD-II is available regardless of
-     * broadcast traffic detected in Phase 1. */
-    cli_log("Phase 2: Probing with 0100...");
-
-    /* Switch to active mode for probe */
-    [g_ble sendCommand:"ATCSM0" response:resp maxLen:sizeof(resp)];
-    [g_ble sendCommand:"ATSP0" response:resp maxLen:sizeof(resp)];
-
-    char probe_resp[256];
-    if ([g_ble sendCommand:"0100" response:probe_resp maxLen:sizeof(probe_resp)] &&
-        !elm327_is_error_response(probe_resp)) {
-        probe_responded = true;
-        cli_log("Phase 2 result: ECU responded");
+    /* === Phase 2: Probe query (only with --probe) ===
+     * The probe transmits (ACK on, ATSP0 auto search, 0100). On a direct tap of a
+     * vehicle bus such as PT-CAN nothing may be sent, and detect cannot tell a
+     * tap from an OBD port, so it stays receive-only unless asked. */
+    bool probe_sent = false;
+    if (!allow_probe) {
+        cli_log("Phase 2 skipped: receive-only (pass --probe on an OBD port to send 0100)");
     } else {
-        cli_log("Phase 2 result: No ECU response");
+        cli_log("Phase 2: Probing with 0100 (transmits)...");
+        probe_sent = true;
+
+        /* Switch to active mode for probe */
+        [g_ble sendCommand:"ATCSM0" response:resp maxLen:sizeof(resp)];
+        [g_ble sendCommand:"ATSP0" response:resp maxLen:sizeof(resp)];
+
+        char probe_resp[256];
+        if ([g_ble sendCommand:"0100" response:probe_resp maxLen:sizeof(probe_resp)] &&
+            !elm327_is_error_response(probe_resp)) {
+            probe_responded = true;
+            cli_log("Phase 2 result: ECU responded");
+        } else {
+            cli_log("Phase 2 result: No ECU response");
+        }
     }
 
     /*  Phase 1 (frames)  |  Phase 2 (probe)  |  Result
@@ -5532,11 +5538,13 @@ static int cli_detect(const char *device) {
         mode = "dcan";
         cli_log("Result: D-CAN (OBD-II port%s)", frames > 0 ? ", with broadcast" : "");
     } else if (frames > 0) {
-        mode = "ptcan";
-        cli_log("Result: PT-CAN (direct bus tap)");
+        mode = probe_sent ? "ptcan" : "broadcast";
+        cli_log(probe_sent ? "Result: PT-CAN (direct bus tap)"
+                           : "Result: broadcast traffic (direct tap or OBD port with broadcast)");
     } else {
         mode = "unknown";
-        cli_log("Result: undetermined (IGN OFF?)");
+        cli_log(probe_sent ? "Result: undetermined (IGN OFF?)"
+                           : "Result: no traffic (IGN OFF, or an OBD port behind a gateway: try --probe)");
     }
 
     /* Count unique CAN IDs */
@@ -5563,6 +5571,7 @@ static int cli_detect(const char *device) {
     printf(",\"voltage\":%.1f", voltage);
     printf(",\"broadcast\":%s", (frames > 0) ? "true" : "false");
     printf(",\"frames_received\":%d", frames);
+    printf(",\"probe_sent\":%s", probe_sent ? "true" : "false");
     printf(",\"probe_responded\":%s", probe_responded ? "true" : "false");
     printf(",\"unique_can_ids\":%d", unique_ids);
     if (unique_ids > 0) {
@@ -5993,7 +6002,7 @@ static void cli_print_usage(void) {
     fprintf(stderr, "  macos_obd_reader supported <device>                  List supported PIDs\n");
     fprintf(stderr, "  macos_obd_reader monitor <device> [secs] [--out FILE] [CAN_IDs]  CAN passive monitor\n");
     fprintf(stderr, "  macos_obd_reader raw <device> <command>              Send raw AT command\n");
-    fprintf(stderr, "  macos_obd_reader detect <device>                     Auto-detect D-CAN vs PT-CAN\n");
+    fprintf(stderr, "  macos_obd_reader detect <device> [--probe]           Detect bus type (receive-only; --probe sends 0100)\n");
     fprintf(stderr, "  macos_obd_reader discover <device> [--dump-dir DIR] Auto-discover PT-CAN signals\n");
     fprintf(stderr, "  macos_obd_reader p992 list                           List 992 XML channels + mappings\n");
     fprintf(stderr, "  macos_obd_reader p992 read <device> [channel...]     Read 992 profile channels once\n");
@@ -6008,7 +6017,7 @@ static void cli_print_usage(void) {
     fprintf(stderr, "  <device>:   BLE name prefix match (e.g., OBDLink, vLinker)\n");
     fprintf(stderr, "  <CAN_IDs>:  Optional hex filter IDs (e.g., 0A5 1A0 316)\n");
     fprintf(stderr, "\n");
-    fprintf(stderr, "  detect:    Passive listen 3s to determine bus type (D-CAN/PT-CAN)\n");
+    fprintf(stderr, "  detect:    Listen 3s for broadcast traffic; --probe also sends 0100 (OBD port only)\n");
     fprintf(stderr, "  discover:  Interactive guided signal discovery + default capture dump\n");
     fprintf(stderr, "             Default dump dir: captures/YYYYMMDD_HHMMSS\n");
     fprintf(stderr, "  monitor:   Silent mode (no ACK) — safe for direct CAN bus tap\n");
@@ -6123,10 +6132,11 @@ static int cli_main(int argc, const char *argv[]) {
         }
     } else if (strcmp(subcmd, "detect") == 0) {
         if (argc < 3) {
-            fprintf(stderr, "[ERROR] Usage: detect <device>\n");
+            fprintf(stderr, "[ERROR] Usage: detect <device> [--probe]\n");
             ret = 1;
         } else {
-            ret = cli_detect(argv[2]);
+            bool allow_probe = argc > 3 && strcmp(argv[3], "--probe") == 0;
+            ret = cli_detect(argv[2], allow_probe);
         }
     } else if (strcmp(subcmd, "discover") == 0) {
         if (argc < 3) {

@@ -81,6 +81,7 @@ typedef struct {
 typedef struct {
     __unsafe_unretained NSArray<VSPProbeItem *> *items;
     bool diagnostic;
+    int frames;            /* every frame received, matched or not */
 } vsp_monitor_context_t;
 
 static volatile sig_atomic_t g_interrupted = 0;
@@ -705,6 +706,7 @@ static void match_diagnostic_frame(NSArray<VSPProbeItem *> *items,
 static void monitor_callback(const can_frame_t *frame, void *context) {
     vsp_monitor_context_t *ctx = (vsp_monitor_context_t *)context;
     if (!ctx || !frame) return;
+    ctx->frames += 1;
 
     double ts = frame->timestamp_ms > 0 ? (double)frame->timestamp_ms : (double)now_ms();
 
@@ -805,12 +807,12 @@ static bool setup_passive_can(OBDAdapter *adapter,
     return true;
 }
 
-static void run_monitor_phase(OBDAdapter *adapter,
-                              const char *monitorCmd,
-                              NSArray<VSPProbeItem *> *items,
-                              bool diagnostic,
-                              double seconds) {
-    vsp_monitor_context_t ctx = { .items = items, .diagnostic = diagnostic };
+static int run_monitor_phase(OBDAdapter *adapter,
+                             const char *monitorCmd,
+                             NSArray<VSPProbeItem *> *items,
+                             bool diagnostic,
+                             double seconds) {
+    vsp_monitor_context_t ctx = { .items = items, .diagnostic = diagnostic, .frames = 0 };
     [adapter startMonitorWithCallback:monitor_callback context:&ctx];
     [adapter sendRawString:[[NSString stringWithFormat:@"%s\r", monitorCmd] UTF8String]];
 
@@ -826,6 +828,14 @@ static void run_monitor_phase(OBDAdapter *adapter,
     [adapter stopMonitor];
     [adapter sendRawString:"\r"];
     [adapter runLoopFor:0.2];
+    return ctx.frames;
+}
+
+/* Frames heard in a short receive-only listen (silent monitor, no filters). */
+static int listen_for_broadcast(OBDAdapter *adapter, double seconds) {
+    bool stnDetected = false;
+    if (!setup_passive_can(adapter, @[], &stnDetected)) return -1;
+    return run_monitor_phase(adapter, stnDetected ? "STMA" : "ATMA", @[], false, seconds);
 }
 
 static bool run_can_phase(OBDAdapter *adapter,
@@ -844,8 +854,9 @@ static bool run_can_phase(OBDAdapter *adapter,
     phaseOut[@"stn_detected"] = @(stnDetected);
 
     int64_t startMs = now_ms();
-    run_monitor_phase(adapter, monitorCmd.UTF8String, items, false, seconds);
+    int frames = run_monitor_phase(adapter, monitorCmd.UTF8String, items, false, seconds);
     double phaseDuration = (double)(now_ms() - startMs) / 1000.0;
+    phaseOut[@"frames_received"] = @(frames);
     phaseOut[@"actual_duration_s"] = @(((double)llround(phaseDuration * 1000.0)) / 1000.0);
     for (VSPProbeItem *item in items) item.testDurationS = phaseDuration;
     return true;
@@ -1327,10 +1338,27 @@ int main(int argc, const char *argv[]) {
         int64_t startMs = now_ms();
         bool ok = true;
 
+        int broadcastFrames = -1;
         if (canItems.count > 0 && (opts.mode == VSPProbeModeAuto || opts.mode == VSPProbeModeCAN)) {
             NSMutableDictionary *phase = [NSMutableDictionary dictionary];
             ok = run_can_phase(adapter, canItems, opts.duration_s, phase);
+            broadcastFrames = [phase[@"frames_received"] intValue];
             [phases addObject:phase];
+        }
+        /* Auto mode never transmits next to broadcast traffic: that may be a direct
+         * tap of a vehicle bus (PT-CAN), where OBD requests must not be sent. On an
+         * OBD port with broadcast, ask for the OBD phase with --mode obd. */
+        if (ok && !g_interrupted && obdItems.count > 0 && opts.mode == VSPProbeModeAuto) {
+            /* The CAN phase only passes the profile's IDs; listen unfiltered when it heard none. */
+            if (broadcastFrames <= 0) broadcastFrames = listen_for_broadcast(adapter, 1.5);
+            if (broadcastFrames != 0) {
+                fprintf(stderr, "[INFO] OBD phase skipped: %d broadcast frames heard (possible direct bus tap); "
+                                "use --mode obd on an OBD port\n", broadcastFrames);
+                [phases addObject:@{ @"name": @"obd", @"skipped": @YES,
+                                     @"reason": @"broadcast traffic heard; auto mode does not transmit on a possible direct bus tap",
+                                     @"broadcast_frames": @(broadcastFrames) }];
+                obdItems = [NSMutableArray array];
+            }
         }
         if (ok && !g_interrupted &&
             obdItems.count > 0 && (opts.mode == VSPProbeModeAuto || opts.mode == VSPProbeModeOBD)) {
