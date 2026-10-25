@@ -36,16 +36,18 @@ VSP의 `signals[].canonical.id`와 `signals[].acquisition`을 기준으로 CAN f
 
 ```bash
 # 하드웨어 없이 선택 계획만 확인
-./build/vsp_probe ../vehicle-signal-profile/profiles/porsche__911_gt3__992.vsp --plan
+./build/vsp_probe ../vehicle-signal-profile/profiles/porsche__911_gt3__992__can_obd.vsp --plan
 
 # CAN acquisition만 5Hz 목표로 10초 검증
-./build/vsp_probe ../vehicle-signal-profile/profiles/porsche__911_gt3__992.vsp \
+./build/vsp_probe ../vehicle-signal-profile/profiles/porsche__911_gt3__992__can_obd.vsp \
   --device vLinker --mode can --hz 5 --seconds 10
 
 # OBD/UDS acquisition만 5Hz 목표로 검증
-./build/vsp_probe ../vehicle-signal-profile/profiles/porsche__911_gt3__992.vsp \
+./build/vsp_probe ../vehicle-signal-profile/profiles/porsche__911_gt3__992__can_obd.vsp \
   --device vLinker --mode obd --hz 5 --seconds 10
 ```
+
+진단 응답은 VSP 규칙대로 CAN 프레임 하나씩(ISO-TP PCI 포함, 재조립 없음) 해석한다. `decode.mux`가 있으면 mux로 프레임을 고르고(멀티프레임 응답의 CF 순번, 첫 프레임의 `62 DID` 등), 없으면 단일/첫 프레임 앞의 긍정응답 표식(`41 PID`, `62 DID`, `61 LID`)으로 고른다. 수동 CAN도 mux와 `can_frames[].frame_id_mask`를 적용한다. 29-bit CAN ID는 아직 지원하지 않는다.
 
 `--mode auto`는 CAN phase와 OBD phase를 순차 실행한다. `--signals`에는 `rpm,gear,steering,throttle,brake` 같은 의미군, canonical id, 또는 VSP signal name을 지정할 수 있다. STN/OBDLink 계열은 raw periodic scheduler를 사용한다. vLinker 계열은 제조사 확인상 `ATMA`/`STM`/`STMA` monitor mode에서 버스를 silent로 유지하며 periodic message(PM)도 송신하지 않으므로, auto에서는 poll 방식으로 fallback한다.
 

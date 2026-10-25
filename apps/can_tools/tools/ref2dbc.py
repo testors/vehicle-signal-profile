@@ -55,7 +55,8 @@ def find_first_zlib(raw):
 def try_decompress(block):
     for wbits in (15, -15, zlib.MAX_WBITS, -zlib.MAX_WBITS):
         try:
-            text = zlib.decompress(block, wbits).decode("ascii", errors="replace")
+            # VBOX text is UTF-8 (units such as "\u00b0C", "m/s\u00b2").
+            text = zlib.decompress(block, wbits).decode("utf-8", errors="replace")
             return text
         except Exception:
             pass
@@ -154,6 +155,26 @@ def format_number(value):
     return f"{value:.12g}"
 
 
+def vbox_motorola_start_to_dbc(start_bit, bit_len):
+    """VBOX numbers a Motorola field by its LSB in the payload read as one 64-bit
+    big-endian integer (bit 0 = LSB of byte 7). DBC numbers the field's MSB as
+    byte * 8 + bit_in_byte, so the MSB at integer bit m = start + len - 1 is
+    8 * (7 - m // 8) + m % 8. Checked against same-meaning AiM channels: 93 of 93
+    named BE signals (engine speed, wheel speeds, pedals) agree only under this rule."""
+    msb = start_bit + bit_len - 1
+    return 8 * (7 - msb // 8) + msb % 8
+
+
+def field_top_byte(start_bit, bit_len, byte_order):
+    """Highest byte index a DBC field touches."""
+    if byte_order == 1:
+        return (start_bit + bit_len - 1) // 8
+    bit = start_bit
+    for _ in range(bit_len - 1):
+        bit = bit + 15 if bit % 8 == 0 else bit - 1
+    return bit // 8
+
+
 def build_messages(rows):
     messages = {}
 
@@ -167,6 +188,8 @@ def build_messages(rows):
         raw_min = parse_float(row["Min"], default=0.0)
         raw_max = parse_float(row["Max"], default=0.0)
         byte_order = parse_byte_order(row["ByteOrder"] or "1")
+        if byte_order == 0:
+            start_bit = vbox_motorola_start_to_dbc(start_bit, bit_len)
         sign = "-" if parse_signed(row["Signed"]) else "+"
 
         signal_name = row["Signal"].strip() or f"Signal_{start_bit}"
@@ -183,6 +206,9 @@ def build_messages(rows):
             },
         )
 
+        # VBOX DLC values are sometimes shorter than the bytes the signals use.
+        needed = field_top_byte(start_bit, bit_len, byte_order) + 1
+        dlc = max(dlc, min(needed, 8))
         if dlc > messages[can_id]["dlc"]:
             messages[can_id]["dlc"] = dlc
 

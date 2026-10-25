@@ -59,6 +59,7 @@ typedef struct {
 @property (nonatomic, copy) NSString *requestBareHex;
 @property (nonatomic, copy) NSString *positiveMarkerHex;
 @property (nonatomic, assign) uint32_t frameId;
+@property (nonatomic, assign) uint32_t frameIdMask;      /* can_frames[].frame_id_mask, 0 = full id */
 @property (nonatomic, assign) uint32_t txId;
 @property (nonatomic, assign) uint32_t rxId;
 @property (nonatomic, assign) int attempts;
@@ -235,6 +236,9 @@ static NSString *positive_marker_for_request(NSString *requestHex) {
     if (reqLen >= 3 && req[0] == 0x22) {
         return [NSString stringWithFormat:@"62%02X%02X", req[1], req[2]];
     }
+    if (reqLen >= 2 && req[0] == 0x21) {
+        return [NSString stringWithFormat:@"61%02X", req[1]];
+    }
     return nil;
 }
 
@@ -382,6 +386,17 @@ static NSDictionary *fallback_query_from_signal(NSDictionary *signal) {
     return q;
 }
 
+static uint32_t frame_id_mask_for(NSDictionary *profile, uint32_t frameId) {
+    NSArray *frames = profile[@"can_frames"];
+    if (![frames isKindOfClass:[NSArray class]]) return 0;
+    for (NSDictionary *frame in frames) {
+        if (![frame isKindOfClass:[NSDictionary class]]) continue;
+        if ([num_or_nil(frame[@"frame_id"]) unsignedIntValue] != frameId) continue;
+        return [num_or_nil(frame[@"frame_id_mask"]) unsignedIntValue];
+    }
+    return 0;
+}
+
 static NSArray<VSPProbeItem *> *select_items(NSDictionary *profile,
                                              const vsp_probe_options_t *opts) {
     NSMutableSet<NSString *> *canonicalTargets = [NSMutableSet set];
@@ -421,6 +436,7 @@ static NSArray<VSPProbeItem *> *select_items(NSDictionary *profile,
             NSNumber *frameId = num_or_nil(acq[@"frame_id"]);
             if (!frameId) continue;
             item.frameId = frameId.unsignedIntValue;
+            item.frameIdMask = frame_id_mask_for(profile, item.frameId);
         } else {
             NSString *qid = acq[@"query_id"];
             NSDictionary *q = ([qid isKindOfClass:[NSString class]]) ? queries[qid] : nil;
@@ -552,6 +568,34 @@ static bool decode_signal_value(NSDictionary *signal,
     return true;
 }
 
+/* The signal's mux field, decoded like the signal itself. False when there is none
+ * or it lacks a position (DBC style {"value": n}), so callers fall back to markers. */
+static bool signal_mux(NSDictionary *signal, uint64_t *valueOut, int *startOut, int *bitsOut, bool *bigOut) {
+    NSDictionary *decode = signal[@"decode"];
+    if (![decode isKindOfClass:[NSDictionary class]]) return false;
+    NSDictionary *mux = decode[@"mux"];
+    if (![mux isKindOfClass:[NSDictionary class]]) return false;
+    NSNumber *value = num_or_nil(mux[@"value"]);
+    NSNumber *start = num_or_nil(mux[@"start_bit"]);
+    NSNumber *bits = num_or_nil(mux[@"bit_length"]);
+    if (!value || !start || !bits || bits.intValue <= 0 || bits.intValue > 63) return false;
+    if (valueOut) *valueOut = value.unsignedLongLongValue;
+    if (startOut) *startOut = start.intValue;
+    if (bitsOut) *bitsOut = bits.intValue;
+    if (bigOut) *bigOut = [mux[@"byte_order"] isEqual:@"big_endian"];
+    return true;
+}
+
+static bool signal_mux_matches(NSDictionary *signal, const uint8_t *data, int len) {
+    uint64_t value = 0;
+    int start = 0, bits = 0;
+    bool big = false;
+    if (!signal_mux(signal, &value, &start, &bits, &big)) return true;
+    uint64_t raw = big ? extract_bits_big_dbc(data, len, start, bits)
+                       : extract_bits_little(data, len, start, bits);
+    return raw == value;
+}
+
 static int extract_line_hex(const char *line, char *hexOut, size_t hexOutLen) {
     size_t j = 0;
     if (!line || !hexOut || hexOutLen == 0) return 0;
@@ -567,88 +611,6 @@ static bool parse_hex_byte_c(const char *hex, uint8_t *out) {
     int lo = hex_value(hex[1]);
     if (hi < 0 || lo < 0) return false;
     *out = (uint8_t)((hi << 4) | lo);
-    return true;
-}
-
-static bool parse_isotp_payload(const char *response,
-                                uint8_t *payloadOut,
-                                int maxPayload,
-                                int *payloadLenOut,
-                                uint32_t *respIdOut) {
-    if (payloadLenOut) *payloadLenOut = 0;
-    if (!response || !payloadOut || maxPayload <= 0) return false;
-
-    char buf[4096];
-    snprintf(buf, sizeof(buf), "%s", response);
-
-    int payloadLen = 0;
-    int totalLen = -1;
-    bool started = false;
-    uint32_t respId = UINT32_MAX;
-
-    for (char *line = strtok(buf, "\r\n"); line; line = strtok(NULL, "\r\n")) {
-        char hex[256];
-        int hexLen = extract_line_hex(line, hex, sizeof(hex));
-        if (hexLen < 5) continue;
-
-        unsigned int idVal = 0;
-        int idHexLen = 3;
-        if (sscanf(hex, "%3x", &idVal) != 1) continue;
-
-        const char *dataHex = hex + idHexLen;
-        int dataHexLen = hexLen - idHexLen;
-        if (dataHexLen < 2) continue;
-
-        uint8_t data[32];
-        int dataLen = 0;
-        for (int i = 0; i + 1 < dataHexLen && dataLen < (int)sizeof(data); i += 2) {
-            if (!parse_hex_byte_c(dataHex + i, &data[dataLen])) break;
-            dataLen++;
-        }
-        if (dataLen <= 0) continue;
-
-        uint8_t pci = data[0];
-        uint8_t frameType = (uint8_t)(pci >> 4);
-        if (frameType == 0x0) {
-            int len = pci & 0x0F;
-            if (len > dataLen - 1) len = dataLen - 1;
-            if (len <= 0) continue;
-            if (len > maxPayload) len = maxPayload;
-            memcpy(payloadOut, data + 1, (size_t)len);
-            payloadLen = len;
-            totalLen = len;
-            respId = idVal;
-            started = true;
-            break;
-        }
-
-        if (frameType == 0x1) {
-            if (dataLen < 2) continue;
-            totalLen = ((pci & 0x0F) << 8) | data[1];
-            int copyLen = dataLen - 2;
-            if (copyLen > maxPayload) copyLen = maxPayload;
-            memcpy(payloadOut, data + 2, (size_t)copyLen);
-            payloadLen = copyLen;
-            respId = idVal;
-            started = true;
-            if (payloadLen >= totalLen) break;
-            continue;
-        }
-
-        if (frameType == 0x2 && started) {
-            int copyLen = dataLen - 1;
-            if (payloadLen + copyLen > maxPayload) copyLen = maxPayload - payloadLen;
-            if (copyLen <= 0) break;
-            memcpy(payloadOut + payloadLen, data + 1, (size_t)copyLen);
-            payloadLen += copyLen;
-            if (totalLen >= 0 && payloadLen >= totalLen) break;
-        }
-    }
-
-    if (!started || payloadLen <= 0) return false;
-    if (totalLen >= 0 && payloadLen > totalLen) payloadLen = totalLen;
-    if (payloadLenOut) *payloadLenOut = payloadLen;
-    if (respIdOut) *respIdOut = respId;
     return true;
 }
 
@@ -716,6 +678,30 @@ static void mark_sample(VSPProbeItem *item,
     }
 }
 
+/* Diagnostic layouts are per CAN frame, PCI byte(s) included (VSP_RUNTIME_SPEC.md,
+ * "Diagnostic Response Frames"). A signal with a mux is matched by it, which also
+ * selects consecutive frames; one without falls back to the positive-response marker
+ * at the start of a single or first frame. */
+static void match_diagnostic_frame(NSArray<VSPProbeItem *> *items,
+                                   NSString *queryKey,
+                                   const can_frame_t *frame,
+                                   double ts) {
+    uint8_t payload[64];
+    int payloadLen = 0;
+    bool initial = frame_initial_isotp_payload(frame, payload, sizeof(payload), &payloadLen);
+
+    for (VSPProbeItem *item in items) {
+        if (queryKey && ![item.queryKey isEqualToString:queryKey]) continue;
+        if (item.rxId != 0 && item.rxId != frame->can_id) continue;
+        if (signal_mux(item.signal, NULL, NULL, NULL, NULL)) {
+            if (!signal_mux_matches(item.signal, frame->data, frame->dlc)) continue;
+        } else if (!initial || !payload_has_marker(payload, payloadLen, item.positiveMarkerHex)) {
+            continue;
+        }
+        mark_sample(item, ts, frame->data, frame->dlc, frame->data, frame->dlc);
+    }
+}
+
 static void monitor_callback(const can_frame_t *frame, void *context) {
     vsp_monitor_context_t *ctx = (vsp_monitor_context_t *)context;
     if (!ctx || !frame) return;
@@ -724,22 +710,15 @@ static void monitor_callback(const can_frame_t *frame, void *context) {
 
     if (!ctx->diagnostic) {
         for (VSPProbeItem *item in ctx->items) {
-            if (item.frameId == frame->can_id) {
-                mark_sample(item, ts, frame->data, frame->dlc, frame->data, frame->dlc);
-            }
+            uint32_t mask = item.frameIdMask ? item.frameIdMask : UINT32_MAX;
+            if ((item.frameId & mask) != (frame->can_id & mask)) continue;
+            if (!signal_mux_matches(item.signal, frame->data, frame->dlc)) continue;
+            mark_sample(item, ts, frame->data, frame->dlc, frame->data, frame->dlc);
         }
         return;
     }
 
-    uint8_t payload[64];
-    int payloadLen = 0;
-    if (!frame_initial_isotp_payload(frame, payload, sizeof(payload), &payloadLen)) return;
-
-    for (VSPProbeItem *item in ctx->items) {
-        if (item.rxId != 0 && item.rxId != frame->can_id) continue;
-        if (!payload_has_marker(payload, payloadLen, item.positiveMarkerHex)) continue;
-        mark_sample(item, ts, payload, payloadLen, frame->data, frame->dlc);
-    }
+    match_diagnostic_frame(ctx->items, nil, frame, ts);
 }
 
 static void send_best_effort(OBDAdapter *adapter, const char *cmd) {
@@ -814,8 +793,12 @@ static bool setup_passive_can(OBDAdapter *adapter,
     if (stnDetected) {
         send_best_effort(adapter, "STFAC");
         for (NSNumber *n in unique_can_ids_for_items(items, false)) {
+            uint32_t mask = 0x7FF;
+            for (VSPProbeItem *item in items) {
+                if (item.frameId == n.unsignedIntValue && item.frameIdMask) mask = item.frameIdMask & 0x7FF;
+            }
             char cmd[32];
-            snprintf(cmd, sizeof(cmd), "STFAP %03X,7FF", n.unsignedIntValue);
+            snprintf(cmd, sizeof(cmd), "STFAP %03X,%03X", n.unsignedIntValue & mask, mask);
             send_best_effort(adapter, cmd);
         }
     }
@@ -1030,6 +1013,22 @@ static bool setup_poll_obd(OBDAdapter *adapter) {
     return true;
 }
 
+/* One ELM327 response line with headers on: 3 hex digits of 11-bit ID, then bytes. */
+static bool parse_response_frame_line(const char *line, can_frame_t *frame) {
+    char hex[256];
+    int hexLen = extract_line_hex(line, hex, sizeof(hex));
+    if (hexLen < 5) return false;
+    unsigned int idVal = 0;
+    if (sscanf(hex, "%3x", &idVal) != 1) return false;
+    frame->can_id = idVal;
+    frame->dlc = 0;
+    for (int i = 3; i + 1 < hexLen && frame->dlc < 8; i += 2) {
+        if (!parse_hex_byte_c(hex + i, &frame->data[frame->dlc])) break;
+        frame->dlc++;
+    }
+    return frame->dlc > 0;
+}
+
 static bool poll_query_once(OBDAdapter *adapter,
                             VSPProbeItem *queryItem,
                             NSArray<VSPProbeItem *> *allItems,
@@ -1061,21 +1060,19 @@ static bool poll_query_once(OBDAdapter *adapter,
         return false;
     }
 
-    uint8_t payload[128];
-    int payloadLen = 0;
-    uint32_t respId = 0;
-    if (!parse_isotp_payload(resp, payload, sizeof(payload), &payloadLen, &respId)) {
-        return false;
-    }
-
+    /* With ATH1 every response line is one CAN frame "ID PCI DATA..."; decode each
+     * frame like the monitor path does instead of the reassembled payload. */
     double ts = (double)now_ms();
-    for (VSPProbeItem *item in allItems) {
-        if (![item.queryKey isEqualToString:queryItem.queryKey]) continue;
-        if (item.rxId != 0 && respId != UINT32_MAX && item.rxId != respId) continue;
-        if (!payload_has_marker(payload, payloadLen, item.positiveMarkerHex)) continue;
-        mark_sample(item, ts, payload, payloadLen, payload, payloadLen);
+    int frames = 0;
+    char buf[sizeof(resp)];
+    snprintf(buf, sizeof(buf), "%s", resp);
+    for (char *line = strtok(buf, "\r\n"); line; line = strtok(NULL, "\r\n")) {
+        can_frame_t frame = {0};
+        if (!parse_response_frame_line(line, &frame)) continue;
+        frames += 1;
+        match_diagnostic_frame(allItems, queryItem.queryKey, &frame, ts);
     }
-    return true;
+    return frames > 0;
 }
 
 static bool run_poll_obd_phase(OBDAdapter *adapter,
