@@ -509,6 +509,15 @@ static bool decode_signal_value(NSDictionary *signal,
         }
     }
 
+    /* Sign-magnitude: raw is the magnitude, sign_bit=1 negates it. */
+    NSNumber *signBit = num_or_nil(decode[@"sign_bit"]);
+    if (signBit && !isSigned) {
+        int sb = signBit.intValue;
+        if (sb >= 0 && sb / 8 < dataLen && ((data[sb / 8] >> (sb % 8)) & 1)) {
+            signedRaw = -signedRaw;
+        }
+    }
+
     double factor = [decode[@"factor"] respondsToSelector:@selector(doubleValue)] ?
                     [decode[@"factor"] doubleValue] : 1.0;
     double offset = [decode[@"offset"] respondsToSelector:@selector(doubleValue)] ?
