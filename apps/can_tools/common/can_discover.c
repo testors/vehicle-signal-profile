@@ -326,14 +326,44 @@ const char *disc_bus_mode_name(disc_bus_mode_t mode) {
     return s_bus_mode_names[mode];
 }
 
+/** No rate-limited gateway relays a message at or above this rate. */
+#define DISC_FAST_ID_HZ           20.0
+/** Fast IDs needed for a direct tap (one chatty node is not enough). */
+#define DISC_DIRECT_MIN_FAST_IDS  2
+/** "Fast message" rate for RPM / wheel speed scoring. */
+#define DISC_GATEWAY_FAST_HZ      1.0
+#define DISC_DIRECT_FAST_HZ_MIN   5.0
+#define DISC_DIRECT_FAST_HZ_MAX   30.0
+
+/** Linear-interpolated percentile (q in 0..1) of an ascending array. */
+static double sorted_percentile(const double *v, int n, double q) {
+    if (n <= 0) return 0.0;
+    double pos = q * (double)(n - 1);
+    int lo = (int)pos;
+    int hi = (lo + 1 < n) ? lo + 1 : lo;
+    double w = pos - (double)lo;
+    return v[lo] * (1.0 - w) + v[hi] * w;
+}
+
 /**
  * Detect bus mode from baseline capture statistics.
- * Computes Hz for each CAN ID, takes the median.
- * median < 10.0 → GATEWAY (D-CAN via ZGW), else DIRECT (PT-CAN).
+ *
+ * Behind a central gateway (OBD port, e.g. BMW ZGW) only a few messages are
+ * relayed, at low rates, so even the fastest IDs are slow. A direct tap always
+ * carries some fast powertrain/chassis messages, however many slow body
+ * messages share the bus, so the median rate does not separate the two: a
+ * 992 GT3 chassis tap has a 4 Hz median but six IDs at 25-50 Hz.
+ *
+ *   >= DISC_DIRECT_MIN_FAST_IDS IDs at >= DISC_FAST_ID_HZ -> DIRECT, else GATEWAY.
+ *
+ * out_hz_threshold is the rate RPM / wheel speed scoring treats as fast:
+ * 1 Hz behind a gateway; on a direct tap 0.8 x the 75th-percentile ID rate,
+ * clamped to 5..30 Hz, so a bus whose engine messages run at 10 Hz still
+ * credits them while a typical PT-CAN keeps 30 Hz.
  */
 static disc_bus_mode_t detect_bus_mode(const disc_phase_t *baseline,
                                        double *out_hz_threshold) {
-    *out_hz_threshold = 30.0;
+    *out_hz_threshold = DISC_DIRECT_FAST_HZ_MAX;
     if (!baseline || baseline->id_count == 0 || baseline->duration_s <= 0) {
         return DISC_BUS_DIRECT;
     }
@@ -342,19 +372,20 @@ static disc_bus_mode_t detect_bus_mode(const disc_phase_t *baseline,
     double *hz_values = (double *)malloc((size_t)n * sizeof(*hz_values));
     if (!hz_values) return DISC_BUS_DIRECT;
 
+    int fast_ids = 0;
     for (int i = 0; i < n; i++) {
         hz_values[i] = (double)baseline->ids[i].frame_count / baseline->duration_s;
+        if (hz_values[i] >= DISC_FAST_ID_HZ) fast_ids++;
     }
     qsort(hz_values, (size_t)n, sizeof(double), cmp_double);
-
-    double median = (n % 2 == 1) ? hz_values[n / 2]
-                                 : (hz_values[n / 2 - 1] + hz_values[n / 2]) / 2.0;
+    double p75 = sorted_percentile(hz_values, n, 0.75);
     free(hz_values);
 
-    if (median < 10.0) {
-        *out_hz_threshold = 1.0;
+    if (fast_ids < DISC_DIRECT_MIN_FAST_IDS) {
+        *out_hz_threshold = DISC_GATEWAY_FAST_HZ;
         return DISC_BUS_GATEWAY;
     }
+    *out_hz_threshold = clamp_score(0.8 * p75, DISC_DIRECT_FAST_HZ_MIN, DISC_DIRECT_FAST_HZ_MAX);
     return DISC_BUS_DIRECT;
 }
 

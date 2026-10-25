@@ -871,6 +871,12 @@ static int expected_steering_sign_bit(const scenario_t *sc) {
     return (sc->gen == gen_sm_prior || sc->gen == gen_sm_no_prior) ? 44 : 0;
 }
 
+/** Only gen_gateway relays every ID slowly; the rest are direct taps, including
+ *  busy_bus where 20 slow sensor IDs pull the median rate below 10 Hz. */
+static disc_bus_mode_t expected_bus_mode(const scenario_t *sc) {
+    return sc->gen == gen_gateway ? DISC_BUS_GATEWAY : DISC_BUS_DIRECT;
+}
+
 static bool run_scenario(int index, double *elapsed_ms) {
     const scenario_t *sc = &g_scenarios[index];
     bool ok = true;
@@ -883,6 +889,8 @@ static bool run_scenario(int index, double *elapsed_ms) {
     *elapsed_ms = now_ms() - t0;
 
     printf("[%s] (%.1f ms, bus=%s)\n", sc->name, *elapsed_ms, disc_bus_mode_name(r.bus_mode));
+    CHECK(r.bus_mode == expected_bus_mode(sc), "bus mode %s, expected %s",
+          disc_bus_mode_name(r.bus_mode), disc_bus_mode_name(expected_bus_mode(sc)));
     for (int s = 0; s < DISC_SIG_COUNT; s++) {
         const disc_candidate_t *c = &r.signals[s];
         const expect_t *e = &sc->expect[s];

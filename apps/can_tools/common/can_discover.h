@@ -121,8 +121,8 @@ typedef struct {
  ******************************************************************************/
 
 typedef enum {
-    DISC_BUS_DIRECT = 0,        /**< Direct PT-CAN (high Hz, ~50-100 Hz) */
-    DISC_BUS_GATEWAY            /**< D-CAN via ZGW gateway (low Hz, ~0.1-5 Hz) */
+    DISC_BUS_DIRECT = 0,        /**< Direct tap: some IDs at >= 20 Hz */
+    DISC_BUS_GATEWAY            /**< Behind a gateway: every ID slow (~0.1-5 Hz) */
 } disc_bus_mode_t;
 
 /*******************************************************************************
@@ -362,9 +362,10 @@ const char *disc_sign_name(disc_sign_t s);
 /**
  * @brief Detect bus mode from baseline capture
  *
- * Computes median Hz across all CAN IDs in the baseline.
- * If median < 10.0, returns DISC_BUS_GATEWAY (D-CAN via ZGW);
- * otherwise DISC_BUS_DIRECT (direct PT-CAN).
+ * Returns DISC_BUS_DIRECT when at least two baseline CAN IDs run at 20 Hz or
+ * faster (a direct tap always carries fast powertrain/chassis messages, even
+ * among many slow body messages); otherwise DISC_BUS_GATEWAY (OBD port behind
+ * a rate-limiting gateway such as BMW ZGW, where every relayed ID is slow).
  *
  * @param baseline Baseline phase capture
  * @return Detected bus mode

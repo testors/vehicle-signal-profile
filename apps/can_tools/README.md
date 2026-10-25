@@ -217,18 +217,22 @@ cd build && ctest --output-on-failure      # 또는 ./build/discover_regression
 
 ### D-CAN / PT-CAN 자동 감지
 
-Baseline 캡처의 통계(전체 CAN ID의 median Hz)로 버스 접속 모드를 자동 판별한다:
+Baseline 캡처의 CAN ID별 Hz로 버스 접속 모드를 자동 판별한다:
 
-| 모드 | 판정 조건 | Hz 임계값 | 경로 |
-|------|----------|-----------|------|
-| **DIRECT** (PT-CAN) | median Hz ≥ 10 | 30.0 Hz | 어댑터 → PT-CAN 직결 |
-| **GATEWAY** (D-CAN) | median Hz < 10 | 1.0 Hz | 어댑터 → OBD 포트 → ZGW → PT-CAN |
+| 모드 | 판정 조건 | "빠른 메시지" 기준 | 경로 |
+|------|----------|-------------------|------|
+| **DIRECT** | 20 Hz 이상인 ID가 2개 이상 | ID Hz 75번째 백분위 × 0.8 (5~30 Hz) | 어댑터 → CAN 직결 |
+| **GATEWAY** | 그 외 | 1.0 Hz | 어댑터 → OBD 포트 → 게이트웨이(ZGW 등) → PT-CAN |
 
-D-CAN 경유 시 ZGW가 PT-CAN 메시지를 저속으로 중계하기 때문에 모든 신호의 Hz가 낮아진다(0.1~5 Hz). GATEWAY 모드가 감지되면 RPM·wheel_speed의 confidence 판정 임계값이 자동으로 낮아져, D-CAN에서도 HIGH confidence를 받을 수 있다.
+게이트웨이 경유 시에는 일부 메시지만 저속으로 중계되므로 가장 빠른 ID도 느리다(0.1~5 Hz).
+직결 버스에는 느린 차체 메시지가 많아도 20~100 Hz 파워트레인/섀시 메시지가 항상 있으므로, median이 아니라
+빠른 ID가 있는지로 판정한다(예: 992 GT3 직결은 median 4 Hz지만 25~50 Hz ID가 6개 있다).
+"빠른 메시지" 기준은 RPM·wheel speed 후보의 주기 가점에 쓰인다. 직결 버스는 그 버스의 빠른 쪽 주기에 맞춰
+정하므로 일반적인 PT-CAN은 30 Hz, 엔진 메시지가 10 Hz인 버스(992 GT3)는 약 8 Hz가 된다.
 
 ```
-[INFO] Bus mode: GATEWAY (D-CAN)    ← median Hz ~0.7
-[INFO] Bus mode: DIRECT (PT-CAN)    ← median Hz ~50
+[INFO] Bus mode: GATEWAY (D-CAN)    ← 가장 빠른 ID도 ~5 Hz
+[INFO] Bus mode: DIRECT (PT-CAN)    ← 20 Hz 이상 ID가 2개 이상
 ```
 
 JSON 출력에도 `"bus_mode"` 필드가 포함된다.
