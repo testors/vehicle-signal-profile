@@ -115,6 +115,11 @@ Rules:
 - `start_bit` and `bit_length` describe the raw bit field inside the CAN
   payload or diagnostic response frame.
 - `byte_order` is `little_endian` or `big_endian`.
+- `start_bit` uses DBC numbering (`byte_index * 8 + bit_in_byte`, bit 0 = LSB
+  of byte 0). It names the field's LSB for `little_endian` and its MSB for
+  `big_endian`; a big-endian field continues from bit 0 of a byte to bit 7 of
+  the next byte. Every bit a signal reads (the field, `sign_bit` and the `mux`
+  field) lies inside the frame's `dlc` bytes.
 - `signed` controls signed integer interpretation before scaling.
 - `sign_bit` is optional. When present, the field is sign-magnitude: the bit
   field is an unsigned magnitude, and if payload bit `sign_bit` is `1` the

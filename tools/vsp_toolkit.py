@@ -588,6 +588,47 @@ def validate_sign_bit(label: str, decode: dict[str, Any], errors: list[str]) -> 
         errors.append(f"{label}: sign_bit {sign_bit} overlaps the magnitude field")
 
 
+def validate_fits_frame(label: str, decode: dict[str, Any], dlc: Any, errors: list[str]) -> None:
+    """Every bit a signal reads (field, sign_bit, mux field) lies inside the frame's dlc bytes.
+
+    A big-endian start_bit numbered from the LSB instead of the MSB (DBC numbering)
+    usually shows up here, as a field that runs past the end of the payload.
+    """
+    if isinstance(dlc, bool) or not isinstance(dlc, int) or dlc <= 0:
+        return
+    limit = dlc * 8
+    parts = [("field", decode_bit_positions(decode), decode.get("byte_order"))]
+    sign_bit = decode.get("sign_bit")
+    if isinstance(sign_bit, int) and not isinstance(sign_bit, bool):
+        parts.append(("sign_bit", {sign_bit}, None))
+    mux = decode.get("mux")
+    if isinstance(mux, dict) and isinstance(mux.get("start_bit"), int) and isinstance(mux.get("bit_length"), int):
+        mux_order = mux.get("byte_order") or "little_endian"
+        mux_field = {"start_bit": mux["start_bit"], "bit_length": mux["bit_length"], "byte_order": mux_order}
+        parts.append(("mux field", decode_bit_positions(mux_field), mux_order))
+    for what, positions, byte_order in parts:
+        if not positions or (min(positions) >= 0 and max(positions) < limit):
+            continue
+        hint = " (big_endian start_bit is the field's MSB)" if byte_order == "big_endian" else ""
+        errors.append(f"{label}: {what} covers payload bits {min(positions)}..{max(positions)}, outside dlc {dlc}{hint}")
+
+
+def warn_lsb_numbered(label: str, decode: dict[str, Any], warnings: list[str]) -> None:
+    """Flag a whole-byte big-endian field whose start_bit looks like an LSB number.
+
+    In DBC numbering a byte-aligned big-endian field starts at bit 7 of its first
+    byte. start_bit % 8 == 0 is what LSB-based numbering gives for the same field.
+    """
+    if decode.get("byte_order") != "big_endian":
+        return
+    start, length = decode.get("start_bit"), decode.get("bit_length")
+    if isinstance(start, int) and isinstance(length, int) and length >= 16 and length % 8 == 0 and start % 8 == 0:
+        warnings.append(
+            f"{label}: big_endian {start}|{length} starts at bit 0 of a byte; "
+            f"start_bit may be the LSB, not the MSB (a byte-aligned field starts at bit 7)"
+        )
+
+
 def signal_matches_frame(signal: dict[str, Any], frame: dict[str, Any]) -> bool:
     expected = canonical_decode(signal.get("decode") or {})
     return any(
@@ -694,6 +735,8 @@ def validate_profile(profile: dict[str, Any]) -> dict[str, Any]:
             validate_values(frame_label, frame_signal.get("decode") or {}, errors)
             validate_mux(frame_label, frame_signal.get("decode") or {}, errors)
             validate_value_type(frame_label, frame_signal.get("decode") or {}, errors)
+            validate_fits_frame(frame_label, frame_signal.get("decode") or {}, frame.get("dlc"), errors)
+            warn_lsb_numbered(frame_label, frame_signal.get("decode") or {}, warnings)
         expected_format = id_format(int(frame_id))
         if frame.get("id_format") and frame.get("id_format") != expected_format:
             errors.append(f"frame {frame.get('name') or frame_id}: id_format should be {expected_format}")
