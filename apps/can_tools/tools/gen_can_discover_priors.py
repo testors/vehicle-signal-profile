@@ -137,6 +137,24 @@ def number_string(value) -> str:
     return s
 
 
+# A canonical "preferred unit" that names a kind of value, not a scale: safe to show for a
+# decode without a unit.
+VALUE_KIND_UNITS = {"gear", "bool", "state"}
+
+
+def prior_unit(decode: dict, canonical: dict) -> str:
+    """The decode's own unit. "" is a plain number (a raw count or code), so a scaled unit
+    such as "%" or "km/h" is not borrowed from the canonical id for it; a kind (gear,
+    bool, state) is, and a decode with no unit field takes the preferred unit."""
+    preferred = str(canonical.get("preferred_unit") or "")
+    unit = decode.get("unit")
+    if unit is None:
+        return preferred
+    if unit == "" and preferred in VALUE_KIND_UNITS:
+        return preferred
+    return str(unit)
+
+
 def is_finite_number(value) -> bool:
     if value is None or isinstance(value, bool):
         return True
@@ -341,7 +359,7 @@ def prior_key(signal: dict, frame_dlcs: dict[tuple[str | None, int], int]):
     strings = {
         "name": str(signal.get("name") or canonical_id or "Signal"),
         **{k: number_string(v) for k, v in numbers.items()},
-        "unit": str(decode.get("unit") or canonical.get("preferred_unit") or ""),
+        "unit": prior_unit(decode, canonical),
         "canonical": str(canonical_id),
     }
     for field, limit in STRING_LIMITS.items():
