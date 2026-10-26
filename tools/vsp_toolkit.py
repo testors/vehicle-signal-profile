@@ -34,6 +34,7 @@ class DbcMessage:
     frame_id: int
     name: str
     dlc: int
+    cycle_ms: float | None = None   # BA_ "GenMsgCycleTime"
 
 
 @dataclass(frozen=True)
@@ -57,6 +58,7 @@ class DbcSignal:
     polynomial: tuple[float, ...] = ()
 
 
+DBC_CYCLE_RE = re.compile(r'^BA_\s+"GenMsgCycleTime"\s+BO_\s+(?P<id>\d+)\s+(?P<ms>\d+(?:\.\d+)?)\s*;', re.M)
 DBC_VAL_RE = re.compile(r"^VAL_\s+(?P<id>\d+)\s+(?P<name>\w+)\s+(?P<body>(?:-?\d+\s+\"[^\"]*\"\s*)*);", re.M)
 DBC_VAL_ENTRY_RE = re.compile(r"(-?\d+)\s+\"([^\"]*)\"")
 # SIG_VALTYPE_ <id> <name> : 1 (IEEE float) | 2 (IEEE double)
@@ -175,6 +177,12 @@ def parse_dbc(path: Path) -> tuple[dict[int, DbcMessage], list[DbcSignal]]:
         else signal
         for signal in signals
     ]
+    for cycle in DBC_CYCLE_RE.finditer(text):
+        raw_frame_id = int(cycle.group("id"))
+        frame_id = raw_frame_id & 0x1FFFFFFF if raw_frame_id & 0x80000000 else raw_frame_id
+        ms = float(cycle.group("ms"))
+        if frame_id in messages and ms > 0:
+            messages[frame_id] = replace(messages[frame_id], cycle_ms=int(ms) if ms.is_integer() else ms)
     return messages, fold_sign_signals(signals)
 
 
@@ -285,6 +293,7 @@ def profile_from_dbc(path: Path, *, manufacturer: str, model: str, bitrate: int)
                 "id_format": id_format(frame_id),
                 "name": message.name,
                 "dlc": message.dlc,
+                **({"cycle_ms": message.cycle_ms} if message.cycle_ms else {}),
                 "signals": [
                     {"name": signal.name, "decode": dbc_signal_decode(signal)}
                     for signal in sorted(frame_signals, key=lambda item: (item.start_bit, item.name))
@@ -441,12 +450,15 @@ def profile_to_dbc(profile: dict[str, Any], *, include_diagnostic_responses: boo
     value_tables: list[str] = []
     comments: list[str] = []
     value_types: list[str] = []
+    cycle_attributes: list[str] = []
     for frame in sorted(profile.get("can_frames") or [], key=lambda item: (str(item.get("bus")), int(item.get("frame_id") or 0))):
         key = (str(frame.get("bus")), int(frame.get("frame_id") or 0))
         if key not in frame_keys:
             continue
         frame_name = dbc_identifier(frame.get("name"), f"FRAME_{int(frame.get('frame_id') or 0):X}")
         lines.append(f"BO_ {dbc_frame_id(frame)} {frame_name}: {int(frame.get('dlc') or 8)} Vector__XXX")
+        if frame.get("cycle_ms"):
+            cycle_attributes.append(f'BA_ "GenMsgCycleTime" BO_ {dbc_frame_id(frame)} {int(round(float(frame["cycle_ms"])))};')
         used_names: set[str] = set()
         for index, mux in enumerate(synthetic_muxors(frame.get("signals") or []), start=1):
             base_name = dbc_identifier(f"{frame_name}_MUX" if index == 1 else f"{frame_name}_MUX_{index}", "MUX")
@@ -488,6 +500,8 @@ def profile_to_dbc(profile: dict[str, Any], *, include_diagnostic_responses: boo
         lines.append("")
 
     lines.extend(comments)
+    if cycle_attributes:
+        lines.extend(['BA_DEF_ BO_ "GenMsgCycleTime" INT 0 65535;', 'BA_DEF_DEF_ "GenMsgCycleTime" 0;', *cycle_attributes])
     lines.extend(value_tables)
     lines.extend(value_types)
     return "\n".join(lines).rstrip() + "\n"
@@ -703,6 +717,61 @@ def validate_frame_id_mask(frame: dict[str, Any], errors: list[str]) -> None:
         errors.append(f"{label}: frame_id_mask_hex does not match frame_id_mask")
 
 
+# Runtime vocabulary (docs/VSP_RUNTIME_SPEC.md). A unit is one of
+# these spellings; "" is a plain number, count or code.
+VSP_UNITS = frozenset({
+    "", "on/off", "gear", "ratio", "%", "%/s", "lambda", "AFR",
+    "km/h", "mph", "m/s", "rpm", "krpm", "rpm/s", "Hz", "bpm",
+    "deg", "rad", "deg/s", "rad/s", "g", "m/s^2",
+    "C", "F",
+    "bar", "mbar", "kPa", "psi", "kPa(g)", "psi(g)",
+    "V", "mV", "A", "W", "kW",
+    "us", "ms", "s", "min", "h",
+    "mm", "m", "km", "mi",
+    "L", "mm^3", "L/s", "L/h", "L/100km", "km/L", "g/s", "kg/s", "kg/h",
+    "Nm", "N", "kgf", "kg", "kg/m^3",
+})
+# How a decode was checked beyond its source file (absent: as the source defines it).
+DECODE_BASES = ("measured", "standard", "reference")
+DECODE_BASIS_RANK = {basis: rank for rank, basis in enumerate(reversed(DECODE_BASES), start=1)}
+# Where a frame period comes from (absent: from the source file).
+CYCLE_BASES = ("measured", "reference")
+# A signal that is no measurement to plot.
+SIGNAL_ROLES = ("counter", "checksum", "bitmask", "identifier")
+
+
+def stronger_decode_basis(current: Any, incoming: Any) -> Any:
+    """The better-checked of two decode bases (measured > standard > reference > none)."""
+    if DECODE_BASIS_RANK.get(incoming, 0) > DECODE_BASIS_RANK.get(current, 0):
+        return incoming
+    return current
+
+
+def validate_runtime_vocabulary(profile: dict[str, Any], errors: list[str]) -> None:
+    """Units, frame periods, decode bases and signal roles use the spec's values."""
+    for frame in profile.get("can_frames") or []:
+        label = f"frame {frame.get('name') or frame.get('frame_id')}"
+        cycle = frame.get("cycle_ms")
+        if cycle is not None and (isinstance(cycle, bool) or not isinstance(cycle, (int, float)) or not 0 < cycle <= 600000):
+            errors.append(f"{label}: cycle_ms must be a positive number of milliseconds")
+        basis = frame.get("cycle_basis")
+        if basis is not None and (basis not in CYCLE_BASES or cycle is None):
+            errors.append(f"{label}: cycle_basis must be one of {', '.join(CYCLE_BASES)} and needs cycle_ms")
+        for frame_signal in frame.get("signals") or []:
+            unit = (frame_signal.get("decode") or {}).get("unit")
+            if unit is not None and unit not in VSP_UNITS:
+                errors.append(f"{label} signal {frame_signal.get('name')}: unit {unit!r} is not a VSP unit")
+    for signal in profile.get("signals") or []:
+        label = f"signal {signal.get('name') or '<unnamed>'}"
+        unit = (signal.get("decode") or {}).get("unit")
+        if unit is not None and unit not in VSP_UNITS:
+            errors.append(f"{label}: unit {unit!r} is not a VSP unit")
+        if signal.get("decode_basis") is not None and signal["decode_basis"] not in DECODE_BASES:
+            errors.append(f"{label}: decode_basis must be one of {', '.join(DECODE_BASES)}")
+        if signal.get("role") is not None and signal["role"] not in SIGNAL_ROLES:
+            errors.append(f"{label}: role must be one of {', '.join(SIGNAL_ROLES)}")
+
+
 def validate_profile(profile: dict[str, Any]) -> dict[str, Any]:
     errors: list[str] = []
     warnings: list[str] = []
@@ -831,6 +900,8 @@ def validate_profile(profile: dict[str, Any]) -> dict[str, Any]:
                 warnings.append(
                     f"canonical.id {canonical_id!r} is used by multiple {acquisition_type} signals: {', '.join(names)}"
                 )
+
+    validate_runtime_vocabulary(profile, errors)
 
     return {
         "errors": errors,

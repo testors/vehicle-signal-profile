@@ -128,7 +128,8 @@ Rules:
   must not overlap the magnitude field, and `signed` must be `false`.
 - Runtime value is `raw * factor + offset`, where `raw` is the magnitude,
   negated when `sign_bit` is set.
-- `unit` is the unit of the decoded runtime value.
+- `unit` is the unit of the decoded runtime value, spelled as in
+  [Units](#units).
 - `values` is optional: a value table for enumerated raw codes (gear, mode,
   status), the VSP form of a DBC `VAL_` table. Each entry has an integer `raw`
   (after `signed` / `sign_bit` interpretation, before scaling), a display
@@ -219,6 +220,23 @@ put a node or sequence number in the low ID bits. Signals reference the frame by
 `frame_id`; look up the mask in `can_frames[]`. Without a mask, the full ID must
 match.
 
+## Frame Periods
+
+`can_frames[].cycle_ms` is optional: the frame's nominal transmit period in
+milliseconds (`100` = sent every 100 ms). `can_frames[].cycle_basis` says where
+it comes from:
+
+- `measured`: the mean interval over listen-only captures of that vehicle,
+  steady in every capture.
+- `reference`: a published database of the same message (for example a DBC
+  `GenMsgCycleTime` in opendbc) whose field layout matches the profile's.
+- absent: the profile's source file (a DBC `GenMsgCycleTime`).
+
+A frame without `cycle_ms` may still be periodic; it may also be sent on events.
+Use the period to tell a stale value from a steady one: when no frame has
+arrived for about three periods, the signal's last value is old. A logger can
+also sample a signal at its frame rate instead of a fixed default.
+
 ## Diagnostic Queries
 
 Each diagnostic query has a stable `id` referenced by diagnostic signals:
@@ -279,6 +297,59 @@ For example, a profile may contain both:
 This is intentional. CAN sniffing apps choose the CAN signal. OBD/query apps
 choose the diagnostic signal.
 
+## Units
+
+`decode.unit` is one of these spellings (ASCII; `""` is a plain number, count or
+code):
+
+| Quantity | Units |
+|---|---|
+| none, switch, gear | `""`, `on/off`, `gear` |
+| ratio | `ratio` (0-1), `%`, `%/s`, `lambda`, `AFR` |
+| speed | `km/h`, `mph`, `m/s` |
+| rotation, frequency | `rpm`, `krpm`, `rpm/s`, `Hz`, `bpm` |
+| angle | `deg`, `rad`, `deg/s`, `rad/s` |
+| acceleration | `g`, `m/s^2` |
+| temperature | `C`, `F` |
+| pressure | `bar`, `mbar`, `kPa`, `psi`, `kPa(g)`, `psi(g)` (gauge) |
+| electric | `V`, `mV`, `A`, `W`, `kW` |
+| time | `us`, `ms`, `s`, `min`, `h` |
+| distance | `mm`, `m`, `km`, `mi` |
+| volume, flow, consumption | `L`, `mm^3`, `L/s`, `L/h`, `L/100km`, `km/L`, `g/s`, `kg/s`, `kg/h` |
+| force, torque, mass | `N`, `kgf`, `Nm`, `kg`, `kg/m^3` |
+
+Absolute pressure has no suffix; `kPa(g)` and `psi(g)` are gauge pressure
+(relative to the ambient pressure). A canonical ID's `preferred_unit` uses the
+same spellings, plus `bool` (a two-state flag) and `state` (an enumerated
+state), which name a kind of value rather than a unit.
+
+## Decode Basis
+
+`signals[].decode_basis` is optional and says how the decode (bit layout,
+sign, scale) was checked beyond its source file:
+
+- `measured`: checked on a vehicle (a capture with a known action, such as
+  turning the wheel left).
+- `standard`: matches a published standard; a Mode 01 signal reproduces its
+  SAE J1979 formula.
+- `reference`: corrected or confirmed against a published decode of the same
+  field, such as opendbc.
+- absent: as the source file (an AiM driver, a VBOX database, a DBC) defines it,
+  not checked independently.
+
+## Signal Roles
+
+`signals[].role` is optional and marks a field that is not a measurement to
+plot:
+
+- `counter`: a message counter (alive or rolling counter) that steps every
+  frame.
+- `checksum`: a checksum or CRC over the frame.
+- `bitmask`: a word of independent flag bits. Show the bits, not the number. In
+  its `values`, an entry whose `raw` is a power of two names that single bit.
+- `identifier`: a constant code that names software or a calibration (such as a
+  strategy CRC). Show it in hex.
+
 ## Profile Selection
 
 Use `vehicle` and `applicability` to select a compatible profile for the target
@@ -332,4 +403,6 @@ Applications do not need source provenance. Select the profile by `vehicle` and
 - Map required features by `canonical.id`.
 - Decode using `decode`; skip signals whose `value_type` or `polynomial` you
   do not implement.
+- Optionally use `can_frames[].cycle_ms` to mark stale values, and
+  `signals[].role` to keep counters, checksums and flag words out of gauges.
 - Ignore unknown fields.

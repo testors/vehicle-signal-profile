@@ -66,6 +66,10 @@ Value tables (`decode.values`) map to DBC `VAL_` tables in both directions.
 DBC keeps only the labels; the optional numeric `value` overrides are lost on
 export.
 
+Frame periods (`can_frames[].cycle_ms`) map to DBC `BA_ "GenMsgCycleTime"` in
+both directions; `cycle_basis`, `decode_basis` and `role` have no DBC form and
+are lost on export.
+
 Compose multiple VSP files:
 
 ```bash
