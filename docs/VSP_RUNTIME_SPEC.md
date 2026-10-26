@@ -320,8 +320,9 @@ code):
 
 Absolute pressure has no suffix; `kPa(g)` and `psi(g)` are gauge pressure
 (relative to the ambient pressure). A canonical ID's `preferred_unit` uses the
-same spellings, plus `bool` (a two-state flag) and `state` (an enumerated
-state), which name a kind of value rather than a unit.
+same spellings, plus `bool` (a two-state flag), `state` (an enumerated state)
+and `count` (a whole number of things, such as a lap number), which name a
+kind of value rather than a unit.
 
 ## Decode Basis
 

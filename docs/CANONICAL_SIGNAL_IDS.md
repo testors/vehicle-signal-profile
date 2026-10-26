@@ -139,6 +139,8 @@ Drivetrain and electrical:
 | `parking_brake.switch` | `bool` |
 | `transmission.neutral.switch` | `bool` |
 | `timing.lap_time` | `s` |
+| `timing.lap_number` | `count` |
+| `timing.lap_distance` | `m` |
 
 Body and lighting:
 
