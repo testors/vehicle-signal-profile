@@ -749,8 +749,13 @@ def stronger_decode_basis(current: Any, incoming: Any) -> Any:
 
 def validate_runtime_vocabulary(profile: dict[str, Any], errors: list[str]) -> None:
     """Units, frame periods, decode bases and signal roles use the spec's values."""
+    bus_types = {bus.get("id"): bus.get("type") for bus in profile.get("buses") or []}
     for frame in profile.get("can_frames") or []:
         label = f"frame {frame.get('name') or frame.get('frame_id')}"
+        if frame.get("reassembled") is not None and not isinstance(frame.get("reassembled"), bool):
+            errors.append(f"{label}: reassembled must be true or false")
+        if bus_types.get(frame.get("bus")) == "can" and int(frame.get("dlc") or 0) > 8 and frame.get("reassembled") is not True:
+            errors.append(f"{label}: dlc {frame.get('dlc')} is longer than a classical CAN frame; mark it reassembled")
         cycle = frame.get("cycle_ms")
         if cycle is not None and (isinstance(cycle, bool) or not isinstance(cycle, (int, float)) or not 0 < cycle <= 600000):
             errors.append(f"{label}: cycle_ms must be a positive number of milliseconds")

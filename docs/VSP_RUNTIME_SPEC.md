@@ -40,7 +40,8 @@ Choose runtime channels from top-level `signals[]` by
 
 CAN sniffing mode:
 
-1. Select signals where `acquisition.type == "can_frame"`.
+1. Select signals where `acquisition.type == "can_frame"`, except those on a
+   reassembled frame (see [Reassembled Frames](#reassembled-frames)).
 2. Listen on `acquisition.bus`.
 3. Match `acquisition.frame_id`.
 4. If `decode.mux` is present, decode and compare the mux value first.
@@ -219,6 +220,17 @@ in hex). When present, a received frame belongs to this layout when
 put a node or sequence number in the low ID bits. Signals reference the frame by
 `frame_id`; look up the mask in `can_frames[]`. Without a mask, the full ID must
 match.
+
+## Reassembled Frames
+
+`can_frames[].reassembled` is optional. `true` marks a layout that is not one
+CAN frame but a buffer the source logger builds from several frames of a
+vendor stream (AiM's drivers for MoTeC dash data, Sybele, Emerald and others).
+VSP does not define how the buffer is built: `dlc` is the buffer length, and
+`frame_id` can be the logger's placeholder rather than an ID on the bus. An
+application that does not implement the vendor's framing skips the signals
+of a reassembled frame. On a `can` bus every other frame has a `dlc` of 8 or
+less.
 
 ## Frame Periods
 
@@ -404,6 +416,8 @@ Applications do not need source provenance. Select the profile by `vehicle` and
 - Map required features by `canonical.id`.
 - Decode using `decode`; skip signals whose `value_type` or `polynomial` you
   do not implement.
+- Skip signals on frames with `reassembled: true` unless you implement that
+  vendor's stream.
 - Optionally use `can_frames[].cycle_ms` to mark stale values, and
   `signals[].role` to keep counters, checksums and flag words out of gauges.
 - Ignore unknown fields.
