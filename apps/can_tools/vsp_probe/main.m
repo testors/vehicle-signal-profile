@@ -60,6 +60,7 @@ typedef struct {
 @property (nonatomic, copy) NSString *positiveMarkerHex;
 @property (nonatomic, assign) uint32_t frameId;
 @property (nonatomic, assign) uint32_t frameIdMask;      /* can_frames[].frame_id_mask, 0 = full id */
+@property (nonatomic, assign) double frameCycleMs;       /* can_frames[].cycle_ms, 0 = not known */
 @property (nonatomic, assign) uint32_t txId;
 @property (nonatomic, assign) uint32_t rxId;
 @property (nonatomic, assign) int attempts;
@@ -398,6 +399,18 @@ static uint32_t frame_id_mask_for(NSDictionary *profile, uint32_t frameId) {
     return 0;
 }
 
+static double frame_cycle_ms_for(NSDictionary *profile, uint32_t frameId) {
+    NSArray *frames = profile[@"can_frames"];
+    if (![frames isKindOfClass:[NSArray class]]) return 0.0;
+    for (NSDictionary *frame in frames) {
+        if (![frame isKindOfClass:[NSDictionary class]]) continue;
+        if ([num_or_nil(frame[@"frame_id"]) unsignedIntValue] != frameId) continue;
+        double cycle = [num_or_nil(frame[@"cycle_ms"]) doubleValue];
+        return cycle > 0.0 ? cycle : 0.0;
+    }
+    return 0.0;
+}
+
 static NSArray<VSPProbeItem *> *select_items(NSDictionary *profile,
                                              const vsp_probe_options_t *opts) {
     NSMutableSet<NSString *> *canonicalTargets = [NSMutableSet set];
@@ -438,6 +451,7 @@ static NSArray<VSPProbeItem *> *select_items(NSDictionary *profile,
             if (!frameId) continue;
             item.frameId = frameId.unsignedIntValue;
             item.frameIdMask = frame_id_mask_for(profile, item.frameId);
+            item.frameCycleMs = frame_cycle_ms_for(profile, item.frameId);
         } else {
             NSString *qid = acq[@"query_id"];
             NSDictionary *q = ([qid isKindOfClass:[NSString class]]) ? queries[qid] : nil;
@@ -1219,6 +1233,10 @@ static NSDictionary *plan_for_item(VSPProbeItem *item) {
 
     if ([item.acquisitionType isEqualToString:@"can_frame"]) {
         d[@"frame_id"] = [NSString stringWithFormat:@"0x%03X", item.frameId];
+        if (item.frameCycleMs > 0.0) {
+            d[@"frame_cycle_ms"] = @(item.frameCycleMs);
+            d[@"frame_hz"] = @(((double)llround(1000.0 / item.frameCycleMs * 1000.0)) / 1000.0);
+        }
     } else {
         d[@"query_id"] = item.query[@"id"] ?: @"";
         d[@"tx_id"] = [NSString stringWithFormat:@"0x%03X", item.txId];
@@ -1245,6 +1263,16 @@ static NSDictionary *result_for_item(VSPProbeItem *item,
     d[@"errors"] = @(item.errors);
     d[@"target_met"] = @(met);
     d[@"status"] = item.samples > 0 ? (met ? @"pass" : @"under_target") : @"no_samples";
+    /* The profile's frame period (cycle_ms) tells a slow frame from lost frames. A muxed
+     * signal sees only the frames of its mux value, so it is not compared. */
+    if (item.frameCycleMs > 0.0 && item.samples > 0 &&
+        !signal_mux(item.signal, NULL, NULL, NULL, NULL)) {
+        double frameHz = 1000.0 / item.frameCycleMs;
+        double ratio = observed / frameHz;
+        d[@"frame_rate_ratio"] = @(((double)llround(ratio * 1000.0)) / 1000.0);
+        if (ratio < 0.5) d[@"frame_rate_low"] = @YES;   /* frames lost, filtered or sent slower here */
+        if (!met && ratio >= 0.9 && targetHz > frameHz * 1.05) d[@"status"] = @"frame_limited";
+    }
     if (item.lastPayloadHex) d[@"last_payload_hex"] = item.lastPayloadHex;
     if (item.hasLastValue) d[@"last_value"] = @(item.lastValue);
     else if (item.lastValueNull) d[@"last_value"] = [NSNull null];
@@ -1285,6 +1313,7 @@ static NSDictionary *build_output(NSDictionary *profile,
     NSMutableArray *signalOut = [NSMutableArray array];
     int pass = 0;
     int under = 0;
+    int limited = 0;
     int none = 0;
     for (VSPProbeItem *item in items) {
         NSDictionary *d = planOnly ? plan_for_item(item) :
@@ -1294,13 +1323,15 @@ static NSDictionary *build_output(NSDictionary *profile,
             NSString *status = d[@"status"];
             if ([status isEqualToString:@"pass"]) pass++;
             else if ([status isEqualToString:@"under_target"]) under++;
+            else if ([status isEqualToString:@"frame_limited"]) limited++;
             else none++;
         }
     }
     out[@"signals"] = signalOut;
     out[@"selected_count"] = @(signalOut.count);
     if (!planOnly) {
-        out[@"summary"] = @{@"pass": @(pass), @"under_target": @(under), @"no_samples": @(none)};
+        out[@"summary"] = @{@"pass": @(pass), @"under_target": @(under), @"frame_limited": @(limited),
+                            @"no_samples": @(none)};
     }
     return out;
 }
