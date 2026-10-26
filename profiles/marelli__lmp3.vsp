@@ -809,6 +809,44 @@
       }
     },
     {
+      "name": "ECU_P_OIL",
+      "decode": {
+        "start_bit": 7,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.001,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 65.535,
+        "unit": "bar",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 8,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 296,
+        "frame_id_hex": "0x128",
+        "frame_name": "MSG_128"
+      },
+      "canonical": {
+        "id": "engine.oil.pressure",
+        "label": "Engine oil pressure",
+        "quantity": "pressure",
+        "preferred_unit": "bar",
+        "confidence": "mapped",
+        "aliases": [
+          "ECU_P_OIL"
+        ]
+      }
+    },
+    {
       "name": "ECU_T_OIL",
       "decode": {
         "start_bit": 39,
@@ -881,6 +919,44 @@
         "confidence": "mapped",
         "aliases": [
           "ECU_RPM"
+        ]
+      }
+    },
+    {
+      "name": "ECU_P_FUEL",
+      "decode": {
+        "start_bit": 23,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.001,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 65.535,
+        "unit": "bar",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 24,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 296,
+        "frame_id_hex": "0x128",
+        "frame_name": "MSG_128"
+      },
+      "canonical": {
+        "id": "fuel.pressure",
+        "label": "Fuel pressure",
+        "quantity": "pressure",
+        "preferred_unit": "bar",
+        "confidence": "mapped",
+        "aliases": [
+          "ECU_P_FUEL"
         ]
       }
     },
@@ -1315,34 +1391,6 @@
       }
     },
     {
-      "name": "ECU_P_FUEL",
-      "decode": {
-        "start_bit": 23,
-        "bit_length": 16,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 0.001,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 65.535,
-        "unit": "bar",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 24,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 296,
-        "frame_id_hex": "0x128",
-        "frame_name": "MSG_128"
-      }
-    },
-    {
       "name": "ECU_P_INLET",
       "decode": {
         "start_bit": 23,
@@ -1396,34 +1444,6 @@
         "frame_id": 312,
         "frame_id_hex": "0x138",
         "frame_name": "MSG_138"
-      }
-    },
-    {
-      "name": "ECU_P_OIL",
-      "decode": {
-        "start_bit": 7,
-        "bit_length": 16,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 0.001,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 65.535,
-        "unit": "bar",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 8,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 296,
-        "frame_id_hex": "0x128",
-        "frame_name": "MSG_128"
       }
     },
     {

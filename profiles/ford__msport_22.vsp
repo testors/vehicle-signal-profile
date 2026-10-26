@@ -756,6 +756,44 @@
       }
     },
     {
+      "name": "Turbo_Speed",
+      "decode": {
+        "start_bit": 23,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": true,
+        "factor": 0.01,
+        "offset": 0.0,
+        "minimum": -327.68,
+        "maximum": 327.67,
+        "unit": "krpm",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 24,
+        "signed_known": true,
+        "signed_reason": "rawfmt:signed"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1573,
+        "frame_id_hex": "0x625",
+        "frame_name": "MSG_625"
+      },
+      "canonical": {
+        "id": "turbocharger.speed",
+        "label": "Turbocharger speed",
+        "quantity": "rotational_speed",
+        "preferred_unit": "rpm",
+        "confidence": "mapped",
+        "aliases": [
+          "Turbo_Speed"
+        ]
+      }
+    },
+    {
       "name": "Vehicle_Speed",
       "decode": {
         "start_bit": 55,
@@ -875,34 +913,6 @@
         "frame_id": 1572,
         "frame_id_hex": "0x624",
         "frame_name": "MSG_624"
-      }
-    },
-    {
-      "name": "Turbo_Speed",
-      "decode": {
-        "start_bit": 23,
-        "bit_length": 16,
-        "byte_order": "big_endian",
-        "signed": true,
-        "factor": 0.01,
-        "offset": 0.0,
-        "minimum": -327.68,
-        "maximum": 327.67,
-        "unit": "krpm",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 24,
-        "signed_known": true,
-        "signed_reason": "rawfmt:signed"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1573,
-        "frame_id_hex": "0x625",
-        "frame_name": "MSG_625"
       }
     }
   ]

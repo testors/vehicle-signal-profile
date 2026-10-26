@@ -815,9 +815,85 @@
         "label": "ABS mode",
         "quantity": "state",
         "preferred_unit": "state",
-        "confidence": "heuristic",
+        "confidence": "mapped",
         "aliases": [
           "RSV4_ABS"
+        ]
+      }
+    },
+    {
+      "name": "RSV4_GAS",
+      "decode": {
+        "start_bit": 7,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 255.0,
+        "unit": "%",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 0,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1537,
+        "frame_id_hex": "0x601",
+        "frame_name": "MSG_601"
+      },
+      "canonical": {
+        "id": "accelerator.pedal.position",
+        "label": "Accelerator pedal position",
+        "quantity": "position",
+        "preferred_unit": "%",
+        "confidence": "heuristic",
+        "aliases": [
+          "RSV4_GAS"
+        ]
+      }
+    },
+    {
+      "name": "RSV4_V_BATT",
+      "decode": {
+        "start_bit": 15,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 100.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 25500.0,
+        "unit": "mV",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 8,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 512,
+        "frame_id_hex": "0x200",
+        "frame_name": "MSG_200"
+      },
+      "canonical": {
+        "id": "battery.voltage",
+        "label": "Battery voltage",
+        "quantity": "voltage",
+        "preferred_unit": "V",
+        "confidence": "mapped",
+        "aliases": [
+          "RSV4_V_BATT"
         ]
       }
     },
@@ -894,6 +970,44 @@
         "confidence": "heuristic",
         "aliases": [
           "RSV4_ENG_TEMP"
+        ]
+      }
+    },
+    {
+      "name": "RSV4_ADVANCE",
+      "decode": {
+        "start_bit": 7,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 255.0,
+        "unit": "deg",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 0,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 2033,
+        "frame_id_hex": "0x7F1",
+        "frame_name": "MSG_7F1"
+      },
+      "canonical": {
+        "id": "engine.ignition.advance",
+        "label": "Ignition advance",
+        "quantity": "angle",
+        "preferred_unit": "deg",
+        "confidence": "mapped",
+        "aliases": [
+          "RSV4_ADVANCE"
         ]
       }
     },
@@ -1211,6 +1325,44 @@
       }
     },
     {
+      "name": "RSV4_ROLL_RATE",
+      "decode": {
+        "start_bit": 0,
+        "bit_length": 16,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 0.005,
+        "offset": -163.84,
+        "minimum": -163.84,
+        "maximum": 163.835,
+        "unit": "deg/s",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 5,
+        "canp_start_bit": 0,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 376,
+        "frame_id_hex": "0x178",
+        "frame_name": "MSG_178"
+      },
+      "canonical": {
+        "id": "vehicle.roll_rate",
+        "label": "Roll rate",
+        "quantity": "angular_speed",
+        "preferred_unit": "deg/s",
+        "confidence": "mapped",
+        "aliases": [
+          "RSV4_ROLL_RATE"
+        ]
+      }
+    },
+    {
       "name": "RSV4_YAW_RATE",
       "decode": {
         "start_bit": 0,
@@ -1325,34 +1477,6 @@
       }
     },
     {
-      "name": "RSV4_ADVANCE",
-      "decode": {
-        "start_bit": 7,
-        "bit_length": 8,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 1.0,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 255.0,
-        "unit": "deg",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 0,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 2033,
-        "frame_id_hex": "0x7F1",
-        "frame_name": "MSG_7F1"
-      }
-    },
-    {
       "name": "RSV4_BK_SPEED",
       "decode": {
         "start_bit": 2,
@@ -1437,34 +1561,6 @@
       }
     },
     {
-      "name": "RSV4_GAS",
-      "decode": {
-        "start_bit": 7,
-        "bit_length": 8,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 1.0,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 255.0,
-        "unit": "%",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 0,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1537,
-        "frame_id_hex": "0x601",
-        "frame_name": "MSG_601"
-      }
-    },
-    {
       "name": "RSV4_MIL_LAMP",
       "decode": {
         "start_bit": 43,
@@ -1546,34 +1642,6 @@
         "frame_id": 2038,
         "frame_id_hex": "0x7F6",
         "frame_name": "MSG_7F6"
-      }
-    },
-    {
-      "name": "RSV4_ROLL_RATE",
-      "decode": {
-        "start_bit": 0,
-        "bit_length": 16,
-        "byte_order": "little_endian",
-        "signed": false,
-        "factor": 0.005,
-        "offset": -163.84,
-        "minimum": -163.84,
-        "maximum": 163.835,
-        "unit": "deg/s",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 5,
-        "canp_start_bit": 0,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 376,
-        "frame_id_hex": "0x178",
-        "frame_name": "MSG_178"
       }
     },
     {
@@ -1852,34 +1920,6 @@
         "frame_id": 256,
         "frame_id_hex": "0x100",
         "frame_name": "MSG_100"
-      }
-    },
-    {
-      "name": "RSV4_V_BATT",
-      "decode": {
-        "start_bit": 15,
-        "bit_length": 8,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 100.0,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 25500.0,
-        "unit": "mV",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 8,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 512,
-        "frame_id_hex": "0x200",
-        "frame_name": "MSG_200"
       }
     },
     {

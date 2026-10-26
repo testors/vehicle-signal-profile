@@ -585,6 +585,92 @@
   "diagnostic_queries": [],
   "signals": [
     {
+      "name": "GT3_BATT_VOLT",
+      "decode": {
+        "start_bit": 56,
+        "bit_length": 8,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 68.1,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 17365.5,
+        "unit": "mV",
+        "mux": {
+          "value": 4,
+          "start_bit": 0,
+          "bit_length": 8,
+          "byte_order": "little_endian"
+        }
+      },
+      "raw": {
+        "cflag": 7,
+        "canp_start_bit": 56,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1904,
+        "frame_id_hex": "0x770",
+        "frame_name": "MSG_770"
+      },
+      "canonical": {
+        "id": "battery.voltage",
+        "label": "Battery voltage",
+        "quantity": "voltage",
+        "preferred_unit": "V",
+        "confidence": "mapped",
+        "aliases": [
+          "GT3_BATT_VOLT"
+        ]
+      }
+    },
+    {
+      "name": "GT3_ECT",
+      "decode": {
+        "start_bit": 56,
+        "bit_length": 8,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 0.75,
+        "offset": -48.0,
+        "minimum": -48.0,
+        "maximum": 143.25,
+        "unit": "C",
+        "mux": {
+          "value": 1,
+          "start_bit": 0,
+          "bit_length": 8,
+          "byte_order": "little_endian"
+        }
+      },
+      "raw": {
+        "cflag": 7,
+        "canp_start_bit": 56,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1904,
+        "frame_id_hex": "0x770",
+        "frame_name": "MSG_770"
+      },
+      "canonical": {
+        "id": "engine.coolant.temperature",
+        "label": "Engine coolant temperature",
+        "quantity": "temperature",
+        "preferred_unit": "C",
+        "confidence": "mapped",
+        "aliases": [
+          "GT3_ECT"
+        ]
+      }
+    },
+    {
       "name": "GT3_OIL_PRESS",
       "decode": {
         "start_bit": 40,
@@ -824,6 +910,49 @@
         "confidence": "heuristic",
         "aliases": [
           "GT3_FUEL_TEMP"
+        ]
+      }
+    },
+    {
+      "name": "GT3_IAT",
+      "decode": {
+        "start_bit": 56,
+        "bit_length": 8,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 0.75,
+        "offset": -48.0,
+        "minimum": -48.0,
+        "maximum": 143.25,
+        "unit": "C",
+        "mux": {
+          "value": 3,
+          "start_bit": 0,
+          "bit_length": 8,
+          "byte_order": "little_endian"
+        }
+      },
+      "raw": {
+        "cflag": 7,
+        "canp_start_bit": 56,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1904,
+        "frame_id_hex": "0x770",
+        "frame_name": "MSG_770"
+      },
+      "canonical": {
+        "id": "intake_air.temperature",
+        "label": "Intake air temperature",
+        "quantity": "temperature",
+        "preferred_unit": "C",
+        "confidence": "mapped",
+        "aliases": [
+          "GT3_IAT"
         ]
       }
     },
@@ -1314,72 +1443,6 @@
       }
     },
     {
-      "name": "GT3_BATT_VOLT",
-      "decode": {
-        "start_bit": 56,
-        "bit_length": 8,
-        "byte_order": "little_endian",
-        "signed": false,
-        "factor": 68.1,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 17365.5,
-        "unit": "mV",
-        "mux": {
-          "value": 4,
-          "start_bit": 0,
-          "bit_length": 8,
-          "byte_order": "little_endian"
-        }
-      },
-      "raw": {
-        "cflag": 7,
-        "canp_start_bit": 56,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1904,
-        "frame_id_hex": "0x770",
-        "frame_name": "MSG_770"
-      }
-    },
-    {
-      "name": "GT3_ECT",
-      "decode": {
-        "start_bit": 56,
-        "bit_length": 8,
-        "byte_order": "little_endian",
-        "signed": false,
-        "factor": 0.75,
-        "offset": -48.0,
-        "minimum": -48.0,
-        "maximum": 143.25,
-        "unit": "C",
-        "mux": {
-          "value": 1,
-          "start_bit": 0,
-          "bit_length": 8,
-          "byte_order": "little_endian"
-        }
-      },
-      "raw": {
-        "cflag": 7,
-        "canp_start_bit": 56,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1904,
-        "frame_id_hex": "0x770",
-        "frame_name": "MSG_770"
-      }
-    },
-    {
       "name": "GT3_GEAR_POT",
       "decode": {
         "start_bit": 48,
@@ -1443,39 +1506,6 @@
         "frame_id": 1905,
         "frame_id_hex": "0x771",
         "frame_name": "MSG_771"
-      }
-    },
-    {
-      "name": "GT3_IAT",
-      "decode": {
-        "start_bit": 56,
-        "bit_length": 8,
-        "byte_order": "little_endian",
-        "signed": false,
-        "factor": 0.75,
-        "offset": -48.0,
-        "minimum": -48.0,
-        "maximum": 143.25,
-        "unit": "C",
-        "mux": {
-          "value": 3,
-          "start_bit": 0,
-          "bit_length": 8,
-          "byte_order": "little_endian"
-        }
-      },
-      "raw": {
-        "cflag": 7,
-        "canp_start_bit": 56,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1904,
-        "frame_id_hex": "0x770",
-        "frame_name": "MSG_770"
       }
     },
     {

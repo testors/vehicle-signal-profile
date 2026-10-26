@@ -676,6 +676,44 @@
   "diagnostic_queries": [],
   "signals": [
     {
+      "name": "ECU_PAmb",
+      "decode": {
+        "start_bit": 16,
+        "bit_length": 16,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 0.0001,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 6.5535000000000005,
+        "unit": "bar",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 5,
+        "canp_start_bit": 16,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 503,
+        "frame_id_hex": "0x1F7",
+        "frame_name": "MSG_1F7"
+      },
+      "canonical": {
+        "id": "ambient_air.pressure",
+        "label": "Ambient air pressure",
+        "quantity": "pressure",
+        "preferred_unit": "bar",
+        "confidence": "mapped",
+        "aliases": [
+          "ECU_PAmb"
+        ]
+      }
+    },
+    {
       "name": "ECU_PBrakeF",
       "decode": {
         "start_bit": 32,
@@ -790,6 +828,44 @@
       }
     },
     {
+      "name": "ECU_TMot",
+      "decode": {
+        "start_bit": 48,
+        "bit_length": 8,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": -40.0,
+        "minimum": -40.0,
+        "maximum": 215.0,
+        "unit": "C",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 5,
+        "canp_start_bit": 48,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 504,
+        "frame_id_hex": "0x1F8",
+        "frame_name": "MSG_1F8"
+      },
+      "canonical": {
+        "id": "engine.coolant.temperature",
+        "label": "Engine coolant temperature",
+        "quantity": "temperature",
+        "preferred_unit": "C",
+        "confidence": "mapped",
+        "aliases": [
+          "ECU_TMot"
+        ]
+      }
+    },
+    {
       "name": "ECU_RPM",
       "decode": {
         "start_bit": 0,
@@ -900,6 +976,44 @@
         "confidence": "heuristic",
         "aliases": [
           "ECU_Lambda"
+        ]
+      }
+    },
+    {
+      "name": "ECU_PFuel",
+      "decode": {
+        "start_bit": 32,
+        "bit_length": 8,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 0.05,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 12.75,
+        "unit": "bar",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 5,
+        "canp_start_bit": 32,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 503,
+        "frame_id_hex": "0x1F7",
+        "frame_name": "MSG_1F7"
+      },
+      "canonical": {
+        "id": "fuel.pressure",
+        "label": "Fuel pressure",
+        "quantity": "pressure",
+        "preferred_unit": "bar",
+        "confidence": "mapped",
+        "aliases": [
+          "ECU_PFuel"
         ]
       }
     },
@@ -1688,62 +1802,6 @@
       }
     },
     {
-      "name": "ECU_PAmb",
-      "decode": {
-        "start_bit": 16,
-        "bit_length": 16,
-        "byte_order": "little_endian",
-        "signed": false,
-        "factor": 0.0001,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 6.5535000000000005,
-        "unit": "bar",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 5,
-        "canp_start_bit": 16,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 503,
-        "frame_id_hex": "0x1F7",
-        "frame_name": "MSG_1F7"
-      }
-    },
-    {
-      "name": "ECU_PFuel",
-      "decode": {
-        "start_bit": 32,
-        "bit_length": 8,
-        "byte_order": "little_endian",
-        "signed": false,
-        "factor": 0.05,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 12.75,
-        "unit": "bar",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 5,
-        "canp_start_bit": 32,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 503,
-        "frame_id_hex": "0x1F7",
-        "frame_name": "MSG_1F7"
-      }
-    },
-    {
       "name": "ECU_PRail2",
       "decode": {
         "start_bit": 48,
@@ -1844,34 +1902,6 @@
       "raw": {
         "cflag": 5,
         "canp_start_bit": 8,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 504,
-        "frame_id_hex": "0x1F8",
-        "frame_name": "MSG_1F8"
-      }
-    },
-    {
-      "name": "ECU_TMot",
-      "decode": {
-        "start_bit": 48,
-        "bit_length": 8,
-        "byte_order": "little_endian",
-        "signed": false,
-        "factor": 1.0,
-        "offset": -40.0,
-        "minimum": -40.0,
-        "maximum": 215.0,
-        "unit": "C",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 5,
-        "canp_start_bit": 48,
         "signed_known": true,
         "signed_reason": "rawfmt:unsigned"
       },

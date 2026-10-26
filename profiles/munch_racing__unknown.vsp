@@ -590,6 +590,44 @@
   "diagnostic_queries": [],
   "signals": [
     {
+      "name": "TempMot",
+      "decode": {
+        "start_bit": 16,
+        "bit_length": 8,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": -40.0,
+        "minimum": -40.0,
+        "maximum": 215.0,
+        "unit": "C",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 5,
+        "canp_start_bit": 16,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1705,
+        "frame_id_hex": "0x6A9",
+        "frame_name": "MSG_6A9"
+      },
+      "canonical": {
+        "id": "engine.coolant.temperature",
+        "label": "Engine coolant temperature",
+        "quantity": "temperature",
+        "preferred_unit": "C",
+        "confidence": "mapped",
+        "aliases": [
+          "TempMot"
+        ]
+      }
+    },
+    {
       "name": "RPM",
       "decode": {
         "start_bit": 36,
@@ -1223,34 +1261,6 @@
         "frame_id": 183,
         "frame_id_hex": "0xB7",
         "frame_name": "MSG_0B7"
-      }
-    },
-    {
-      "name": "TempMot",
-      "decode": {
-        "start_bit": 16,
-        "bit_length": 8,
-        "byte_order": "little_endian",
-        "signed": false,
-        "factor": 1.0,
-        "offset": -40.0,
-        "minimum": -40.0,
-        "maximum": 215.0,
-        "unit": "C",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 5,
-        "canp_start_bit": 16,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1705,
-        "frame_id_hex": "0x6A9",
-        "frame_name": "MSG_6A9"
       }
     },
     {

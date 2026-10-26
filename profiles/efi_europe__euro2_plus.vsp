@@ -691,6 +691,44 @@
       }
     },
     {
+      "name": "POIL",
+      "decode": {
+        "start_bit": 23,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": true,
+        "factor": 0.001,
+        "offset": 0.0,
+        "minimum": -32.768,
+        "maximum": 32.767,
+        "unit": "bar",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 24,
+        "signed_known": true,
+        "signed_reason": "rawfmt:signed"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 769,
+        "frame_id_hex": "0x301",
+        "frame_name": "MSG_301"
+      },
+      "canonical": {
+        "id": "engine.oil.pressure",
+        "label": "Engine oil pressure",
+        "quantity": "pressure",
+        "preferred_unit": "bar",
+        "confidence": "mapped",
+        "aliases": [
+          "POIL"
+        ]
+      }
+    },
+    {
       "name": "TOil",
       "decode": {
         "start_bit": 55,
@@ -839,6 +877,44 @@
         "confidence": "heuristic",
         "aliases": [
           "Lambda2_LOG"
+        ]
+      }
+    },
+    {
+      "name": "PFuel",
+      "decode": {
+        "start_bit": 7,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": true,
+        "factor": 0.001,
+        "offset": 0.0,
+        "minimum": -32.768,
+        "maximum": 32.767,
+        "unit": "bar",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 8,
+        "signed_known": true,
+        "signed_reason": "rawfmt:signed"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 775,
+        "frame_id_hex": "0x307",
+        "frame_name": "MSG_307"
+      },
+      "canonical": {
+        "id": "fuel.pressure",
+        "label": "Fuel pressure",
+        "quantity": "pressure",
+        "preferred_unit": "bar",
+        "confidence": "mapped",
+        "aliases": [
+          "PFuel"
         ]
       }
     },
@@ -1388,62 +1464,6 @@
         "frame_id": 775,
         "frame_id_hex": "0x307",
         "frame_name": "MSG_307"
-      }
-    },
-    {
-      "name": "PFuel",
-      "decode": {
-        "start_bit": 7,
-        "bit_length": 16,
-        "byte_order": "big_endian",
-        "signed": true,
-        "factor": 0.001,
-        "offset": 0.0,
-        "minimum": -32.768,
-        "maximum": 32.767,
-        "unit": "bar",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 8,
-        "signed_known": true,
-        "signed_reason": "rawfmt:signed"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 775,
-        "frame_id_hex": "0x307",
-        "frame_name": "MSG_307"
-      }
-    },
-    {
-      "name": "POIL",
-      "decode": {
-        "start_bit": 23,
-        "bit_length": 16,
-        "byte_order": "big_endian",
-        "signed": true,
-        "factor": 0.001,
-        "offset": 0.0,
-        "minimum": -32.768,
-        "maximum": 32.767,
-        "unit": "bar",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 24,
-        "signed_known": true,
-        "signed_reason": "rawfmt:signed"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 769,
-        "frame_id_hex": "0x301",
-        "frame_name": "MSG_301"
       }
     },
     {

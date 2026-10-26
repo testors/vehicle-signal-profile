@@ -1089,6 +1089,44 @@
       }
     },
     {
+      "name": "F88_VBATT",
+      "decode": {
+        "start_bit": 39,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": true,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": -32768.0,
+        "maximum": 32767.0,
+        "unit": "mV",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 40,
+        "signed_known": true,
+        "signed_reason": "rawfmt:signed"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1536,
+        "frame_id_hex": "0x600",
+        "frame_name": "MSG_600"
+      },
+      "canonical": {
+        "id": "battery.voltage",
+        "label": "Battery voltage",
+        "quantity": "voltage",
+        "preferred_unit": "V",
+        "confidence": "mapped",
+        "aliases": [
+          "F88_VBATT"
+        ]
+      }
+    },
+    {
       "name": "F88_CRANK1_PR",
       "decode": {
         "start_bit": 7,
@@ -1123,6 +1161,44 @@
         "confidence": "heuristic",
         "aliases": [
           "F88_CRANK1_PR"
+        ]
+      }
+    },
+    {
+      "name": "F88_EOT",
+      "decode": {
+        "start_bit": 7,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": true,
+        "factor": 0.1,
+        "offset": 0.0,
+        "minimum": -3276.8,
+        "maximum": 3276.7000000000003,
+        "unit": "C",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 8,
+        "signed_known": true,
+        "signed_reason": "rawfmt:signed"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1545,
+        "frame_id_hex": "0x609",
+        "frame_name": "MSG_609"
+      },
+      "canonical": {
+        "id": "engine.oil.temperature",
+        "label": "Engine oil temperature",
+        "quantity": "temperature",
+        "preferred_unit": "C",
+        "confidence": "mapped",
+        "aliases": [
+          "F88_EOT"
         ]
       }
     },
@@ -2279,34 +2355,6 @@
       }
     },
     {
-      "name": "F88_EOT",
-      "decode": {
-        "start_bit": 7,
-        "bit_length": 16,
-        "byte_order": "big_endian",
-        "signed": true,
-        "factor": 0.1,
-        "offset": 0.0,
-        "minimum": -3276.8,
-        "maximum": 3276.7000000000003,
-        "unit": "C",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 8,
-        "signed_known": true,
-        "signed_reason": "rawfmt:signed"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1545,
-        "frame_id_hex": "0x609",
-        "frame_name": "MSG_609"
-      }
-    },
-    {
       "name": "F88_ETOH_CONT",
       "decode": {
         "start_bit": 7,
@@ -2724,34 +2772,6 @@
         "frame_id": 1552,
         "frame_id_hex": "0x610",
         "frame_name": "MSG_610"
-      }
-    },
-    {
-      "name": "F88_VBATT",
-      "decode": {
-        "start_bit": 39,
-        "bit_length": 16,
-        "byte_order": "big_endian",
-        "signed": true,
-        "factor": 1.0,
-        "offset": 0.0,
-        "minimum": -32768.0,
-        "maximum": 32767.0,
-        "unit": "mV",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 40,
-        "signed_known": true,
-        "signed_reason": "rawfmt:signed"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1536,
-        "frame_id_hex": "0x600",
-        "frame_name": "MSG_600"
       }
     },
     {

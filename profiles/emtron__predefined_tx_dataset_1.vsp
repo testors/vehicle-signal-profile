@@ -207,6 +207,38 @@
       }
     },
     {
+      "name": "Head_Temperature",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 800,
+        "frame_id_hex": "0x320",
+        "frame_name": "MSG_320"
+      },
+      "decode": {
+        "start_bit": 32,
+        "bit_length": 16,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 0.1,
+        "offset": -50.0,
+        "minimum": -50.0,
+        "maximum": 250.0,
+        "unit": "C",
+        "mux": null
+      },
+      "canonical": {
+        "id": "engine.cylinder_head.temperature",
+        "label": "Cylinder head temperature",
+        "quantity": "temperature",
+        "preferred_unit": "C",
+        "confidence": "mapped",
+        "aliases": [
+          "Head_Temperature"
+        ]
+      }
+    },
+    {
       "name": "Oil_Temperature",
       "acquisition": {
         "type": "can_frame",
@@ -396,28 +428,6 @@
         "aliases": [
           "Gear"
         ]
-      }
-    },
-    {
-      "name": "Head_Temperature",
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 800,
-        "frame_id_hex": "0x320",
-        "frame_name": "MSG_320"
-      },
-      "decode": {
-        "start_bit": 32,
-        "bit_length": 16,
-        "byte_order": "little_endian",
-        "signed": false,
-        "factor": 0.1,
-        "offset": -50.0,
-        "minimum": -50.0,
-        "maximum": 250.0,
-        "unit": "C",
-        "mux": null
       }
     }
   ]

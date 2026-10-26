@@ -934,7 +934,7 @@
         "label": "Ambient air pressure",
         "quantity": "pressure",
         "preferred_unit": "bar",
-        "confidence": "heuristic",
+        "confidence": "mapped",
         "aliases": [
           "pBaro"
         ]
@@ -1013,6 +1013,44 @@
         "confidence": "heuristic",
         "aliases": [
           "tWater"
+        ]
+      }
+    },
+    {
+      "name": "pOil",
+      "decode": {
+        "start_bit": 7,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": true,
+        "factor": 0.01,
+        "offset": 0.0,
+        "minimum": -327.68,
+        "maximum": 327.67,
+        "unit": "bar",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 8,
+        "signed_known": true,
+        "signed_reason": "rawfmt:signed"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 296,
+        "frame_id_hex": "0x128",
+        "frame_name": "MSG_128"
+      },
+      "canonical": {
+        "id": "engine.oil.pressure",
+        "label": "Engine oil pressure",
+        "quantity": "pressure",
+        "preferred_unit": "bar",
+        "confidence": "mapped",
+        "aliases": [
+          "pOil"
         ]
       }
     },
@@ -1843,34 +1881,6 @@
       "raw": {
         "cflag": 0,
         "canp_start_bit": 24,
-        "signed_known": true,
-        "signed_reason": "rawfmt:signed"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 296,
-        "frame_id_hex": "0x128",
-        "frame_name": "MSG_128"
-      }
-    },
-    {
-      "name": "pOil",
-      "decode": {
-        "start_bit": 7,
-        "bit_length": 16,
-        "byte_order": "big_endian",
-        "signed": true,
-        "factor": 0.01,
-        "offset": 0.0,
-        "minimum": -327.68,
-        "maximum": 327.67,
-        "unit": "bar",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 8,
         "signed_known": true,
         "signed_reason": "rawfmt:signed"
       },

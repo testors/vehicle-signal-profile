@@ -3098,6 +3098,44 @@
       }
     },
     {
+      "name": "Turbo_Speed",
+      "decode": {
+        "start_bit": 39,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.001,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 65.535,
+        "unit": "",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 40,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1569,
+        "frame_id_hex": "0x621",
+        "frame_name": "MSG_621"
+      },
+      "canonical": {
+        "id": "turbocharger.speed",
+        "label": "Turbocharger speed",
+        "quantity": "rotational_speed",
+        "preferred_unit": "rpm",
+        "confidence": "mapped",
+        "aliases": [
+          "Turbo_Speed"
+        ]
+      }
+    },
+    {
       "name": "Lat_Acc_G",
       "decode": {
         "start_bit": 23,
@@ -3170,6 +3208,44 @@
         "confidence": "heuristic",
         "aliases": [
           "Long_Acc_G"
+        ]
+      }
+    },
+    {
+      "name": "Pitch_Rate",
+      "decode": {
+        "start_bit": 55,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": true,
+        "factor": 0.1,
+        "offset": 0.0,
+        "minimum": -3276.8,
+        "maximum": 3276.7000000000003,
+        "unit": "deg/s",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 56,
+        "signed_known": true,
+        "signed_reason": "rawfmt:signed"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1550,
+        "frame_id_hex": "0x60E",
+        "frame_name": "MSG_60E"
+      },
+      "canonical": {
+        "id": "vehicle.pitch_rate",
+        "label": "Pitch rate",
+        "quantity": "angular_speed",
+        "preferred_unit": "deg/s",
+        "confidence": "mapped",
+        "aliases": [
+          "Pitch_Rate"
         ]
       }
     },
@@ -5414,34 +5490,6 @@
       }
     },
     {
-      "name": "Pitch_Rate",
-      "decode": {
-        "start_bit": 55,
-        "bit_length": 16,
-        "byte_order": "big_endian",
-        "signed": true,
-        "factor": 0.1,
-        "offset": 0.0,
-        "minimum": -3276.8,
-        "maximum": 3276.7000000000003,
-        "unit": "deg/s",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 56,
-        "signed_known": true,
-        "signed_reason": "rawfmt:signed"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1550,
-        "frame_id_hex": "0x60E",
-        "frame_name": "MSG_60E"
-      }
-    },
-    {
       "name": "Rev_Cut_RPM",
       "decode": {
         "start_bit": 39,
@@ -5859,34 +5907,6 @@
         "frame_id": 1537,
         "frame_id_hex": "0x601",
         "frame_name": "MSG_601"
-      }
-    },
-    {
-      "name": "Turbo_Speed",
-      "decode": {
-        "start_bit": 39,
-        "bit_length": 16,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 0.001,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 65.535,
-        "unit": "",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 40,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1569,
-        "frame_id_hex": "0x621",
-        "frame_name": "MSG_621"
       }
     },
     {

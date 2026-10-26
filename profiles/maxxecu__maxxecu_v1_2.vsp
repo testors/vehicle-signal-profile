@@ -275,6 +275,38 @@
   "diagnostic_queries": [],
   "signals": [
     {
+      "name": "Barometric_Pressure",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1328,
+        "frame_id_hex": "0x530",
+        "frame_name": "MSG_530"
+      },
+      "decode": {
+        "start_bit": 16,
+        "bit_length": 16,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 0.1,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 6553.5,
+        "unit": "kPa",
+        "mux": null
+      },
+      "canonical": {
+        "id": "ambient_air.pressure",
+        "label": "Ambient air pressure",
+        "quantity": "pressure",
+        "preferred_unit": "bar",
+        "confidence": "mapped",
+        "aliases": [
+          "Barometric_Pressure"
+        ]
+      }
+    },
+    {
       "name": "Battery_Voltage",
       "acquisition": {
         "type": "can_frame",
@@ -592,28 +624,6 @@
         "aliases": [
           "Wheel_Speed_2_kph"
         ]
-      }
-    },
-    {
-      "name": "Barometric_Pressure",
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1328,
-        "frame_id_hex": "0x530",
-        "frame_name": "MSG_530"
-      },
-      "decode": {
-        "start_bit": 16,
-        "bit_length": 16,
-        "byte_order": "little_endian",
-        "signed": false,
-        "factor": 0.1,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 6553.5,
-        "unit": "kPa",
-        "mux": null
       }
     },
     {

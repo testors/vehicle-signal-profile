@@ -1713,6 +1713,44 @@
       }
     },
     {
+      "name": "ECU_ETHANOL",
+      "decode": {
+        "start_bit": 56,
+        "bit_length": 8,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 255.0,
+        "unit": "%",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 5,
+        "canp_start_bit": 56,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1540,
+        "frame_id_hex": "0x604",
+        "frame_name": "MSG_604"
+      },
+      "canonical": {
+        "id": "fuel.ethanol_content",
+        "label": "Fuel ethanol content",
+        "quantity": "fraction",
+        "preferred_unit": "%",
+        "confidence": "mapped",
+        "aliases": [
+          "ECU_ETHANOL"
+        ]
+      }
+    },
+    {
       "name": "ECU_FUEL_P",
       "decode": {
         "start_bit": 40,
@@ -2595,34 +2633,6 @@
         "canp_start_bit": 40,
         "signed_known": true,
         "signed_reason": "rawfmt:bitfield"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1540,
-        "frame_id_hex": "0x604",
-        "frame_name": "MSG_604"
-      }
-    },
-    {
-      "name": "ECU_ETHANOL",
-      "decode": {
-        "start_bit": 56,
-        "bit_length": 8,
-        "byte_order": "little_endian",
-        "signed": false,
-        "factor": 1.0,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 255.0,
-        "unit": "%",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 5,
-        "canp_start_bit": 56,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
       },
       "acquisition": {
         "type": "can_frame",

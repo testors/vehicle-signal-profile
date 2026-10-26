@@ -585,6 +585,44 @@
       }
     },
     {
+      "name": "ECU_POIL",
+      "decode": {
+        "start_bit": 7,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.0024,
+        "offset": -0.296,
+        "minimum": -0.296,
+        "maximum": 156.988,
+        "unit": "bar",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 8,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1639,
+        "frame_id_hex": "0x667",
+        "frame_name": "MSG_667"
+      },
+      "canonical": {
+        "id": "engine.oil.pressure",
+        "label": "Engine oil pressure",
+        "quantity": "pressure",
+        "preferred_unit": "bar",
+        "confidence": "mapped",
+        "aliases": [
+          "ECU_POIL"
+        ]
+      }
+    },
+    {
       "name": "ECU_RPM",
       "decode": {
         "start_bit": 7,
@@ -1316,34 +1354,6 @@
       "raw": {
         "cflag": 0,
         "canp_start_bit": 24,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1639,
-        "frame_id_hex": "0x667",
-        "frame_name": "MSG_667"
-      }
-    },
-    {
-      "name": "ECU_POIL",
-      "decode": {
-        "start_bit": 7,
-        "bit_length": 16,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 0.0024,
-        "offset": -0.296,
-        "minimum": -0.296,
-        "maximum": 156.988,
-        "unit": "bar",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 8,
         "signed_known": true,
         "signed_reason": "rawfmt:unsigned"
       },

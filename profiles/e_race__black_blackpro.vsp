@@ -1502,6 +1502,44 @@
       }
     },
     {
+      "name": "TurboSpeed",
+      "decode": {
+        "start_bit": 23,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 255.0,
+        "unit": "krpm",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 16,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1648,
+        "frame_id_hex": "0x670",
+        "frame_name": "MSG_670"
+      },
+      "canonical": {
+        "id": "turbocharger.speed",
+        "label": "Turbocharger speed",
+        "quantity": "rotational_speed",
+        "preferred_unit": "rpm",
+        "confidence": "mapped",
+        "aliases": [
+          "TurboSpeed"
+        ]
+      }
+    },
+    {
       "name": "Speed",
       "decode": {
         "start_bit": 55,
@@ -2293,34 +2331,6 @@
         "frame_id": 1600,
         "frame_id_hex": "0x640",
         "frame_name": "MSG_640"
-      }
-    },
-    {
-      "name": "TurboSpeed",
-      "decode": {
-        "start_bit": 23,
-        "bit_length": 8,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 1.0,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 255.0,
-        "unit": "krpm",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 16,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1648,
-        "frame_id_hex": "0x670",
-        "frame_name": "MSG_670"
       }
     }
   ]

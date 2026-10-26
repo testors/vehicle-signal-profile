@@ -510,6 +510,44 @@
       }
     },
     {
+      "name": "P_OIL",
+      "decode": {
+        "start_bit": 32,
+        "bit_length": 8,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 0.05,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 12.75,
+        "unit": "bar",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 1,
+        "canp_start_bit": 32,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 512,
+        "frame_id_hex": "0x200",
+        "frame_name": "MSG_200"
+      },
+      "canonical": {
+        "id": "engine.oil.pressure",
+        "label": "Engine oil pressure",
+        "quantity": "pressure",
+        "preferred_unit": "bar",
+        "confidence": "mapped",
+        "aliases": [
+          "P_OIL"
+        ]
+      }
+    },
+    {
       "name": "OIL_T",
       "decode": {
         "start_bit": 56,
@@ -961,34 +999,6 @@
         "frame_id": 514,
         "frame_id_hex": "0x202",
         "frame_name": "MSG_202"
-      }
-    },
-    {
-      "name": "P_OIL",
-      "decode": {
-        "start_bit": 32,
-        "bit_length": 8,
-        "byte_order": "little_endian",
-        "signed": false,
-        "factor": 0.05,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 12.75,
-        "unit": "bar",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 1,
-        "canp_start_bit": 32,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 512,
-        "frame_id_hex": "0x200",
-        "frame_name": "MSG_200"
       }
     }
   ]

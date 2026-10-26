@@ -33,6 +33,7 @@ Powertrain:
 | `engine.crankcase.pressure` | `bar` |
 | `engine.oil.temperature` | `C` |
 | `engine.oil.pressure` | `bar` |
+| `engine.cylinder_head.temperature` | `C` |
 | `engine.oil.level` | `%` |
 | `engine.load` | `%` |
 | `engine.runtime` | `s` |
@@ -47,6 +48,7 @@ Powertrain:
 | `engine.oil.warning_lamp` | `bool` |
 | `intake_air.temperature` | `C` |
 | `intake_air.boost_pressure` | `bar` |
+| `turbocharger.speed` | `rpm` |
 | `intake_manifold.pressure` | `bar` |
 | `exhaust.air_fuel_ratio` | `ratio` |
 | `exhaust.lambda` | `lambda` |
@@ -57,6 +59,7 @@ Powertrain:
 | `accelerator.pedal.position` | `%` |
 | `fuel.level` | `%` |
 | `fuel.pressure` | `bar` |
+| `fuel.ethanol_content` | `%` |
 | `fuel.temperature` | `C` |
 | `fuel.used` | `L` |
 | `fuel.remaining` | `L` |
@@ -74,6 +77,7 @@ Vehicle and chassis:
 | `vehicle.acceleration.vertical` | `g` |
 | `vehicle.yaw_rate` | `deg/s` |
 | `vehicle.roll_rate` | `deg/s` |
+| `vehicle.pitch_rate` | `deg/s` |
 | `wheel.speed` | `km/h` |
 | `wheel.speed.front_left` | `km/h` |
 | `wheel.speed.front_right` | `km/h` |
@@ -97,6 +101,10 @@ Vehicle and chassis:
 | `tire.temperature.front_right` | `C` |
 | `tire.temperature.rear_left` | `C` |
 | `tire.temperature.rear_right` | `C` |
+| `suspension.ride_height.front_left` | `mm` |
+| `suspension.ride_height.front_right` | `mm` |
+| `suspension.ride_height.rear_left` | `mm` |
+| `suspension.ride_height.rear_right` | `mm` |
 
 Drivetrain and electrical:
 
@@ -105,6 +113,7 @@ Drivetrain and electrical:
 | `transmission.gear.selected` | `gear` |
 | `transmission.gear.requested` | `gear` |
 | `transmission.oil.temperature` | `C` |
+| `differential.oil.temperature` | `C` |
 | `clutch.position` | `%` |
 | `clutch.switch` | `bool` |
 | `battery.voltage` | `V` |

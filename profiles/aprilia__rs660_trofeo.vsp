@@ -3338,6 +3338,44 @@
       }
     },
     {
+      "name": "RSV4_Advance",
+      "decode": {
+        "start_bit": 7,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.5,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 127.5,
+        "unit": "deg",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 0,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 2033,
+        "frame_id_hex": "0x7F1",
+        "frame_name": "MSG_7F1"
+      },
+      "canonical": {
+        "id": "engine.ignition.advance",
+        "label": "Ignition advance",
+        "quantity": "angle",
+        "preferred_unit": "deg",
+        "confidence": "mapped",
+        "aliases": [
+          "RSV4_Advance"
+        ]
+      }
+    },
+    {
       "name": "Oil_Temp",
       "decode": {
         "start_bit": 15,
@@ -3951,6 +3989,44 @@
         "confidence": "mapped",
         "aliases": [
           "Odometer"
+        ]
+      }
+    },
+    {
+      "name": "Pitch_Rate",
+      "decode": {
+        "start_bit": 16,
+        "bit_length": 12,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 0.08,
+        "offset": -163.84,
+        "minimum": -163.84,
+        "maximum": 163.76000000000002,
+        "unit": "deg/s",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 5,
+        "canp_start_bit": 16,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 629,
+        "frame_id_hex": "0x275",
+        "frame_name": "MSG_275"
+      },
+      "canonical": {
+        "id": "vehicle.pitch_rate",
+        "label": "Pitch rate",
+        "quantity": "angular_speed",
+        "preferred_unit": "deg/s",
+        "confidence": "mapped",
+        "aliases": [
+          "Pitch_Rate"
         ]
       }
     },
@@ -6433,34 +6509,6 @@
       }
     },
     {
-      "name": "Pitch_Rate",
-      "decode": {
-        "start_bit": 16,
-        "bit_length": 12,
-        "byte_order": "little_endian",
-        "signed": false,
-        "factor": 0.08,
-        "offset": -163.84,
-        "minimum": -163.84,
-        "maximum": 163.76000000000002,
-        "unit": "deg/s",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 5,
-        "canp_start_bit": 16,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 629,
-        "frame_id_hex": "0x275",
-        "frame_name": "MSG_275"
-      }
-    },
-    {
       "name": "Pitch_Rate_Statu",
       "decode": {
         "start_bit": 28,
@@ -6881,34 +6929,6 @@
         "frame_id": 376,
         "frame_id_hex": "0x178",
         "frame_name": "MSG_178"
-      }
-    },
-    {
-      "name": "RSV4_Advance",
-      "decode": {
-        "start_bit": 7,
-        "bit_length": 8,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 0.5,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 127.5,
-        "unit": "deg",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 0,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 2033,
-        "frame_id_hex": "0x7F1",
-        "frame_name": "MSG_7F1"
       }
     },
     {

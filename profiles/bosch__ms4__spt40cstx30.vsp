@@ -1131,6 +1131,87 @@
       }
     },
     {
+      "name": "MS4_PAMB",
+      "decode": {
+        "start_bit": 39,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.0001,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 6.5535000000000005,
+        "unit": "bar",
+        "mux": {
+          "value": 2,
+          "start_bit": 7,
+          "bit_length": 8,
+          "byte_order": "big_endian"
+        }
+      },
+      "raw": {
+        "cflag": 2,
+        "canp_start_bit": 40,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1914,
+        "frame_id_hex": "0x77A",
+        "frame_name": "MSG_77A"
+      },
+      "canonical": {
+        "id": "ambient_air.pressure",
+        "label": "Ambient air pressure",
+        "quantity": "pressure",
+        "preferred_unit": "bar",
+        "confidence": "mapped",
+        "aliases": [
+          "MS4_PAMB"
+        ]
+      }
+    },
+    {
+      "name": "MS4_BATT",
+      "decode": {
+        "start_bit": 55,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 70.3125,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 17929.6875,
+        "unit": "mV",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 48,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1913,
+        "frame_id_hex": "0x779",
+        "frame_name": "MSG_779"
+      },
+      "canonical": {
+        "id": "battery.voltage",
+        "label": "Battery voltage",
+        "quantity": "voltage",
+        "preferred_unit": "V",
+        "confidence": "mapped",
+        "aliases": [
+          "MS4_BATT"
+        ]
+      }
+    },
+    {
       "name": "MS4_BRK_PR",
       "decode": {
         "start_bit": 15,
@@ -1203,6 +1284,259 @@
         "confidence": "heuristic",
         "aliases": [
           "MS4_BRAKE_SW"
+        ]
+      }
+    },
+    {
+      "name": "MS4_TMOT",
+      "decode": {
+        "start_bit": 39,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": -40.0,
+        "minimum": -40.0,
+        "maximum": 215.0,
+        "unit": "C",
+        "mux": {
+          "value": 5,
+          "start_bit": 7,
+          "bit_length": 8,
+          "byte_order": "big_endian"
+        }
+      },
+      "raw": {
+        "cflag": 2,
+        "canp_start_bit": 32,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1914,
+        "frame_id_hex": "0x77A",
+        "frame_name": "MSG_77A"
+      },
+      "canonical": {
+        "id": "engine.coolant.temperature",
+        "label": "Engine coolant temperature",
+        "quantity": "temperature",
+        "preferred_unit": "C",
+        "confidence": "mapped",
+        "aliases": [
+          "MS4_TMOT"
+        ]
+      }
+    },
+    {
+      "name": "MS4_IGN_ANG",
+      "decode": {
+        "start_bit": 31,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 3.1875,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 812.8125,
+        "unit": "deg",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 24,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1905,
+        "frame_id_hex": "0x771",
+        "frame_name": "MSG_771"
+      },
+      "canonical": {
+        "id": "engine.ignition.advance",
+        "label": "Ignition advance",
+        "quantity": "angle",
+        "preferred_unit": "deg",
+        "confidence": "mapped",
+        "aliases": [
+          "MS4_IGN_ANG"
+        ]
+      }
+    },
+    {
+      "name": "MS4_MIL",
+      "decode": {
+        "start_bit": 20,
+        "bit_length": 1,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "unit": "",
+        "mux": {
+          "value": 0,
+          "start_bit": 7,
+          "bit_length": 8,
+          "byte_order": "big_endian"
+        }
+      },
+      "raw": {
+        "cflag": 2,
+        "canp_start_bit": 20,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1914,
+        "frame_id_hex": "0x77A",
+        "frame_name": "MSG_77A"
+      },
+      "canonical": {
+        "id": "engine.malfunction_indicator",
+        "label": "Malfunction indicator lamp",
+        "quantity": "state",
+        "preferred_unit": "bool",
+        "confidence": "mapped",
+        "aliases": [
+          "MS4_MIL"
+        ]
+      }
+    },
+    {
+      "name": "MS4_POIL",
+      "decode": {
+        "start_bit": 47,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.05154639,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 13.144329449999999,
+        "unit": "bar",
+        "mux": {
+          "value": 1,
+          "start_bit": 7,
+          "bit_length": 8,
+          "byte_order": "big_endian"
+        }
+      },
+      "raw": {
+        "cflag": 2,
+        "canp_start_bit": 40,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1914,
+        "frame_id_hex": "0x77A",
+        "frame_name": "MSG_77A"
+      },
+      "canonical": {
+        "id": "engine.oil.pressure",
+        "label": "Engine oil pressure",
+        "quantity": "pressure",
+        "preferred_unit": "bar",
+        "confidence": "mapped",
+        "aliases": [
+          "MS4_POIL"
+        ]
+      }
+    },
+    {
+      "name": "MS4_TOIL",
+      "decode": {
+        "start_bit": 47,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": -40.0,
+        "minimum": -40.0,
+        "maximum": 215.0,
+        "unit": "C",
+        "mux": {
+          "value": 4,
+          "start_bit": 7,
+          "bit_length": 8,
+          "byte_order": "big_endian"
+        }
+      },
+      "raw": {
+        "cflag": 2,
+        "canp_start_bit": 40,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1914,
+        "frame_id_hex": "0x77A",
+        "frame_name": "MSG_77A"
+      },
+      "canonical": {
+        "id": "engine.oil.temperature",
+        "label": "Engine oil temperature",
+        "quantity": "temperature",
+        "preferred_unit": "C",
+        "confidence": "mapped",
+        "aliases": [
+          "MS4_TOIL"
+        ]
+      }
+    },
+    {
+      "name": "MS4_OIL_LAMP",
+      "decode": {
+        "start_bit": 19,
+        "bit_length": 1,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "unit": "",
+        "mux": {
+          "value": 0,
+          "start_bit": 7,
+          "bit_length": 8,
+          "byte_order": "big_endian"
+        }
+      },
+      "raw": {
+        "cflag": 2,
+        "canp_start_bit": 19,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1914,
+        "frame_id_hex": "0x77A",
+        "frame_name": "MSG_77A"
+      },
+      "canonical": {
+        "id": "engine.oil.warning_lamp",
+        "label": "Engine oil warning lamp",
+        "quantity": "state",
+        "preferred_unit": "bool",
+        "confidence": "mapped",
+        "aliases": [
+          "MS4_OIL_LAMP"
         ]
       }
     },
@@ -1317,6 +1651,92 @@
         "confidence": "heuristic",
         "aliases": [
           "MS4_LAMBDA2"
+        ]
+      }
+    },
+    {
+      "name": "MS4_PFUEL",
+      "decode": {
+        "start_bit": 63,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.05154639,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 13.144329449999999,
+        "unit": "bar",
+        "mux": {
+          "value": 1,
+          "start_bit": 7,
+          "bit_length": 8,
+          "byte_order": "big_endian"
+        }
+      },
+      "raw": {
+        "cflag": 2,
+        "canp_start_bit": 56,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1914,
+        "frame_id_hex": "0x77A",
+        "frame_name": "MSG_77A"
+      },
+      "canonical": {
+        "id": "fuel.pressure",
+        "label": "Fuel pressure",
+        "quantity": "pressure",
+        "preferred_unit": "bar",
+        "confidence": "mapped",
+        "aliases": [
+          "MS4_PFUEL"
+        ]
+      }
+    },
+    {
+      "name": "MS4_TAIR",
+      "decode": {
+        "start_bit": 63,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": -40.0,
+        "minimum": -40.0,
+        "maximum": 215.0,
+        "unit": "C",
+        "mux": {
+          "value": 2,
+          "start_bit": 7,
+          "bit_length": 8,
+          "byte_order": "big_endian"
+        }
+      },
+      "raw": {
+        "cflag": 2,
+        "canp_start_bit": 56,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1914,
+        "frame_id_hex": "0x77A",
+        "frame_name": "MSG_77A"
+      },
+      "canonical": {
+        "id": "intake_air.temperature",
+        "label": "Intake air temperature",
+        "quantity": "temperature",
+        "preferred_unit": "C",
+        "confidence": "mapped",
+        "aliases": [
+          "MS4_TAIR"
         ]
       }
     },
@@ -1436,6 +1856,158 @@
         "confidence": "heuristic",
         "aliases": [
           "MS4_GEAR"
+        ]
+      }
+    },
+    {
+      "name": "MS4_ACCY",
+      "decode": {
+        "start_bit": 55,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": true,
+        "factor": 0.03137254,
+        "offset": 0.0,
+        "minimum": -4.01568512,
+        "maximum": 3.9843125799999997,
+        "unit": "g",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 48,
+        "signed_known": true,
+        "signed_reason": "rawfmt:signed"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1911,
+        "frame_id_hex": "0x777",
+        "frame_name": "MSG_777"
+      },
+      "canonical": {
+        "id": "vehicle.acceleration.lateral",
+        "label": "Lateral acceleration",
+        "quantity": "acceleration",
+        "preferred_unit": "g",
+        "confidence": "mapped",
+        "aliases": [
+          "MS4_ACCY"
+        ]
+      }
+    },
+    {
+      "name": "MS4_ACCX",
+      "decode": {
+        "start_bit": 47,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": true,
+        "factor": 0.03137254,
+        "offset": 0.0,
+        "minimum": -4.01568512,
+        "maximum": 3.9843125799999997,
+        "unit": "g",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 40,
+        "signed_known": true,
+        "signed_reason": "rawfmt:signed"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1911,
+        "frame_id_hex": "0x777",
+        "frame_name": "MSG_777"
+      },
+      "canonical": {
+        "id": "vehicle.acceleration.longitudinal",
+        "label": "Longitudinal acceleration",
+        "quantity": "acceleration",
+        "preferred_unit": "g",
+        "confidence": "mapped",
+        "aliases": [
+          "MS4_ACCX"
+        ]
+      }
+    },
+    {
+      "name": "MS4_ACCZ",
+      "decode": {
+        "start_bit": 63,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": true,
+        "factor": 0.03137254,
+        "offset": 0.0,
+        "minimum": -4.01568512,
+        "maximum": 3.9843125799999997,
+        "unit": "g",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 56,
+        "signed_known": true,
+        "signed_reason": "rawfmt:signed"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1911,
+        "frame_id_hex": "0x777",
+        "frame_name": "MSG_777"
+      },
+      "canonical": {
+        "id": "vehicle.acceleration.vertical",
+        "label": "Vertical acceleration",
+        "quantity": "acceleration",
+        "preferred_unit": "g",
+        "confidence": "mapped",
+        "aliases": [
+          "MS4_ACCZ"
+        ]
+      }
+    },
+    {
+      "name": "MS4_SPEED",
+      "decode": {
+        "start_bit": 7,
+        "bit_length": 9,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 511.0,
+        "unit": "km/h",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 15,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1909,
+        "frame_id_hex": "0x775",
+        "frame_name": "MSG_775"
+      },
+      "canonical": {
+        "id": "vehicle.speed",
+        "label": "Vehicle speed",
+        "quantity": "speed",
+        "preferred_unit": "km/h",
+        "confidence": "heuristic",
+        "aliases": [
+          "MS4_SPEED"
         ]
       }
     },
@@ -1592,90 +2164,6 @@
       }
     },
     {
-      "name": "MS4_ACCX",
-      "decode": {
-        "start_bit": 47,
-        "bit_length": 8,
-        "byte_order": "big_endian",
-        "signed": true,
-        "factor": 0.03137254,
-        "offset": 0.0,
-        "minimum": -4.01568512,
-        "maximum": 3.9843125799999997,
-        "unit": "g",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 40,
-        "signed_known": true,
-        "signed_reason": "rawfmt:signed"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1911,
-        "frame_id_hex": "0x777",
-        "frame_name": "MSG_777"
-      }
-    },
-    {
-      "name": "MS4_ACCY",
-      "decode": {
-        "start_bit": 55,
-        "bit_length": 8,
-        "byte_order": "big_endian",
-        "signed": true,
-        "factor": 0.03137254,
-        "offset": 0.0,
-        "minimum": -4.01568512,
-        "maximum": 3.9843125799999997,
-        "unit": "g",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 48,
-        "signed_known": true,
-        "signed_reason": "rawfmt:signed"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1911,
-        "frame_id_hex": "0x777",
-        "frame_name": "MSG_777"
-      }
-    },
-    {
-      "name": "MS4_ACCZ",
-      "decode": {
-        "start_bit": 63,
-        "bit_length": 8,
-        "byte_order": "big_endian",
-        "signed": true,
-        "factor": 0.03137254,
-        "offset": 0.0,
-        "minimum": -4.01568512,
-        "maximum": 3.9843125799999997,
-        "unit": "g",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 56,
-        "signed_known": true,
-        "signed_reason": "rawfmt:signed"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1911,
-        "frame_id_hex": "0x777",
-        "frame_name": "MSG_777"
-      }
-    },
-    {
       "name": "MS4_ATH",
       "decode": {
         "start_bit": 47,
@@ -1701,34 +2189,6 @@
         "frame_id": 1907,
         "frame_id_hex": "0x773",
         "frame_name": "MSG_773"
-      }
-    },
-    {
-      "name": "MS4_BATT",
-      "decode": {
-        "start_bit": 55,
-        "bit_length": 8,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 70.3125,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 17929.6875,
-        "unit": "mV",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 48,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1913,
-        "frame_id_hex": "0x779",
-        "frame_name": "MSG_779"
       }
     },
     {
@@ -1905,34 +2365,6 @@
       }
     },
     {
-      "name": "MS4_IGN_ANG",
-      "decode": {
-        "start_bit": 31,
-        "bit_length": 8,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 3.1875,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 812.8125,
-        "unit": "deg",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 24,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1905,
-        "frame_id_hex": "0x771",
-        "frame_name": "MSG_771"
-      }
-    },
-    {
       "name": "MS4_IGN_BASE",
       "decode": {
         "start_bit": 7,
@@ -2010,72 +2442,6 @@
       "raw": {
         "cflag": 2,
         "canp_start_bit": 48,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1914,
-        "frame_id_hex": "0x77A",
-        "frame_name": "MSG_77A"
-      }
-    },
-    {
-      "name": "MS4_MIL",
-      "decode": {
-        "start_bit": 20,
-        "bit_length": 1,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 1.0,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "unit": "",
-        "mux": {
-          "value": 0,
-          "start_bit": 7,
-          "bit_length": 8,
-          "byte_order": "big_endian"
-        }
-      },
-      "raw": {
-        "cflag": 2,
-        "canp_start_bit": 20,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1914,
-        "frame_id_hex": "0x77A",
-        "frame_name": "MSG_77A"
-      }
-    },
-    {
-      "name": "MS4_OIL_LAMP",
-      "decode": {
-        "start_bit": 19,
-        "bit_length": 1,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 1.0,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "unit": "",
-        "mux": {
-          "value": 0,
-          "start_bit": 7,
-          "bit_length": 8,
-          "byte_order": "big_endian"
-        }
-      },
-      "raw": {
-        "cflag": 2,
-        "canp_start_bit": 19,
         "signed_known": true,
         "signed_reason": "rawfmt:unsigned"
       },
@@ -2200,39 +2566,6 @@
       }
     },
     {
-      "name": "MS4_PAMB",
-      "decode": {
-        "start_bit": 39,
-        "bit_length": 16,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 0.0001,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 6.5535000000000005,
-        "unit": "bar",
-        "mux": {
-          "value": 2,
-          "start_bit": 7,
-          "bit_length": 8,
-          "byte_order": "big_endian"
-        }
-      },
-      "raw": {
-        "cflag": 2,
-        "canp_start_bit": 40,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1914,
-        "frame_id_hex": "0x77A",
-        "frame_name": "MSG_77A"
-      }
-    },
-    {
       "name": "MS4_PCRANK",
       "decode": {
         "start_bit": 39,
@@ -2254,72 +2587,6 @@
       "raw": {
         "cflag": 2,
         "canp_start_bit": 32,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1914,
-        "frame_id_hex": "0x77A",
-        "frame_name": "MSG_77A"
-      }
-    },
-    {
-      "name": "MS4_PFUEL",
-      "decode": {
-        "start_bit": 63,
-        "bit_length": 8,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 0.05154639,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 13.144329449999999,
-        "unit": "bar",
-        "mux": {
-          "value": 1,
-          "start_bit": 7,
-          "bit_length": 8,
-          "byte_order": "big_endian"
-        }
-      },
-      "raw": {
-        "cflag": 2,
-        "canp_start_bit": 56,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1914,
-        "frame_id_hex": "0x77A",
-        "frame_name": "MSG_77A"
-      }
-    },
-    {
-      "name": "MS4_POIL",
-      "decode": {
-        "start_bit": 47,
-        "bit_length": 8,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 0.05154639,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 13.144329449999999,
-        "unit": "bar",
-        "mux": {
-          "value": 1,
-          "start_bit": 7,
-          "bit_length": 8,
-          "byte_order": "big_endian"
-        }
-      },
-      "raw": {
-        "cflag": 2,
-        "canp_start_bit": 40,
         "signed_known": true,
         "signed_reason": "rawfmt:unsigned"
       },
@@ -2418,67 +2685,6 @@
         "frame_id": 1905,
         "frame_id_hex": "0x771",
         "frame_name": "MSG_771"
-      }
-    },
-    {
-      "name": "MS4_SPEED",
-      "decode": {
-        "start_bit": 7,
-        "bit_length": 9,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 1.0,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 511.0,
-        "unit": "km/h",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 15,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1909,
-        "frame_id_hex": "0x775",
-        "frame_name": "MSG_775"
-      }
-    },
-    {
-      "name": "MS4_TAIR",
-      "decode": {
-        "start_bit": 63,
-        "bit_length": 8,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 1.0,
-        "offset": -40.0,
-        "minimum": -40.0,
-        "maximum": 215.0,
-        "unit": "C",
-        "mux": {
-          "value": 2,
-          "start_bit": 7,
-          "bit_length": 8,
-          "byte_order": "big_endian"
-        }
-      },
-      "raw": {
-        "cflag": 2,
-        "canp_start_bit": 56,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1914,
-        "frame_id_hex": "0x77A",
-        "frame_name": "MSG_77A"
       }
     },
     {
@@ -2719,72 +2925,6 @@
       "raw": {
         "cflag": 2,
         "canp_start_bit": 56,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1914,
-        "frame_id_hex": "0x77A",
-        "frame_name": "MSG_77A"
-      }
-    },
-    {
-      "name": "MS4_TMOT",
-      "decode": {
-        "start_bit": 39,
-        "bit_length": 8,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 1.0,
-        "offset": -40.0,
-        "minimum": -40.0,
-        "maximum": 215.0,
-        "unit": "C",
-        "mux": {
-          "value": 5,
-          "start_bit": 7,
-          "bit_length": 8,
-          "byte_order": "big_endian"
-        }
-      },
-      "raw": {
-        "cflag": 2,
-        "canp_start_bit": 32,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1914,
-        "frame_id_hex": "0x77A",
-        "frame_name": "MSG_77A"
-      }
-    },
-    {
-      "name": "MS4_TOIL",
-      "decode": {
-        "start_bit": 47,
-        "bit_length": 8,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 1.0,
-        "offset": -40.0,
-        "minimum": -40.0,
-        "maximum": 215.0,
-        "unit": "C",
-        "mux": {
-          "value": 4,
-          "start_bit": 7,
-          "bit_length": 8,
-          "byte_order": "big_endian"
-        }
-      },
-      "raw": {
-        "cflag": 2,
-        "canp_start_bit": 40,
         "signed_known": true,
         "signed_reason": "rawfmt:unsigned"
       },

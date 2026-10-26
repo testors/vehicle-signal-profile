@@ -1181,6 +1181,44 @@
       }
     },
     {
+      "name": "BarometricPressure",
+      "decode": {
+        "start_bit": 40,
+        "bit_length": 8,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 0.005,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 1.2750000000000001,
+        "unit": "bar",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 5,
+        "canp_start_bit": 40,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 419429888,
+        "frame_id_hex": "0x18FFFE00",
+        "frame_name": "MSG_18FFFE00"
+      },
+      "canonical": {
+        "id": "ambient_air.pressure",
+        "label": "Ambient air pressure",
+        "quantity": "pressure",
+        "preferred_unit": "bar",
+        "confidence": "mapped",
+        "aliases": [
+          "BarometricPressure"
+        ]
+      }
+    },
+    {
       "name": "BrakeSwitch_OFF",
       "decode": {
         "start_bit": 28,
@@ -1918,34 +1956,6 @@
         "frame_id": 419403567,
         "frame_id_hex": "0x18FF972F",
         "frame_name": "MSG_18FF972F"
-      }
-    },
-    {
-      "name": "BarometricPressure",
-      "decode": {
-        "start_bit": 40,
-        "bit_length": 8,
-        "byte_order": "little_endian",
-        "signed": false,
-        "factor": 0.005,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 1.2750000000000001,
-        "unit": "bar",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 5,
-        "canp_start_bit": 40,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 419429888,
-        "frame_id_hex": "0x18FFFE00",
-        "frame_name": "MSG_18FFFE00"
       }
     },
     {

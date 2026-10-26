@@ -885,6 +885,38 @@
   "diagnostic_queries": [],
   "signals": [
     {
+      "name": "Barometric_Pressure",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 882,
+        "frame_id_hex": "0x372",
+        "frame_name": "MSG_372"
+      },
+      "decode": {
+        "start_bit": 55,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.1,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 0.0,
+        "unit": "kPa",
+        "mux": null
+      },
+      "canonical": {
+        "id": "ambient_air.pressure",
+        "label": "Ambient air pressure",
+        "quantity": "pressure",
+        "preferred_unit": "bar",
+        "confidence": "mapped",
+        "aliases": [
+          "Barometric_Pressure"
+        ]
+      }
+    },
+    {
       "name": "Battery_Voltage",
       "acquisition": {
         "type": "can_frame",
@@ -1011,6 +1043,39 @@
           "Clutch_Position"
         ]
       }
+    },
+    {
+      "name": "Differential_Oil_Temperature",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 993,
+        "frame_id_hex": "0x3E1",
+        "frame_name": "MSG_3E1"
+      },
+      "decode": {
+        "start_bit": 23,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.1,
+        "offset": -273.15,
+        "minimum": -273.15,
+        "maximum": 6280.35,
+        "unit": "C",
+        "mux": null
+      },
+      "canonical": {
+        "id": "differential.oil.temperature",
+        "label": "Differential oil temperature",
+        "quantity": "temperature",
+        "preferred_unit": "C",
+        "confidence": "mapped",
+        "aliases": [
+          "Differential_Oil_Temperature"
+        ]
+      },
+      "decode_basis": "reference"
     },
     {
       "name": "Coolant_Pressure",
@@ -1203,6 +1268,38 @@
         "confidence": "mapped",
         "aliases": [
           "Engine_Speed"
+        ]
+      }
+    },
+    {
+      "name": "Fuel_Composition",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 993,
+        "frame_id_hex": "0x3E1",
+        "frame_name": "MSG_3E1"
+      },
+      "decode": {
+        "start_bit": 39,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.1,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 0.0,
+        "unit": "%",
+        "mux": null
+      },
+      "canonical": {
+        "id": "fuel.ethanol_content",
+        "label": "Fuel ethanol content",
+        "quantity": "fraction",
+        "preferred_unit": "%",
+        "confidence": "mapped",
+        "aliases": [
+          "Fuel_Composition"
         ]
       }
     },
@@ -1562,6 +1659,38 @@
       "decode_basis": "reference"
     },
     {
+      "name": "Turbo_Speed",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 875,
+        "frame_id_hex": "0x36B",
+        "frame_name": "MSG_36B"
+      },
+      "decode": {
+        "start_bit": 39,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 10.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 0.0,
+        "unit": "rpm",
+        "mux": null
+      },
+      "canonical": {
+        "id": "turbocharger.speed",
+        "label": "Turbocharger speed",
+        "quantity": "rotational_speed",
+        "preferred_unit": "rpm",
+        "confidence": "mapped",
+        "aliases": [
+          "Turbo_Speed"
+        ]
+      }
+    },
+    {
       "name": "Indicated_Lateral_Acceleration",
       "acquisition": {
         "type": "can_frame",
@@ -1808,28 +1937,6 @@
       }
     },
     {
-      "name": "Barometric_Pressure",
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 882,
-        "frame_id_hex": "0x372",
-        "frame_name": "MSG_372"
-      },
-      "decode": {
-        "start_bit": 55,
-        "bit_length": 16,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 0.1,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 0.0,
-        "unit": "kPa",
-        "mux": null
-      }
-    },
-    {
       "name": "Battery_Light",
       "acquisition": {
         "type": "can_frame",
@@ -1874,29 +1981,6 @@
       }
     },
     {
-      "name": "Differential_Oil_Temperature",
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 993,
-        "frame_id_hex": "0x3E1",
-        "frame_name": "MSG_3E1"
-      },
-      "decode": {
-        "start_bit": 23,
-        "bit_length": 16,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 0.1,
-        "offset": -273.15,
-        "minimum": -273.15,
-        "maximum": 6280.35,
-        "unit": "C",
-        "mux": null
-      },
-      "decode_basis": "reference"
-    },
-    {
       "name": "Error_Flags",
       "acquisition": {
         "type": "can_frame",
@@ -1915,28 +1999,6 @@
         "minimum": 0.0,
         "maximum": 0.0,
         "unit": "on/off",
-        "mux": null
-      }
-    },
-    {
-      "name": "Fuel_Composition",
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 993,
-        "frame_id_hex": "0x3E1",
-        "frame_name": "MSG_3E1"
-      },
-      "decode": {
-        "start_bit": 39,
-        "bit_length": 16,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 0.1,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 0.0,
-        "unit": "%",
         "mux": null
       }
     },
@@ -2003,28 +2065,6 @@
         "minimum": 0.0,
         "maximum": 0.0,
         "unit": "on/off",
-        "mux": null
-      }
-    },
-    {
-      "name": "Turbo_Speed",
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 875,
-        "frame_id_hex": "0x36B",
-        "frame_name": "MSG_36B"
-      },
-      "decode": {
-        "start_bit": 39,
-        "bit_length": 16,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 10.0,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 0.0,
-        "unit": "rpm",
         "mux": null
       }
     },

@@ -598,6 +598,38 @@
       }
     },
     {
+      "name": "Barometric_Pressure",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 376,
+        "frame_id_hex": "0x178",
+        "frame_name": "MSG_178"
+      },
+      "decode": {
+        "start_bit": 55,
+        "bit_length": 6,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 10.0,
+        "offset": 500.0,
+        "minimum": 500.0,
+        "maximum": 1110.0,
+        "unit": "mbar",
+        "mux": null
+      },
+      "canonical": {
+        "id": "ambient_air.pressure",
+        "label": "Ambient air pressure",
+        "quantity": "pressure",
+        "preferred_unit": "bar",
+        "confidence": "mapped",
+        "aliases": [
+          "Barometric_Pressure"
+        ]
+      }
+    },
+    {
       "name": "Air_Temperature",
       "acquisition": {
         "type": "can_frame",
@@ -1235,28 +1267,6 @@
         "aliases": [
           "Wheel_Speed_RR_kph"
         ]
-      }
-    },
-    {
-      "name": "Barometric_Pressure",
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 376,
-        "frame_id_hex": "0x178",
-        "frame_name": "MSG_178"
-      },
-      "decode": {
-        "start_bit": 55,
-        "bit_length": 6,
-        "byte_order": "big_endian",
-        "signed": false,
-        "factor": 10.0,
-        "offset": 500.0,
-        "minimum": 500.0,
-        "maximum": 1110.0,
-        "unit": "mbar",
-        "mux": null
       }
     },
     {

@@ -1603,6 +1603,49 @@
       }
     },
     {
+      "name": "ECU_ETHANOL",
+      "decode": {
+        "start_bit": 32,
+        "bit_length": 16,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 1.0,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 65535.0,
+        "unit": "%",
+        "mux": {
+          "value": 13,
+          "start_bit": 0,
+          "bit_length": 16,
+          "byte_order": "little_endian"
+        }
+      },
+      "raw": {
+        "cflag": 7,
+        "canp_start_bit": 32,
+        "signed_known": true,
+        "signed_reason": "rawfmt:unsigned"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 1000,
+        "frame_id_hex": "0x3E8",
+        "frame_name": "MSG_3E8"
+      },
+      "canonical": {
+        "id": "fuel.ethanol_content",
+        "label": "Fuel ethanol content",
+        "quantity": "fraction",
+        "preferred_unit": "%",
+        "confidence": "mapped",
+        "aliases": [
+          "ECU_ETHANOL"
+        ]
+      }
+    },
+    {
       "name": "ECU_FUEL_PRESS",
       "decode": {
         "start_bit": 48,
@@ -2433,39 +2476,6 @@
       "raw": {
         "cflag": 7,
         "canp_start_bit": 60,
-        "signed_known": true,
-        "signed_reason": "rawfmt:unsigned"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 1000,
-        "frame_id_hex": "0x3E8",
-        "frame_name": "MSG_3E8"
-      }
-    },
-    {
-      "name": "ECU_ETHANOL",
-      "decode": {
-        "start_bit": 32,
-        "bit_length": 16,
-        "byte_order": "little_endian",
-        "signed": false,
-        "factor": 1.0,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 65535.0,
-        "unit": "%",
-        "mux": {
-          "value": 13,
-          "start_bit": 0,
-          "bit_length": 16,
-          "byte_order": "little_endian"
-        }
-      },
-      "raw": {
-        "cflag": 7,
-        "canp_start_bit": 32,
         "signed_known": true,
         "signed_reason": "rawfmt:unsigned"
       },

@@ -1770,7 +1770,7 @@
         "label": "Ambient air pressure",
         "quantity": "pressure",
         "preferred_unit": "bar",
-        "confidence": "heuristic",
+        "confidence": "mapped",
         "aliases": [
           "pBaro"
         ]
@@ -1929,6 +1929,44 @@
       }
     },
     {
+      "name": "pOil",
+      "decode": {
+        "start_bit": 7,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": true,
+        "factor": 0.01,
+        "offset": 0.0,
+        "minimum": 0.0,
+        "maximum": 0.0,
+        "unit": "bar",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 8,
+        "signed_known": true,
+        "signed_reason": "rawfmt:signed"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 548,
+        "frame_id_hex": "0x224",
+        "frame_name": "MSG_224"
+      },
+      "canonical": {
+        "id": "engine.oil.pressure",
+        "label": "Engine oil pressure",
+        "quantity": "pressure",
+        "preferred_unit": "bar",
+        "confidence": "mapped",
+        "aliases": [
+          "pOil"
+        ]
+      }
+    },
+    {
       "name": "tOil",
       "decode": {
         "start_bit": 39,
@@ -2077,6 +2115,44 @@
         "confidence": "heuristic",
         "aliases": [
           "tExhaust"
+        ]
+      }
+    },
+    {
+      "name": "pFuel",
+      "decode": {
+        "start_bit": 23,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": true,
+        "factor": 0.01,
+        "offset": 0.01,
+        "minimum": 0.0,
+        "maximum": 0.0,
+        "unit": "bar",
+        "mux": null
+      },
+      "raw": {
+        "cflag": 0,
+        "canp_start_bit": 24,
+        "signed_known": true,
+        "signed_reason": "rawfmt:signed"
+      },
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 548,
+        "frame_id_hex": "0x224",
+        "frame_name": "MSG_224"
+      },
+      "canonical": {
+        "id": "fuel.pressure",
+        "label": "Fuel pressure",
+        "quantity": "pressure",
+        "preferred_unit": "bar",
+        "confidence": "mapped",
+        "aliases": [
+          "pFuel"
         ]
       }
     },
@@ -3593,34 +3669,6 @@
       }
     },
     {
-      "name": "pFuel",
-      "decode": {
-        "start_bit": 23,
-        "bit_length": 16,
-        "byte_order": "big_endian",
-        "signed": true,
-        "factor": 0.01,
-        "offset": 0.01,
-        "minimum": 0.0,
-        "maximum": 0.0,
-        "unit": "bar",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 24,
-        "signed_known": true,
-        "signed_reason": "rawfmt:signed"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 548,
-        "frame_id_hex": "0x224",
-        "frame_name": "MSG_224"
-      }
-    },
-    {
       "name": "PIT_iSpeed",
       "decode": {
         "start_bit": 7,
@@ -3674,34 +3722,6 @@
         "frame_id": 308,
         "frame_id_hex": "0x134",
         "frame_name": "MSG_134"
-      }
-    },
-    {
-      "name": "pOil",
-      "decode": {
-        "start_bit": 7,
-        "bit_length": 16,
-        "byte_order": "big_endian",
-        "signed": true,
-        "factor": 0.01,
-        "offset": 0.0,
-        "minimum": 0.0,
-        "maximum": 0.0,
-        "unit": "bar",
-        "mux": null
-      },
-      "raw": {
-        "cflag": 0,
-        "canp_start_bit": 8,
-        "signed_known": true,
-        "signed_reason": "rawfmt:signed"
-      },
-      "acquisition": {
-        "type": "can_frame",
-        "bus": "can0",
-        "frame_id": 548,
-        "frame_id_hex": "0x224",
-        "frame_name": "MSG_224"
       }
     },
     {
