@@ -399,6 +399,19 @@ static uint32_t frame_id_mask_for(NSDictionary *profile, uint32_t frameId) {
     return 0;
 }
 
+/* A reassembled frame is a vendor stream buffer, not one CAN frame (VSP_RUNTIME_SPEC.md,
+ * "Reassembled Frames"); its signals cannot be read from single frames. */
+static bool frame_is_reassembled(NSDictionary *profile, uint32_t frameId) {
+    NSArray *frames = profile[@"can_frames"];
+    if (![frames isKindOfClass:[NSArray class]]) return false;
+    for (NSDictionary *frame in frames) {
+        if (![frame isKindOfClass:[NSDictionary class]]) continue;
+        if ([num_or_nil(frame[@"frame_id"]) unsignedIntValue] != frameId) continue;
+        return [frame[@"reassembled"] isKindOfClass:[NSNumber class]] && [frame[@"reassembled"] boolValue];
+    }
+    return false;
+}
+
 static double frame_cycle_ms_for(NSDictionary *profile, uint32_t frameId) {
     NSArray *frames = profile[@"can_frames"];
     if (![frames isKindOfClass:[NSArray class]]) return 0.0;
@@ -450,6 +463,11 @@ static NSArray<VSPProbeItem *> *select_items(NSDictionary *profile,
             NSNumber *frameId = num_or_nil(acq[@"frame_id"]);
             if (!frameId) continue;
             item.frameId = frameId.unsignedIntValue;
+            if (frame_is_reassembled(profile, item.frameId)) {
+                fprintf(stderr, "[INFO] %s: skipped, frame 0x%03X is a reassembled vendor stream\n",
+                        (name ?: @"").UTF8String, item.frameId);
+                continue;
+            }
             item.frameIdMask = frame_id_mask_for(profile, item.frameId);
             item.frameCycleMs = frame_cycle_ms_for(profile, item.frameId);
         } else {
