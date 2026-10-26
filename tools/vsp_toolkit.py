@@ -772,6 +772,20 @@ def validate_runtime_vocabulary(profile: dict[str, Any], errors: list[str]) -> N
             errors.append(f"{label}: role must be one of {', '.join(SIGNAL_ROLES)}")
 
 
+def warn_double_bias(profile: dict[str, Any], warnings: list[str]) -> None:
+    """A signed field whose offset is also -2^(n-1) x factor is biased twice: it spans only
+    one side of 0 (a VBOX or AiM source error; the offset is the unsigned bias)."""
+    for signal in profile.get("signals") or []:
+        decode = signal.get("decode") or {}
+        length, factor, offset = int(decode.get("bit_length") or 0), decode.get("factor"), decode.get("offset")
+        if not decode.get("signed") or length < 2 or not factor or not offset or decode.get("polynomial"):
+            continue
+        half = (1 << (length - 1)) * abs(float(factor))
+        if abs(abs(float(offset)) - half) <= 0.005 * half:
+            warnings.append(f"signal {signal.get('name')}: signed with an offset of -2^{length - 1} x factor, "
+                            "so it spans only one side of 0 (read it unsigned?)")
+
+
 def validate_profile(profile: dict[str, Any]) -> dict[str, Any]:
     errors: list[str] = []
     warnings: list[str] = []
@@ -902,6 +916,7 @@ def validate_profile(profile: dict[str, Any]) -> dict[str, Any]:
                 )
 
     validate_runtime_vocabulary(profile, errors)
+    warn_double_bias(profile, warnings)
 
     return {
         "errors": errors,
