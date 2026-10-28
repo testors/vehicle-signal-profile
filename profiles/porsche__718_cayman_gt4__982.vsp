@@ -57,6 +57,22 @@
         {
           "name": "Steering_Angle",
           "decode": {
+            "start_bit": 16,
+            "bit_length": 13,
+            "byte_order": "little_endian",
+            "signed": false,
+            "sign_bit": 29,
+            "factor": 0.1,
+            "offset": 0.0,
+            "minimum": -819.1,
+            "maximum": 819.1,
+            "unit": "deg",
+            "mux": null
+          }
+        },
+        {
+          "name": "Steering_Angle_Coarse",
+          "decode": {
             "start_bit": 41,
             "bit_length": 10,
             "byte_order": "big_endian",
@@ -861,7 +877,7 @@
       }
     },
     {
-      "name": "Steering_Angle",
+      "name": "Steering_Angle_Coarse",
       "acquisition": {
         "type": "can_frame",
         "bus": "can0",
@@ -880,7 +896,31 @@
         "maximum": 638.75,
         "unit": "deg",
         "mux": null
+      }
+    },
+    {
+      "name": "Steering_Angle",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 134,
+        "frame_id_hex": "0x86",
+        "frame_name": "MSG_086"
       },
+      "decode": {
+        "start_bit": 16,
+        "bit_length": 13,
+        "byte_order": "little_endian",
+        "signed": false,
+        "sign_bit": 29,
+        "factor": 0.1,
+        "offset": 0.0,
+        "minimum": -819.1,
+        "maximum": 819.1,
+        "unit": "deg",
+        "mux": null
+      },
+      "decode_basis": "reference",
       "canonical": {
         "id": "steering.wheel.angle",
         "label": "Steering wheel angle",
@@ -912,16 +952,6 @@
         "maximum": 0.0,
         "unit": "",
         "mux": null
-      },
-      "canonical": {
-        "id": "steering.wheel.direction",
-        "label": "Steering wheel direction",
-        "quantity": "state",
-        "preferred_unit": "state",
-        "confidence": "mapped",
-        "aliases": [
-          "Steering_Direction"
-        ]
       }
     },
     {
