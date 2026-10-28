@@ -34,6 +34,9 @@ ACTIVE 초기화(ELM327 초기화 명령 + STN 옵션)를 쓴다.
 
 ## 빌드
 
+vehicle-signal-profile 저장소의 `apps/can_tools` 폴더에서 빌드한다(이 문서의 경로는 모두 이 폴더 기준).
+python3가 필요하다: 빌드가 저장소의 `profiles/`(`../../profiles`)에서 prior table을 생성한다(아래 "Prior table 생성").
+
 ```bash
 ./build.sh
 ```
@@ -59,14 +62,14 @@ VSP의 `signals[].canonical.id`와 `signals[].acquisition`을 기준으로 CAN f
 
 ```bash
 # 하드웨어 없이 선택 계획만 확인
-./build/can_tools probe ../vehicle-signal-profile/profiles/porsche__911_gt3__992__can_obd.vsp --plan
+./build/can_tools probe ../../profiles/porsche__911_gt3__992__can_obd.vsp --plan
 
 # CAN acquisition만 5Hz 목표로 10초 검증
-./build/can_tools probe ../vehicle-signal-profile/profiles/porsche__911_gt3__992__can_obd.vsp \
+./build/can_tools probe ../../profiles/porsche__911_gt3__992__can_obd.vsp \
   --device vLinker --mode can --hz 5 --seconds 10
 
 # OBD/UDS acquisition만 5Hz 목표로 검증
-./build/can_tools probe ../vehicle-signal-profile/profiles/porsche__911_gt3__992__can_obd.vsp \
+./build/can_tools probe ../../profiles/porsche__911_gt3__992__can_obd.vsp \
   --device vLinker --mode obd --hz 5 --seconds 10
 ```
 
@@ -155,13 +158,13 @@ btop처럼 터미널 하나에서 어댑터 연결, 프로필 선택, 실시간 
 ```bash
 ./build/can_tools                         # 연결 화면 (= can_tools tui)
 ./build/can_tools tui --device OBDLink    # 이름에 OBDLink가 들어간 첫 어댑터에 바로 연결
-./build/can_tools tui --device vLinker --profile ../vehicle-signal-profile/profiles/porsche__911_gt3__992__can_obd.vsp
+./build/can_tools tui --device vLinker --profile ../../profiles/porsche__911_gt3__992__can_obd.vsp
 ./build/can_tools tui --replay captures/20261028_101500          # 저장된 세션을 차 없이 다시 보기
 ./build/can_tools tui --replay x.frames.tsv --snapshot-at 5 --size 120x40   # 화면을 텍스트로 출력 (터미널 불필요)
 ```
 
 옵션: `--profile VSP|none`(없으면 연결 뒤 프로필 선택 창), `--profiles DIR`(프로필 폴더; 기본은 `VSP_PROFILES_DIR`,
-`./profiles`, `../vehicle-signal-profile/profiles`, 실행파일 상위 폴더 순), `--no-tx`, `--no-rec`, `--captures DIR`(세션 폴더
+`./profiles`, 저장소의 `profiles/`(빌드 때 절대 경로로 기록), 실행파일 폴더와 상위 폴더의 `profiles/` 순), `--no-tx`, `--no-rec`, `--captures DIR`(세션 폴더
 위치, 기본 `captures/`), `--mono`(색 없음, `NO_COLOR`도 같음), `--ascii`(UTF-8이 아닌 터미널), replay 전용 `--speed X`(0.25~16).
 `--device ""`는 거부한다.
 
@@ -307,16 +310,12 @@ phase 길이는 manifest의 `analyzed_duration_s` → `actual_duration_s` → fr
 
 ### Prior table 생성
 
-prior table(`common/can_discover_priors.h`)은 `tools/gen_can_discover_priors.py`로
-`../vehicle-signal-profile/profiles/*.vsp`에서 생성하며, 런타임에는 VSP 저장소가 없어도 된다.
-헤더 상단에 원본 저장소 commit, 파일 수, 입력 digest가 기록된다. DLC가 8을 넘거나 필드가 frame을
+prior table(`can_discover_priors.h`)은 빌드할 때 `tools/gen_can_discover_priors.py`가 저장소의
+`profiles/*.vsp`(`../../profiles`)에서 `build/generated/`에 생성한다. 헤더는 커밋하지 않으며, 프로필이나 생성기가
+바뀌면 다음 빌드에서 다시 만든다. 런타임에는 프로필 폴더가 없어도 된다.
+헤더 상단에 `profiles/`를 마지막으로 바꾼 commit, 파일 수, 입력 digest가 기록된다. DLC가 8을 넘거나 필드가 frame을
 벗어나는 신호, multiplexed 신호는 제외한다. VSP `decode.sign_bit`(sign-magnitude) 신호는 부호 `'S'`와
 부호 비트 위치로 들어가며, 같은 비트를 다른 부호 방식으로 읽은 후보도 부호 전환이 더 매끄러울 때만 이 prior를 채택한다.
-
-```bash
-python3 tools/gen_can_discover_priors.py            # 재생성
-python3 tools/gen_can_discover_priors.py --check    # 현재 헤더가 원본과 일치하는지 확인
-```
 
 ### 회귀 테스트
 
@@ -380,7 +379,7 @@ JSON 출력에도 `"bus_mode"` 필드가 포함된다.
 ## 프로젝트 구조
 
 ```
-can_tools/
+apps/can_tools/
 ├── can_tools/           # 단일 실행파일 can_tools (명령별 파일)
 │   ├── main.m           # 명령 분기, 도움말, argv[0] 별칭(can_reader 등)
 │   ├── cli_common.m/h   # 명령 공용 상태, 연결 래퍼
@@ -414,9 +413,8 @@ can_tools/
 │   ├── discover_session.m/h # 탐색 세션(phase 캡처→분석→파일 저장) + 대화형 CLI
 │   ├── vsp_engine.m/h   # VSP 프로파일 로드, 시그널 선택, frame 디코드 (C API)
 │   ├── cli_util.c/h     # CLI 로그, JSON 문자열 출력
-│   ├── can_discover.c/h # PT-CAN 시그널 자동 탐색 엔진
-│   └── can_discover_priors.h # VSP corpus prior table (생성 파일)
-├── tools/               # prior 생성기, ref2dbc
+│   └── can_discover.c/h # PT-CAN 시그널 자동 탐색 엔진
+├── tools/               # prior 생성기(빌드 때 실행, build/generated/can_discover_priors.h), ref2dbc
 ├── tests/               # 탐색 엔진 회귀, VSP 디코더, replay, 탐색 세션, 어댑터 수명, TUI 테스트 (하드웨어 불필요)
 │   ├── fake/            # 가짜 어댑터 (can_tools_fake)
 │   ├── tui_fake/        # 가짜 어댑터로 TUI 라이브 경로의 AT 명령 기록 검증

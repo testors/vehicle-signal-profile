@@ -17,7 +17,9 @@ Only the runtime files in this repository are part of the public contract.
 vehicle-signal-profile/
 ├── profiles/                  # ready-to-use public .vsp files
 ├── docs/                      # public runtime docs
-└── tools/                     # public VSP conversion and validation scripts
+├── tools/                     # public VSP conversion and validation scripts
+└── apps/
+    └── can_tools/             # macOS CLI + terminal dashboard (see Apps)
 ```
 
 ## Docs
@@ -102,3 +104,12 @@ Validate a profile:
 ```bash
 python3 tools/validate_vsp.py profiles/<profile>.vsp
 ```
+
+## Apps
+
+- [apps/can_tools](apps/can_tools/README.md): a macOS command-line tool and
+  terminal dashboard that reads vehicle signals described by these profiles
+  over a Bluetooth OBD adapter. On a direct CAN tap it is receive-only.
+
+Apps are tools built on the profiles; they are not part of the `.vsp` format
+contract.
