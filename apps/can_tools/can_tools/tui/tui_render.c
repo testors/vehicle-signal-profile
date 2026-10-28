@@ -767,6 +767,12 @@ static void gauge_scale_label(char *out, size_t len, const tui_gauges_t *gs, con
 
 typedef enum { BAR_METER, BAR_STEER, BAR_GEAR, BAR_NONE } bar_kind_t;
 
+/* Pedal, pressure, rpm and speed mean nothing below 0: a reading under it (a
+   released brake at -0.3 bar) shows 0, text and bar alike. Display only. */
+static double gauge_floor0(double v) {
+    return v < 0 ? 0 : v;
+}
+
 static void draw_one_gauge(tui_grid_t *g, const tui_model_t *m, const tui_view_t *v, tui_gauge_id_t id,
                            int x, int y, int colw, bool wide) {
     const tui_gauges_t *gs = v->gauges;
@@ -806,8 +812,9 @@ static void draw_one_gauge(tui_grid_t *g, const tui_model_t *m, const tui_view_t
             bool deg = s && tui_unit_is_degrees(s->unit);
             snprintf(unit, sizeof(unit), "%s", deg ? "°" : "%");
             if (number) {
-                tui_format_fixed(val, sizeof(val), s->value, 0);
-                frac = s->value / (deg ? 90.0 : 100.0);
+                double pos = gauge_floor0(s->value);
+                tui_format_fixed(val, sizeof(val), pos, 0);
+                frac = pos / (deg ? 90.0 : 100.0);
             }
             stops = TUI_GRAD_THR;
             nstops = 5;
@@ -820,8 +827,9 @@ static void draw_one_gauge(tui_grid_t *g, const tui_model_t *m, const tui_view_t
             if (mode == TUI_BRAKE_PEDAL) {
                 snprintf(unit, sizeof(unit), "%%");
                 if (number) {
-                    tui_format_fixed(val, sizeof(val), s->value, 0);
-                    frac = s->value / 100.0;
+                    double pct = gauge_floor0(s->value);
+                    tui_format_fixed(val, sizeof(val), pct, 0);
+                    frac = pct / 100.0;
                 }
             } else if (mode == TUI_BRAKE_SWITCH) {
                 if (number) {
@@ -832,7 +840,7 @@ static void draw_one_gauge(tui_grid_t *g, const tui_model_t *m, const tui_view_t
             } else {
                 snprintf(unit, sizeof(unit), "bar");
                 if (number) {
-                    double bar = tui_gauge_convert(id, s->unit, s->value);
+                    double bar = gauge_floor0(tui_gauge_convert(id, s->unit, s->value));
                     tui_format_fixed(val, sizeof(val), bar, 1);
                     frac = bar / gs->g[id].scale;
                 }
@@ -855,15 +863,16 @@ static void draw_one_gauge(tui_grid_t *g, const tui_model_t *m, const tui_view_t
             stops = TUI_GRAD_RPM;
             nstops = 11;
             if (number) {
-                if (wide) tui_format_count(val, sizeof(val), llround(s->value));
-                else tui_format_fixed(val, sizeof(val), s->value, 0);
-                frac = s->value / gs->g[id].scale;
+                double rpm = gauge_floor0(s->value);
+                if (wide) tui_format_count(val, sizeof(val), llround(rpm));
+                else tui_format_fixed(val, sizeof(val), rpm, 0);
+                frac = rpm / gs->g[id].scale;
             }
             break;
         case TUI_GAUGE_SPEED:
             snprintf(unit, sizeof(unit), "km/h");
             if (number) {
-                double kmh = tui_gauge_convert(id, s->unit, s->value);
+                double kmh = gauge_floor0(tui_gauge_convert(id, s->unit, s->value));
                 tui_format_fixed(val, sizeof(val), kmh, 0);
                 frac = kmh / gs->g[id].scale;
             }

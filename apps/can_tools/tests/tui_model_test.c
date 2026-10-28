@@ -346,6 +346,69 @@ static void test_timeline_hold(void) {
     CHECK(c[0] == ' ' && c[6] != ' ' && c[19] == ' ', "3.5 s before the window: blank left edge");
 }
 
+/* 0x106 Brake_Pressure: 10 bit x 0.3 - 30.6 bar, 50 Hz; raw `a` and `b` alternate
+   every 100 ms (released at rest: 102 = 0.0 bar, now and then 101 = -0.3 bar). */
+static tui_signal_t brake_signal(double lsb, int a, int b) {
+    tui_signal_desc_t d = {
+        .name = "Brake_Pressure", .unit = "bar", .group = "brake", .factor = 0.3, .lsb = lsb,
+        .cycle_ms = 20, .frame_id = 0x106, .canonical = "brake.pressure",
+    };
+    tui_signal_t s;
+    tui_signal_init(&s, &d);
+    for (int64_t ms = 0; ms <= 20000; ms += 20) {
+        int raw = (ms / 100) % 2 ? b : a;
+        tui_signal_sample(&s, ms, true, false, raw * 0.3 - 30.6, NULL);
+    }
+    return s;
+}
+
+/* cells that are drawn and not the flat glyph (⠤, or half of it) */
+static int non_flat_cells(const tui_signal_t *s, int cells) {
+    unsigned int c[256];
+    int n = timeline_cps(s, 20000, cells, c), bad = 0;
+    for (int i = 0; i < n; i++) bad += c[i] != ' ' && c[i] != 0x2824 && c[i] != 0x2804 && c[i] != 0x2820;
+    return n == cells ? bad : -1;
+}
+
+static void test_timeline_lsb(void) {
+    char out[512];
+    /* 1 LSB (0.0 / -0.3 bar): flat, not full height with dips */
+    tui_signal_t one = brake_signal(0.3, 102, 101);
+    CHECK(non_flat_cells(&one, 69) == 0, "1 LSB apart: every cell flat (%d not)", non_flat_cells(&one, 69));
+    tui_signal_sparkline(&one, 20000, 20, false, out, sizeof(out));
+    CHECK_STR(out, "━━━━━━━━━━━━━━━━━━━━");
+    /* 2 LSB (0.0 / -0.6 bar): still flat */
+    tui_signal_t two = brake_signal(0.3, 102, 100);
+    CHECK(non_flat_cells(&two, 69) == 0, "2 LSB apart: every cell flat (%d not)", non_flat_cells(&two, 69));
+    tui_signal_sparkline(&two, 20000, 20, false, out, sizeof(out));
+    CHECK_STR(out, "━━━━━━━━━━━━━━━━━━━━");
+    /* 3 LSB: scaled as before */
+    tui_signal_t three = brake_signal(0.3, 102, 99);
+    CHECK(non_flat_cells(&three, 69) == 69, "3 LSB apart: scaled (%d of 69)", non_flat_cells(&three, 69));
+    /* pressed (0.0 / 21.6 bar): heights 1 and 4 */
+    tui_signal_t pressed = brake_signal(0.3, 102, 174);
+    unsigned int c[256];
+    timeline_cps(&pressed, 20000, 100, c);   /* 100 ms cells: one value per cell */
+    CHECK(c[0] == tui_braille_char(1, 1) && c[1] == tui_braille_char(4, 4), "0.0 / 21.6 bar: low and full (%X %X)",
+          c[0], c[1]);
+    tui_signal_sparkline(&pressed, 20000, 100, false, out, sizeof(out));
+    CHECK(strstr(out, "▁█") != NULL, "sparkline scaled too");
+    /* no LSB (float32 / polynomial / under 6 bits: lsb 0): the same tiny step is scaled as before */
+    tui_signal_t none = brake_signal(0, 102, 101);
+    CHECK(none.lsb == 0 && non_flat_cells(&none, 69) == 69, "no LSB: scaled (%d of 69)", non_flat_cells(&none, 69));
+    tui_signal_sparkline(&none, 20000, 100, false, out, sizeof(out));
+    CHECK(strstr(out, "█▁") != NULL, "no LSB: sparkline scaled");
+    /* 1 bit 0/1 toggle (the engine gives it no LSB): heights, not flat */
+    tui_signal_desc_t d = { .name = "Brake_Switch", .unit = "on/off", .group = "custom", .factor = 1, .lsb = 0,
+                            .cycle_ms = 20 };
+    tui_signal_t sw;
+    tui_signal_init(&sw, &d);
+    for (int64_t ms = 0; ms <= 20000; ms += 20) tui_signal_sample(&sw, ms, true, false, (double)((ms / 100) % 2), NULL);
+    timeline_cps(&sw, 20000, 100, c);
+    CHECK(c[0] == tui_braille_char(1, 1) && c[1] == tui_braille_char(4, 4), "1-bit toggle: low and full (%X %X)",
+          c[0], c[1]);
+}
+
 /*******************************************************************************
  * Formatting
  ******************************************************************************/
@@ -849,6 +912,7 @@ int main(void) {
     test_ordering();
     test_sparkline();
     test_timeline_hold();
+    test_timeline_lsb();
     test_format();
     test_classifier();
     test_log();

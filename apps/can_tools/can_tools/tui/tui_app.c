@@ -438,6 +438,7 @@ static bool load_profile(tui_app_t *app, const char *path, char *err, size_t err
             .diagnostic = diag,
             .has_value_table = info->has_value_table,
             .factor = info->factor,
+            .lsb = info->lsb,
             .cycle_ms = info->cycle_ms,
             .frame_id = info->frame_id,
             .request_hex = info->request_hex,

@@ -152,6 +152,7 @@ typedef struct {
     bool        diagnostic;
     bool        has_value_table;
     double      factor;
+    double      lsb;           /* value of one raw step (vsp_signal_info_t.lsb), 0 = none */
     double      cycle_ms;      /* 0 = unknown */
     uint32_t    frame_id;      /* CAN */
     const char *request_hex;   /* diagnostic, e.g. "01 2F" */
@@ -169,6 +170,7 @@ typedef struct {
     bool        diagnostic;
     bool        discrete;      /* value table or gear group: text history */
     int         decimals;
+    double      lsb;           /* 0 = none */
     double      cycle_ms;
     int         decoder_index;
     char        canonical[64]; /* lower case */
@@ -218,13 +220,15 @@ int tui_signal_compare(const void *a, const void *b);
 /** Sparkline of the last 10 s in `cells` columns (UTF-8 into out). Last value
  *  in each cell, an empty cell holding the previous sample (also the last one
  *  before the window) for tui_signal_hold_ms, scaled to the min..max of the
- *  drawn values; constant -> flat line; nothing to hold -> space. */
+ *  drawn values; constant or within 2 raw steps (lsb) -> flat line; nothing
+ *  to hold -> space. */
 void tui_signal_sparkline(const tui_signal_t *s, int64_t now_ms, int cells, bool ascii,
                           char *out, size_t out_len);
 /** btop-style braille timeline of the last 10 s in `cells` columns: two
  *  samples per cell (each the last value in its half of the cell's time
  *  range, held like the sparkline), height 1..4 over the min..max of the
- *  drawn values (temperatures: at least a 10 °C / 18 °F span), flat window -> "⠤".
+ *  drawn values (temperatures: at least a 10 °C / 18 °F span), flat window
+ *  (constant or within 2 raw steps, see lsb) -> "⠤".
  *  Writes UTF-8 to out and a color index per cell to fg (0 for blank
  *  cells). Returns the number of cells written. */
 int  tui_signal_braille(const tui_signal_t *s, int64_t now_ms, int cells, char *out, size_t out_len,

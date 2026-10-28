@@ -326,6 +326,7 @@ void tui_signal_init(tui_signal_t *s, const tui_signal_desc_t *d) {
     s->diagnostic = d->diagnostic;
     s->discrete = d->has_value_table || s->group == TUI_GROUP_GEAR;
     s->decimals = tui_decimals_for_factor(d->factor);
+    s->lsb = d->lsb > 0 ? d->lsb : 0;
     s->cycle_ms = d->cycle_ms > 0 ? d->cycle_ms : 0;
     s->decoder_index = d->decoder_index;
     s->max_gear = d->max_gear;
@@ -528,6 +529,13 @@ static bool sample_series(const tui_signal_t *s, int64_t now_ms, int n, double *
     return any;
 }
 
+/* A window within 2 raw steps is drawn flat: a reading resting on an LSB
+   boundary (a released brake at 0.0 / -0.3 bar) is noise, not full height.
+   Raw steps are whole, so a span under 2.5 steps is at most 2. */
+static bool within_lsb(const tui_signal_t *s, double lo, double hi) {
+    return s->lsb > 0 && hi - lo < 2.5 * s->lsb;
+}
+
 void tui_signal_sparkline(const tui_signal_t *s, int64_t now_ms, int cells, bool ascii,
                           char *out, size_t out_len) {
     if (!out || out_len == 0) return;
@@ -546,7 +554,7 @@ void tui_signal_sparkline(const tui_signal_t *s, int64_t now_ms, int cells, bool
     for (int i = 0; i < cells; i++) {
         const char *g;
         if (!has[i]) g = " ";
-        else if (mx == mn) g = tui_glyph(TUI_G_FLAT, ascii);
+        else if (mx == mn || within_lsb(s, mn, mx)) g = tui_glyph(TUI_G_FLAT, ascii);
         else {
             int level = (int)floor((vals[i] - mn) / (mx - mn) * 7.0 + 0.5);
             g = tui_spark(level, ascii);
@@ -611,7 +619,7 @@ int tui_signal_braille(const tui_signal_t *s, int64_t now_ms, int cells, char *o
     }
     double lo = 0, hi = 0;
     bool any = sample_series(s, now_ms, ns, vals, has, &lo, &hi);
-    bool flat = !any || hi - lo < 1e-9;
+    bool flat = !any || hi - lo < 1e-9 || within_lsb(s, lo, hi);
     if (!flat && s->temp != TUI_TEMP_NONE) {
         double span = tui_unit_is_fahrenheit(s->unit) ? 18.0 : 10.0;
         if (hi - lo < span) {

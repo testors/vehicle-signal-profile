@@ -13,6 +13,7 @@
 #include "tui_gauges.h"
 #include "tui_grid.h"
 #include "tui_model.h"
+#include "tui_render.h"
 
 static int g_checks = 0, g_failures = 0;
 #define CHECK(cond, ...)                                                    \
@@ -376,6 +377,133 @@ static void test_gear(void) {
     CHECK(strcmp(lab, "P") == 0, "null -> label");
 }
 
+/*******************************************************************************
+ * Gauge cells: no negative pedal, pressure, rpm or speed
+ ******************************************************************************/
+
+/* Text of grid row y (cells concatenated). */
+static void grid_row(const tui_grid_t *g, int y, char *out, size_t len) {
+    size_t n = 0;
+    out[0] = '\0';
+    for (int x = 0; x < g->cols; x++) {
+        const char *ch = tui_grid_cell(g, x, y)->ch;
+        size_t l = strlen(ch);
+        if (n + l + 1 > len) break;
+        memcpy(out + n, ch, l);
+        n += l;
+    }
+    out[n] = '\0';
+}
+
+/* The first row holding `label` (the Gauges panel is on top): the row from the
+   label on, and the filled cells of the first ■ bar after it. */
+static bool gauge_cell(const tui_grid_t *g, const char *label, char *text, size_t len, int *filled) {
+    char row[1024];
+    for (int y = 0; y < g->rows; y++) {
+        grid_row(g, y, row, sizeof(row));
+        const char *p = strstr(row, label);
+        if (!p) continue;
+        snprintf(text, len, "%s", p);
+        int x = tui_utf8_width(row) - tui_utf8_width(p);   /* the label's column */
+        while (x < g->cols && strcmp(tui_grid_cell(g, x, y)->ch, "■") != 0) x++;
+        *filled = 0;
+        for (; x < g->cols && strcmp(tui_grid_cell(g, x, y)->ch, "■") == 0; x++) {
+            *filled += tui_grid_cell(g, x, y)->fg != TUI_FG_TRACK;
+        }
+        return true;
+    }
+    return false;
+}
+
+static void test_gauge_floor(void) {
+    tui_signal_desc_t d[5] = {
+        { .name = "Thr", .unit = "%", .group = "throttle", .factor = 0.4, .cycle_ms = 20,
+          .canonical = "throttle.position", .decoder_index = 0 },
+        { .name = "Brk", .unit = "bar", .group = "brake", .factor = 0.3, .cycle_ms = 20,
+          .canonical = "brake.pressure", .decoder_index = 1 },
+        { .name = "Str", .unit = "deg", .group = "steering", .factor = 0.1, .cycle_ms = 20,
+          .canonical = "steering.wheel.angle", .decoder_index = 2 },
+        { .name = "Rpm", .unit = "rpm", .group = "rpm", .factor = 1, .cycle_ms = 20,
+          .canonical = "engine.speed", .decoder_index = 3 },
+        { .name = "Spd", .unit = "km/h", .group = "custom", .factor = 0.1, .cycle_ms = 20,
+          .canonical = "vehicle.speed", .decoder_index = 4 },
+    };
+    static const double val[5] = { -0.6, -0.3, -5.0, -3.0, -0.6 };
+    tui_model_t m;
+    tui_model_init(&m, 0);
+    tui_model_set_signals(&m, d, 5);
+    for (int i = 0; i < m.signal_count; i++) {
+        tui_signal_t *s = &m.signals[i];
+        for (int k = 0; k < 5; k++) {
+            if (s->decoder_index != k) continue;
+            for (int64_t ms = 0; ms <= 1000; ms += 20) tui_signal_sample(s, ms, true, false, val[k], NULL);
+        }
+    }
+    tui_gauges_t gs;
+    tui_gauges_init(&gs);
+    tui_gauges_bind(&gs, &m);
+    tui_gauges_update(&gs, &m, 1000);
+    static const struct { int cols, rows; } sizes[2] = { { 120, 40 }, { 80, 24 } };   /* wide, narrow gauges */
+    for (int k = 0; k < 2; k++) {
+        tui_grid_t *g = tui_grid_new(sizes[k].cols, sizes[k].rows);
+        tui_view_t v;
+        memset(&v, 0, sizeof(v));
+        v.cols = sizes[k].cols;
+        v.rows = sizes[k].rows;
+        v.now_ms = 1000;
+        v.device = "gauge test";
+        v.filter = "";
+        v.tab = TUI_PANEL_GAUGES;
+        v.focus = TUI_PANEL_SIGNALS;
+        v.gauges = &gs;
+        v.colors = 256;
+        tui_render_dashboard(g, &m, &v);
+        bool wide = k == 0;
+        char t[1024];
+        int filled = -1;
+        /* -0.3 bar released brake, -0.6 % throttle, -0.6 km/h, -3 rpm: 0 with an empty bar */
+        CHECK(gauge_cell(g, wide ? "Brake  " : "Brk ", t, sizeof(t), &filled) &&
+              strstr(t, wide ? " 0.0 bar" : " 0.0bar") && !strstr(t, "-0.3") && filled == 0,
+              "%s brake -0.3 bar shows 0.0 bar, empty bar (%d): [%.40s]", wide ? "wide" : "narrow", filled, t);
+        CHECK(gauge_cell(g, wide ? "Throttle" : "Thr ", t, sizeof(t), &filled) && !strstr(t, "-1") &&
+              filled == 0, "%s throttle -0.6 %% shows 0 (%d): [%.40s]", wide ? "wide" : "narrow", filled, t);
+        CHECK(gauge_cell(g, wide ? "Speed" : "Spd ", t, sizeof(t), &filled) && !strstr(t, "-1") &&
+              filled == 0, "%s speed -0.6 km/h shows 0 (%d): [%.40s]", wide ? "wide" : "narrow", filled, t);
+        CHECK(gauge_cell(g, "RPM", t, sizeof(t), &filled) && !strstr(t, "-3") && filled == 0,
+              "%s rpm -3 shows 0 (%d): [%.40s]", wide ? "wide" : "narrow", filled, t);
+        /* steering stays signed: -5° is R 5 */
+        CHECK(gauge_cell(g, wide ? "Steering" : "Str ", t, sizeof(t), &filled) && strstr(t, "R 5") != NULL,
+              "%s steering -5° still R 5: [%.40s]", wide ? "wide" : "narrow", t);
+        tui_grid_free(g);
+    }
+    /* a real pressure still fills the bar (the cell reader sees filled cells) */
+    tui_signal_t *brk = &m.signals[sig_index(&m, "Brk")];
+    for (int64_t ms = 1020; ms <= 1100; ms += 20) tui_signal_sample(brk, ms, true, false, 50.0, NULL);
+    tui_gauges_update(&gs, &m, 1100);
+    {
+        tui_grid_t *g = tui_grid_new(120, 40);
+        tui_view_t v;
+        memset(&v, 0, sizeof(v));
+        v.cols = 120;
+        v.rows = 40;
+        v.now_ms = 1100;
+        v.device = "gauge test";
+        v.filter = "";
+        v.tab = TUI_PANEL_GAUGES;
+        v.focus = TUI_PANEL_SIGNALS;
+        v.gauges = &gs;
+        v.colors = 256;
+        tui_render_dashboard(g, &m, &v);
+        char t[1024];
+        int filled = 0;
+        CHECK(gauge_cell(g, "Brake  ", t, sizeof(t), &filled) && strstr(t, " 50.0 bar") && filled > 0,
+              "50 bar: value and a filled bar (%d)", filled);
+        tui_grid_free(g);
+    }
+    tui_gauges_free(&gs);
+    tui_model_free(&m);
+}
+
 static void test_colors(void) {
     CHECK(tui_color_basic(39) == 4 && tui_color_basic(33) == 4 && tui_color_basic(25) == 4, "cold -> blue");
     CHECK(tui_color_basic(46) == 2 && tui_color_basic(40) == 2 && tui_color_basic(34) == 2, "ok -> green");
@@ -406,6 +534,7 @@ int main(void) {
     test_steering();
     test_meter();
     test_gear();
+    test_gauge_floor();
     test_colors();
     printf("%d/%d checks passed\n", g_checks - g_failures, g_checks);
     return g_failures == 0 ? 0 : 1;

@@ -1073,6 +1073,14 @@ static bool fill_signal(vsp_decoder_t *dec, engine_signal_t *sig, VSPEngineItem 
         [decode[@"factor"] respondsToSelector:@selector(doubleValue)]) {
         info->factor = [decode[@"factor"] doubleValue];
     }
+    /* One raw step is |factor| only for raw * factor + offset of an integer field;
+       under 6 bits (< 64 steps: flags, states, nibbles) every step matters: none. */
+    const decode_spec_t *d = &sig->decode;
+    bool linear = d->valid && !d->is_float && d->poly_count == 0 && d->bit_length >= 6;
+    info->lsb = linear ? fabs(d->factor) : 0.0;
+    for (int i = 0; i < d->value_count; i++) {
+        if (d->values[i].kind == 2) info->lsb = 0.0;   /* numeric override */
+    }
     info->has_value_table = sig->decode.value_count > 0;
     return ok;
 }

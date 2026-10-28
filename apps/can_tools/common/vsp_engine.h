@@ -152,6 +152,10 @@ typedef struct {
     const char       *query_key;        /**< "TTT:RRR:REQUEST", groups signals of one request */
     const char       *query_payload_hex;/**< diagnostic_queries[].payload_hex, NULL if absent */
     double            factor;           /**< decode.factor (1 if absent) */
+    double            lsb;              /**< value of one raw step: |factor| for an integer field
+                                             of 6+ bits with a linear decode; 0 = none (under 6
+                                             bits, float32/float64, polynomial, numeric
+                                             value-table override, no decode) */
     bool              has_value_table;  /**< decode.values has entries */
 } vsp_signal_info_t;
 

@@ -341,6 +341,49 @@ static void test_decode(vsp_decoder_t *dec) {
     CHECK(state_of(dec, "RPM_LE")->samples == 0 && !state_of(dec, "RPM_LE")->has_value, "reset");
 }
 
+/* lsb: the value of one raw step, only for a linear integer field of 6+ bits. */
+static void test_lsb(const vsp_decoder_t *dec) {
+    CHECK_NEAR(vsp_decoder_signal_info(dec, find_signal(dec, "RPM_LE"))->lsb, 0.25);
+    CHECK_NEAR(vsp_decoder_signal_info(dec, find_signal(dec, "STEER"))->lsb, 0.5);     /* signed */
+    CHECK_NEAR(vsp_decoder_signal_info(dec, find_signal(dec, "BRAKE_SM"))->lsb, 0.1);  /* sign_bit */
+    CHECK_NEAR(vsp_decoder_signal_info(dec, find_signal(dec, "MUX_A"))->lsb, 1.0);     /* offset -40 */
+    CHECK(vsp_decoder_signal_info(dec, find_signal(dec, "FLOAT_T"))->lsb == 0, "float32: no lsb");
+    CHECK(vsp_decoder_signal_info(dec, find_signal(dec, "GEAR"))->lsb == 0, "4 bit, numeric overrides: no lsb");
+
+    static const char *kLsb =
+    "{\"schema\": \"vehicle_data_profile.v1\", \"can_frames\": [{\"frame_id\": 256, \"dlc\": 8}], \"signals\": ["
+    " {\"name\": \"POLY\", \"acquisition\": {\"type\": \"can_frame\", \"frame_id\": 256},"
+    "  \"decode\": {\"start_bit\": 0, \"bit_length\": 8, \"factor\": 1, \"polynomial\": [0, 0.5, 0.01]}},"
+    " {\"name\": \"F64\", \"acquisition\": {\"type\": \"can_frame\", \"frame_id\": 256},"
+    "  \"decode\": {\"start_bit\": 0, \"bit_length\": 64, \"value_type\": \"float64\", \"factor\": 1}},"
+    " {\"name\": \"BIT1\", \"acquisition\": {\"type\": \"can_frame\", \"frame_id\": 256},"
+    "  \"decode\": {\"start_bit\": 0, \"bit_length\": 1, \"factor\": 1}},"
+    " {\"name\": \"BITS5\", \"acquisition\": {\"type\": \"can_frame\", \"frame_id\": 256},"
+    "  \"decode\": {\"start_bit\": 0, \"bit_length\": 5, \"factor\": 0.5}},"
+    " {\"name\": \"BITS6\", \"acquisition\": {\"type\": \"can_frame\", \"frame_id\": 256},"
+    "  \"decode\": {\"start_bit\": 0, \"bit_length\": 6, \"factor\": -0.5}},"
+    " {\"name\": \"LABELS\", \"acquisition\": {\"type\": \"can_frame\", \"frame_id\": 256},"
+    "  \"decode\": {\"start_bit\": 0, \"bit_length\": 8, \"factor\": 2, \"values\": [{\"raw\": 255, \"label\": \"SNA\"}]}}"
+    "]}";
+    char err[256] = "";
+    vsp_profile_t *p = vsp_profile_load_json(kLsb, strlen(kLsb), err, sizeof(err));
+    CHECK(p != NULL, "lsb profile: %s", err);
+    if (!p) return;
+    vsp_select_t all = { .signals = NULL, .all_signals = true, .acquisition = VSP_ACQ_ANY };
+    vsp_decoder_t *d = vsp_decoder_create(p, &all);
+    CHECK(d && vsp_decoder_signal_count(d) == 6, "lsb decoder");
+    if (d && vsp_decoder_signal_count(d) == 6) {
+        CHECK(vsp_decoder_signal_info(d, find_signal(d, "POLY"))->lsb == 0, "polynomial: no lsb");
+        CHECK(vsp_decoder_signal_info(d, find_signal(d, "F64"))->lsb == 0, "float64: no lsb");
+        CHECK(vsp_decoder_signal_info(d, find_signal(d, "BIT1"))->lsb == 0, "1 bit flag: no lsb");
+        CHECK(vsp_decoder_signal_info(d, find_signal(d, "BITS5"))->lsb == 0, "5 bits: no lsb");
+        CHECK_NEAR(vsp_decoder_signal_info(d, find_signal(d, "BITS6"))->lsb, 0.5);    /* |factor| */
+        CHECK_NEAR(vsp_decoder_signal_info(d, find_signal(d, "LABELS"))->lsb, 2.0);   /* label only */
+    }
+    vsp_decoder_free(d);
+    vsp_profile_free(p);
+}
+
 static void test_hex_and_errors(void) {
     char buf[64];
     CHECK(vsp_single_frame_payload_hex("01 0C", 0x55, buf, sizeof(buf)), "single frame");
@@ -380,6 +423,7 @@ int main(void) {
     CHECK(dec != NULL, "decoder");
     if (dec) {
         test_signal_info(dec);
+        test_lsb(dec);
         test_decode(dec);
         vsp_decoder_free(dec);
     }
