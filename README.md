@@ -18,6 +18,7 @@ vehicle-signal-profile/
 ├── profiles/                  # ready-to-use public .vsp files
 ├── docs/                      # public runtime docs
 ├── tools/                     # public VSP conversion and validation scripts
+│   └── aim/                   # Race Studio 3 driver template for vsp2xc1
 └── apps/
     └── can_tools/             # macOS CLI + terminal dashboard (see Apps)
 ```
@@ -77,6 +78,50 @@ Compose multiple VSP files:
 ```bash
 python3 tools/merge_vsp.py base.vsp overlay.vsp --prefer error -o out/combined.vsp
 ```
+
+## AiM Race Studio 3
+
+`tools/vsp2xc1.py` writes a VSP's passive CAN signals (`acquisition.type`
+`can_frame`) as a Race Studio 3 custom CAN driver (`.xc1`). Diagnostic queries
+are left out: a custom CAN driver only listens. Each signal becomes one AiM
+channel with its layout, sign, mux, scale or polynomial and value table.
+Channels get AiM's unit, quantity and function id as AiM's own drivers write
+them (`--aim-sensors off` keeps Race Studio's DBC-import "#" numbers), and a
+frame with `cycle_ms` sets its channels' maximum frequency. Signals AiM cannot
+hold are printed as notes and kept in the manifest.
+
+```bash
+python3 tools/vsp2xc1.py profiles/<profile>.vsp \
+  --uid <id> --model "<model>" --index-fragments -o out/aim
+```
+
+This writes `<id>.xc1`, its XML, `<id>.manifest.json` and, with
+`--index-fragments`, the two Race Studio list entries. The driver is
+listen-only (`--silent on`) with the logger's 120 ohm terminator off
+(`--termination off`) by default, for a tap on a bus that is already
+terminated. The bit rate comes from the profile's bus (`--bitrate` overrides).
+
+To install it, close Race Studio 3 and back up the two list files, then:
+
+1. Copy `<id>.xc1` to `C:\AIM_SPORT\RaceStudio3\user\resources\can\custom\`.
+2. Add `<id>.indiceCANCustom.entry.xml` to `indiceCANCustom.xml` in that
+   folder, and `<id>.xmldb_unicode32_custecus.entry.xml` to
+   `C:\AIM_SPORT\RaceStudio3\user\xmldb_unicode32_custecus.xml`, next to the
+   existing entries.
+3. Pick the manufacturer and model in the logger's ECU stream (CAN) setting.
+
+Alternatively, export a DBC with `tools/vsp2dbc.py` and use Race Studio's DBC
+import. Sign-magnitude signals then arrive as two channels, and the listen-only
+and terminator settings should be checked after the import.
+
+An `.xc1` file is the driver's XML encrypted with AES-128-ECB under Race
+Studio's default no-password key (a 4-byte little-endian length, then the
+zero-padded XML). `tools/aim_xc1.py` holds that key for interoperability and
+needs the `openssl` command; `python3 tools/aim_xc1.py unpack <id>.xc1`
+decrypts a driver for inspection and `pack` encrypts XML again. Drivers are
+built on `tools/aim/rs3_can_template.xml`, a Race Studio 3 DBC-import driver
+cut down to one placeholder channel; `--template` takes your own driver (XC1
+or XML) instead.
 
 ## Runtime Use
 
