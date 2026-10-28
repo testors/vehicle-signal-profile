@@ -348,8 +348,7 @@ static void draw_footer(tui_grid_t *g, const tui_view_t *v, bool narrow) {
     if (v->rec_available) hints[n++] = (tui_hint_t){ "r", "rec", 0 };
     hints[n++] = (tui_hint_t){ "p", "profile", 0 };
     if (v->tx_footer) hints[n++] = (tui_hint_t){ "x", v->tx_footer, 0 };
-    if (v->replay) hints[n++] = (tui_hint_t){ "r", "replay list", 0 };
-    else if (v->live || v->disconnected) hints[n++] = (tui_hint_t){ "R", "replay list", 0 };
+    if (v->replay || v->live || v->disconnected) hints[n++] = (tui_hint_t){ "R", "replay list", 0 };
     hints[n++] = (tui_hint_t){ tui_glyph(TUI_G_UPDOWN, ascii), "scroll", 0 };
     /* "? help" and "q quit" always show; the others while they fit */
     const tui_hint_t tail[2] = { { "?", "help", 0 }, { "q", "quit", 0 } };

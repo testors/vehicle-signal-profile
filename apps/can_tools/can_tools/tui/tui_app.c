@@ -1117,8 +1117,8 @@ static const char *const kHelpLines[] = {
     "  s                Raw CAN sort: hz, id, last change",
     "  d                discover: guided search for rpm, steering, throttle, ...",
     "  p                profile picker",
-    "  r                recording on/off (live), replay list (replay)",
-    "  R                replay list (live and replay)",
+    "  r                recording on/off (live)",
+    "  R                replay list (live, replay and the connect screen)",
     "  x                TX mode: poll the profile's OBD signals",
     "  space [ ]        replay: pause, slower, faster",
     "  v                last discover result",
@@ -1128,6 +1128,9 @@ static const char *const kHelpLines[] = {
     "Discover",
     "  enter starts the next phase, s skips it, a aborts (captured phases are kept).",
     "  On the result screen enter loads the draft profile into the dashboard.",
+    "",
+    "Connect screen",
+    "  enter connects the selected adapter, s rescans, R opens the replay list.",
     "",
     "Safety",
     "  The adapter listens in silent mode (ATCSM1): nothing is sent on the bus.",
@@ -1644,7 +1647,7 @@ static void dashboard_key(tui_app_t *app, int key) {
             picker_open(app, app->profile_path[0] ? app->profile_path : NULL);
             break;
         case 'r':
-            if (app->replay) replay_list_open(app);
+            if (app->replay) app_log(app, "recording unavailable in replay");
             else if (app->disconnected) app_log(app, "recording unavailable: disconnected");
             else if (tui_recorder_is_open(&app->rec)) rec_stop(app);
             else rec_start(app);

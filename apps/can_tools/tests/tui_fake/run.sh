@@ -130,18 +130,21 @@ live discover_live FAKE_STREAM=direct -- --device vLinker --profile "$PROFILE" \
         --snapshot-at 0.8,2.5,4 --keys "1:enter;3:enter"
 ) &
 # replay list over cap/old (--no-rec keeps the live session out of the list)
-for n in list_wait list_gone_connect list_gone_live tx_replay; do
+for n in list_wait list_gone_connect list_gone_live tx_replay connect_r; do
     mkdir -p "$WORK/$n/cap/old" && cp "$FX/stream_gateway.frames.tsv" "$WORK/$n/cap/old/live.frames.tsv"
 done
 empty_later() { sleep "$2"; head -1 "$FX/stream_gateway.frames.tsv" > "$WORK/$1/cap/old/live.frames.tsv"; }
-live list_wait FAKE_STREAM=direct -- --profile "$PROFILE" --snapshot-at 1.5,3.5 --keys "0.5:enter r;2:esc" &
+live list_wait FAKE_STREAM=direct -- --profile "$PROFILE" --snapshot-at 1.5,3.5 --keys "0.5:enter R;2:esc" &
 empty_later list_gone_connect 2 &
-live list_gone_connect FAKE_STREAM=direct -- --profile "$PROFILE" --snapshot-at 3.5 --keys "1:r;3:enter" &
+live list_gone_connect FAKE_STREAM=direct -- --profile "$PROFILE" --snapshot-at 3.5 --keys "1:R;3:enter" &
 empty_later list_gone_live 2.5 &
 live list_gone_live FAKE_STREAM=direct -- --device vLinker --profile "$PROFILE" --no-rec \
     --snapshot-at 4 --keys "1.5:R;3.5:enter" &
 live tx_replay FAKE_STREAM=gateway FAKE_RESP=probe -- --device vLinker --profile "$PROFILE" --no-rec \
     --snapshot-at 5.8,6.6,7.6,10 --keys "4:x;4.4:y;5:R;5.4:enter;6.2:n;7:esc;7.2:q;8:esc;8.4:R;8.8:enter;9.2:y" &
+# connect screen: r only shows a status (no list, no adapter command); s rescans and drops the pending target
+live connect_r FAKE_STREAM=direct -- --profile "$PROFILE" --snapshot-at 1.5 --keys "1:r" &
+live connect_s FAKE_STREAM=direct -- --device NOPE --profile "$PROFILE" --snapshot-at 1.5 --keys "1:s" &
 wait
 
 # ---- no terminal, no hook: nothing is created (run in a folder of their own) ----
@@ -162,7 +165,7 @@ cd "$ROOT"
 
 # ---- adapter command logs ----
 for n in direct_x gateway_tx silent_tx no_tx detecting sticky disconnect no_connect recording discover_live \
-         connect_screen connect_last list_wait list_gone_connect list_gone_live tx_replay; do
+         connect_screen connect_last list_wait list_gone_connect list_gone_live tx_replay connect_r connect_s; do
     check_cmds "$n"
 done
 [ "$MODE" = "update" ] && exit 0
@@ -206,6 +209,10 @@ expect list_gone_live screen.txt "1 capture"
 expect tx_replay screen.txt "TX mode is on. Leave TX mode and replay old? [y/N]"
 expect tx_replay screen.txt "TX mode is on. Quit? [y/N]"
 expect tx_replay screen.txt "snapshot T=10.000" absent
+expect connect_r screen.txt "recording starts after connecting"
+expect connect_r screen.txt "1 capture" absent
+expect connect_s screen.txt "looking for NOPE" absent
+expect connect_s screen.txt "R replay list  s rescan"
 
 S=$(session_file disconnect)
 TOTAL=$((TOTAL + 1))

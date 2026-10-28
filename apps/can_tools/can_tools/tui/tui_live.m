@@ -473,9 +473,12 @@ static void connect_key(live_t *L, int key) {
             }
             break;
         case 'r':
-            open_replay_list(L);
+            set_status(L, TUI_ROLE_DIM, "recording starts after connecting");
             break;
         case 'R':
+            open_replay_list(L);
+            break;
+        case 's':
             L->target[0] = '\0';
             L->status[0] = '\0';
             restart_scan(L, true);

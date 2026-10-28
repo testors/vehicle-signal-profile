@@ -533,8 +533,8 @@ void tui_draw_connect(tui_grid_t *g, int cols, int rows, const tui_connect_view_
     } else {
         hints[nh++] = (tui_hint_t){ tui_glyph(TUI_G_UPDOWN, ascii), "select", 0 };
         hints[nh++] = (tui_hint_t){ enter, "connect", 0 };
-        hints[nh++] = (tui_hint_t){ "r", "replay list", 0 };
-        hints[nh++] = (tui_hint_t){ "R", "rescan", 0 };
+        hints[nh++] = (tui_hint_t){ "R", "replay list", 0 };
+        hints[nh++] = (tui_hint_t){ "s", "rescan", 0 };
         hints[nh++] = (tui_hint_t){ "o", "capture path", 0 };
         hints[nh++] = (tui_hint_t){ "q", "quit", 0 };
     }

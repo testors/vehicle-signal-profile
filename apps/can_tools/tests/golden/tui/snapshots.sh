@@ -80,7 +80,9 @@ touch -t 202601021200 "$WORK/replay_caps/20260102_120000"
 mkdir -p "$WORK/replay_caps/20260103_120000"
 head -1 "$FX/stream_direct.frames.tsv" > "$WORK/replay_caps/20260103_120000/live.frames.tsv"
 touch -t 202601031200 "$WORK/replay_caps/20260103_120000"
-run_case replay_list_120x40  $DIRECT $PROFILE --captures "$WORK/replay_caps" --snapshot-at 1.5 --size 120x40 --keys "1:r"
+run_case replay_list_120x40  $DIRECT $PROFILE --captures "$WORK/replay_caps" --snapshot-at 1.5 --size 120x40 --keys "1:R"
+# r in replay: no list, one Log line (r is recording only)
+run_case replay_r_120x40     $DIRECT $PROFILE --captures "$WORK/replay_caps" --snapshot-at 1.5 --size 120x40 --keys "1:r"
 run_case help_100x30         $DIRECT $PROFILE --snapshot-at 1.5 --size 100x30 --keys "1:?"
 run_case x_direct_120x40     $DIRECT $PROFILE --snapshot-at 4 --size 120x40 --keys "3.5:x" --color-map
 run_case x_gateway_120x40    $GATEWAY $PROFILE --snapshot-at 4 --size 120x40 --keys "3.5:x"
