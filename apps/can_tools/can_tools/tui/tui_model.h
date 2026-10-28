@@ -128,14 +128,17 @@ int    tui_zone_text_fg(tui_zone_t z);
 int    tui_zone_cell_fg(tui_zone_t z);
 
 #define TUI_HIST_BUCKET_MS 50
-#define TUI_HIST_RING      256         /* > 10 s of 50 ms buckets (no wrap inside the window) */
+#define TUI_HIST_RING      416         /* > 20 s of 50 ms buckets: the 10 s window (no wrap
+                                          inside it) and 10 s before it for the left-edge hold */
 #define TUI_HIST_WINDOW_MS 10000
 #define TUI_SIGNAL_HZ_WINDOW_MS 5000
 #define TUI_DEAD_MS 10000
+#define TUI_HOLD_MIN_MS 300            /* shortest hold: covers Bluetooth burst gaps */
 #define TUI_SIGNAL_TS_RING 512
 
 typedef struct {
     int64_t     bucket;     /* -1 = empty */
+    int64_t     ts;         /* time of the last sample in the bucket */
     bool        has_value;
     double      value;
     const char *label;      /* owned by the decoder */
@@ -190,7 +193,7 @@ typedef struct {
 typedef enum {
     TUI_SIG_NEVER = 0,   /* no sample yet */
     TUI_SIG_LIVE,
-    TUI_SIG_STALE,       /* age > 3 periods: gray */
+    TUI_SIG_STALE,       /* age > hold (3 periods, at least 300 ms): gray */
     TUI_SIG_DEAD,        /* age > 10 s: blanked */
 } tui_sig_state_t;
 
@@ -204,20 +207,24 @@ void tui_signal_sample(tui_signal_t *s, int64_t ts, bool has_value, bool value_n
 double tui_signal_hz(const tui_signal_t *s, int64_t now_ms);
 /** Stale period: cycle_ms, else 1/measured hz, else 1 s. */
 double tui_signal_period_ms(const tui_signal_t *s, int64_t now_ms);
+/** How long a sample stays current: max(3 periods, TUI_HOLD_MIN_MS). Older
+ *  than that the signal is stale and the timeline stops holding it. */
+double tui_signal_hold_ms(const tui_signal_t *s, int64_t now_ms);
 tui_sig_state_t tui_signal_state(const tui_signal_t *s, int64_t now_ms);
 /** Display order: rpm, gear, steering, throttle, brake, then by name;
  *  diagnostic signals last. qsort comparator over tui_signal_t. */
 int tui_signal_compare(const void *a, const void *b);
 
-/** Sparkline of the last 10 s in `cells` columns (UTF-8 into out). One bucket
- *  per cell, last value in the bucket, scaled to the window min..max; constant
- *  -> flat line; empty bucket -> space. */
+/** Sparkline of the last 10 s in `cells` columns (UTF-8 into out). Last value
+ *  in each cell, an empty cell holding the previous sample (also the last one
+ *  before the window) for tui_signal_hold_ms, scaled to the min..max of the
+ *  drawn values; constant -> flat line; nothing to hold -> space. */
 void tui_signal_sparkline(const tui_signal_t *s, int64_t now_ms, int cells, bool ascii,
                           char *out, size_t out_len);
 /** btop-style braille timeline of the last 10 s in `cells` columns: two
  *  samples per cell (each the last value in its half of the cell's time
- *  range, held like the sparkline), height 1..4 over the window min..max
- *  (temperatures: at least a 10 °C / 18 °F span), flat window -> "⠤".
+ *  range, held like the sparkline), height 1..4 over the min..max of the
+ *  drawn values (temperatures: at least a 10 °C / 18 °F span), flat window -> "⠤".
  *  Writes UTF-8 to out and a color index per cell to fg (0 for blank
  *  cells). Returns the number of cells written. */
 int  tui_signal_braille(const tui_signal_t *s, int64_t now_ms, int cells, char *out, size_t out_len,

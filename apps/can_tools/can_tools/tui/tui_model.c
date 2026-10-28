@@ -381,6 +381,7 @@ void tui_signal_sample(tui_signal_t *s, int64_t ts, bool has_value, bool value_n
     int64_t b = floor_div(ts, TUI_HIST_BUCKET_MS);
     tui_hist_slot_t *slot = &s->hist[ring_slot(b, TUI_HIST_RING)];
     slot->bucket = b;
+    slot->ts = ts;
     slot->has_value = has_value;
     slot->value = value;
     slot->label = label;
@@ -416,11 +417,18 @@ double tui_signal_period_ms(const tui_signal_t *s, int64_t now_ms) {
     return 1000.0;
 }
 
+/* Three periods, but at least TUI_HOLD_MIN_MS: a Bluetooth adapter delivers
+   frames in bursts, so a 50 Hz frame often arrives 60-100 ms after the last. */
+double tui_signal_hold_ms(const tui_signal_t *s, int64_t now_ms) {
+    double hold = 3.0 * tui_signal_period_ms(s, now_ms);
+    return hold > TUI_HOLD_MIN_MS ? hold : (double)TUI_HOLD_MIN_MS;
+}
+
 tui_sig_state_t tui_signal_state(const tui_signal_t *s, int64_t now_ms) {
     if (!s->sampled) return TUI_SIG_NEVER;
     int64_t age = now_ms - s->last_ms;
     if (age > TUI_DEAD_MS) return TUI_SIG_DEAD;
-    if ((double)age > 3.0 * tui_signal_period_ms(s, now_ms)) return TUI_SIG_STALE;
+    if ((double)age > tui_signal_hold_ms(s, now_ms)) return TUI_SIG_STALE;
     return TUI_SIG_LIVE;
 }
 
@@ -463,9 +471,10 @@ static void cell_range(int64_t now_ms, int cells, int i, int64_t *b_start, int64
 }
 
 /* Values of n equal slices of the last 10 s: the last sample in each slice.
-   An empty slice holds the previous value while that sample is younger than
-   3 periods (a slow signal draws a line; a stopped one goes blank). Returns
-   whether any slice has a value, with the min/max of the real samples. */
+   An empty slice holds the previous sample (before the first slice: the last
+   one before the window still in the ring) while it is no older than the hold
+   at the slice's end (a slow signal draws a line; a stopped one goes blank).
+   Returns whether any slice has a value, with the min/max of the drawn values. */
 static bool sample_series(const tui_signal_t *s, int64_t now_ms, int n, double *vals, bool *has,
                           double *mn_out, double *mx_out) {
     double mn = 0, mx = 0;
@@ -482,20 +491,36 @@ static bool sample_series(const tui_signal_t *s, int64_t now_ms, int n, double *
         if (!any || slot->value > mx) mx = slot->value;
         any = true;
     }
-    double period = tui_signal_period_ms(s, now_ms);
+    double hold = tui_signal_hold_ms(s, now_ms);
     double last_v = 0;
     int64_t last_t = INT64_MIN;
+    if (n > 0 && !has[0]) {
+        /* left edge: the buckets before the window that no newer bucket has reused */
+        int64_t bs, be;
+        cell_range(now_ms, n, 0, &bs, &be);
+        int64_t oldest = floor_div(now_ms, TUI_HIST_BUCKET_MS) - TUI_HIST_RING + 1;
+        const tui_hist_slot_t *slot = hist_latest(s, oldest, bs - 1, true);
+        if (slot) {
+            last_v = slot->value;
+            last_t = slot->ts;
+        }
+    }
     for (int i = 0; i < n; i++) {
         int64_t bs, be;
         cell_range(now_ms, n, i, &bs, &be);
         int64_t cell_end = (be + 1) * TUI_HIST_BUCKET_MS;
+        if (cell_end > now_ms) cell_end = now_ms;   /* the last slice ends now, like the stale age */
         if (has[i]) {
             const tui_hist_slot_t *slot = hist_latest(s, bs, be, true);
             last_v = vals[i];
-            last_t = slot ? slot->bucket * TUI_HIST_BUCKET_MS : cell_end;
-        } else if (last_t != INT64_MIN && (double)(cell_end - last_t) <= 3.0 * period) {
+            last_t = slot ? slot->ts : cell_end;
+        } else if (last_t != INT64_MIN && (double)(cell_end - last_t) <= hold) {
             vals[i] = last_v;
             has[i] = true;
+            /* a value from before the window joins the scale */
+            if (!any || last_v < mn) mn = last_v;
+            if (!any || last_v > mx) mx = last_v;
+            any = true;
         }
     }
     *mn_out = mn;

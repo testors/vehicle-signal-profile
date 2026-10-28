@@ -149,11 +149,17 @@ static void test_signal_state(void) {
     CHECK(tui_signal_state(&s, 0) == TUI_SIG_NEVER, "never");
     for (int64_t ms = 1000; ms <= 2000; ms += 20) tui_signal_sample(&s, ms, true, false, (double)ms, NULL);
     CHECK(tui_signal_state(&s, 2010) == TUI_SIG_LIVE, "live");
-    CHECK(tui_signal_state(&s, 2060) == TUI_SIG_LIVE, "age = 3 periods is still live");
-    CHECK(tui_signal_state(&s, 2061) == TUI_SIG_STALE, "stale after 3 x cycle");
+    CHECK(fabs(tui_signal_hold_ms(&s, 2010) - 300.0) < 1e-9, "3 x 20 ms is below the 300 ms minimum hold");
+    CHECK(tui_signal_state(&s, 2300) == TUI_SIG_LIVE, "age = 300 ms is still live");
+    CHECK(tui_signal_state(&s, 2301) == TUI_SIG_STALE, "stale after the 300 ms minimum hold");
     CHECK(tui_signal_state(&s, 12000) == TUI_SIG_STALE, "stale up to 10 s");
     CHECK(tui_signal_state(&s, 12001) == TUI_SIG_DEAD, "dead after 10 s");
     CHECK(fabs(tui_signal_hz(&s, 2050) - 50.0) < 1e-9, "50 Hz from the first sample: %f", tui_signal_hz(&s, 2050));
+    /* 50 Hz over Bluetooth: a 94 ms burst gap is not stale, 350 ms is */
+    tui_signal_t bt = make_signal("Brake", "custom", 20, 0.1, false, false);
+    for (int64_t ms = 0; ms <= 5000; ms += 20) tui_signal_sample(&bt, ms, true, false, 1.0, NULL);
+    CHECK(tui_signal_state(&bt, 5094) == TUI_SIG_LIVE, "94 ms gap on a 50 Hz signal: live");
+    CHECK(tui_signal_state(&bt, 5350) == TUI_SIG_STALE, "350 ms on a 50 Hz signal: stale");
     CHECK(strcmp(s.src, "0x123") == 0 && s.decimals == 2 && !s.discrete, "static info");
 
     /* no cycle: period from the measured rate (10 Hz -> 100 ms) */
@@ -176,6 +182,7 @@ static void test_signal_state(void) {
     CHECK(fabs(tui_signal_period_ms(&gw, 4499) - 500.0) < 1e-6, "slower than declared: measured period");
     CHECK(tui_signal_state(&gw, 4499) == TUI_SIG_LIVE && tui_signal_state(&gw, 5500) == TUI_SIG_LIVE &&
           tui_signal_state(&gw, 5501) == TUI_SIG_STALE, "gateway-rate signal stale after 3 x 500 ms");
+    CHECK(fabs(tui_signal_hold_ms(&gw, 4499) - 1500.0) < 1e-9, "slow signal: hold = 3 periods");
     /* arriving faster than declared: the declared cycle stays the limit */
     tui_signal_t fast = make_signal("Fast", "custom", 100, 1, false, false);
     for (int64_t ms = 0; ms <= 1000; ms += 10) tui_signal_sample(&fast, ms, true, false, 1.0, NULL);
@@ -259,6 +266,84 @@ static void test_sparkline(void) {
     CHECK_STR(out, "P P P P N N N N D D");
     tui_signal_discrete_history(&g, 20000, 7, out, sizeof(out));
     CHECK_STR(out, "N N D D");
+}
+
+/* Braille timeline as code points; *_on: dots in the left / right column. */
+static int timeline_cps(const tui_signal_t *s, int64_t now, int cells, unsigned int *cp) {
+    char out[2048];
+    unsigned char fg[256];
+    int n = tui_signal_braille(s, now, cells, out, sizeof(out), fg);
+    const char *p = out;
+    for (int i = 0; i < n; i++) p += tui_utf8_decode(p, &cp[i]);
+    return n;
+}
+
+static bool left_on(unsigned int cp) { return cp >= 0x2800 && ((cp - 0x2800) & 0x47) != 0; }
+static bool right_on(unsigned int cp) { return cp >= 0x2800 && ((cp - 0x2800) & 0xB8) != 0; }
+
+/* 50 Hz with a 94 ms burst gap every second (x.500 -> x.594 s): the samples in [from, to] */
+static void feed_bursty(tui_signal_t *s, int64_t from, int64_t to) {
+    for (int64_t t = from; t <= to; t++) {
+        int64_t ph = t % 1000;
+        bool grid = t % 20 == 0 && !(ph > 500 && ph < 600);
+        if (grid || ph == 594) tui_signal_sample(s, t, true, false, (double)((t / 100) % 5), NULL);
+    }
+}
+
+static void test_timeline_hold(void) {
+    unsigned int c[256];
+
+    /* 50 Hz over Bluetooth: no gap at any width or scroll position */
+    static const int widths[] = { 40, 69, 100, 120, 160 };
+    enum { NW = sizeof(widths) / sizeof(widths[0]) };
+    int blanks[NW] = { 0 }, cells[NW] = { 0 };
+    tui_signal_t bt = make_signal("Brake", "custom", 20, 0.1, false, false);
+    feed_bursty(&bt, 0, 19993);
+    for (int64_t now = 20000; now < 21000; now += 7) {
+        feed_bursty(&bt, now - 6, now);
+        for (int w = 0; w < NW; w++) {
+            cells[w] = timeline_cps(&bt, now, widths[w], c);
+            for (int i = 0; i < cells[w]; i++) blanks[w] += !left_on(c[i]) + !right_on(c[i]);
+        }
+    }
+    for (int w = 0; w < NW; w++)
+        CHECK(cells[w] == widths[w] && blanks[w] == 0, "94 ms gaps, %d cells: %d blank half cells",
+              widths[w], blanks[w]);
+
+    /* 50 Hz stopped for 1.5 s: held for 300 ms, then blank, drawn again from 15.5 s */
+    tui_signal_t stop = make_signal("Brake", "custom", 20, 0.1, false, false);
+    for (int64_t ms = 0; ms <= 20000; ms += 20) {
+        if (ms > 14000 && ms < 15500) continue;
+        tui_signal_sample(&stop, ms, true, false, 1.0 + (double)((ms / 100) % 5), NULL);
+    }
+    int n = timeline_cps(&stop, 20000, 100, c);   /* 100 ms cells */
+    int bad = n == 100 ? -1 : 0;
+    for (int i = 0; i < n; i++) {
+        int64_t cs = 10000 + 100 * i, ce = cs + 100;
+        bool both = left_on(c[i]) && right_on(c[i]), none = !left_on(c[i]) && !right_on(c[i]);
+        if ((ce <= 14300 || cs >= 15500) && !both) bad = i;
+        if (cs >= 14300 && ce <= 15500 && !none) bad = i;
+    }
+    CHECK(bad < 0, "1.5 s stop: drawn up to 300 ms after, blank to 15.5 s, drawn again (cell %d)", bad);
+
+    /* 1 Hz: the leftmost cell holds the sample from 0.5 s before the window,
+       and that value is part of the scale (0 at the bottom, 10 halfway) */
+    tui_signal_t one = make_signal("Fuel", "custom", 1000, 1, false, false);
+    for (int k = 0; k < 20; k++)
+        tui_signal_sample(&one, 500 + 1000 * k, true, false, k < 10 ? 0.0 : (k % 2 ? 20.0 : 10.0), NULL);
+    n = timeline_cps(&one, 20000, 20, c);         /* 500 ms cells */
+    int blank = 0;
+    for (int i = 0; i < n; i++) blank += !left_on(c[i]) + !right_on(c[i]);
+    CHECK(n == 20 && blank == 0, "1 Hz: whole width drawn (%d blank half cells)", blank);
+    CHECK(c[0] == tui_braille_char(1, 1), "leftmost cell: the 9.5 s sample at the bottom (%X)", c[0]);
+    CHECK(c[1] == tui_braille_char(3, 3), "10 on the 0..20 scale: height 3 (%X)", c[1]);
+
+    /* a sample older than the hold (3 s) is not carried into the window */
+    tui_signal_t old = make_signal("Fuel", "custom", 1000, 1, false, false);
+    tui_signal_sample(&old, 6500, true, false, 1.0, NULL);
+    tui_signal_sample(&old, 13000, true, false, 1.0, NULL);
+    timeline_cps(&old, 20000, 20, c);
+    CHECK(c[0] == ' ' && c[6] != ' ' && c[19] == ' ', "3.5 s before the window: blank left edge");
 }
 
 /*******************************************************************************
@@ -763,6 +848,7 @@ int main(void) {
     test_signal_state();
     test_ordering();
     test_sparkline();
+    test_timeline_hold();
     test_format();
     test_classifier();
     test_log();

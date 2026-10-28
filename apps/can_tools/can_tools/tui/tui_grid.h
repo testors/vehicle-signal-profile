@@ -22,7 +22,7 @@ typedef enum {
     TUI_ROLE_DEFAULT = '.',
     TUI_ROLE_DIM     = 'd',   /**< secondary text, unchanged bytes, silent rows */
     TUI_ROLE_BRIGHT  = 'b',   /**< recently changed bytes, focused panel title */
-    TUI_ROLE_STALE   = 'g',   /**< value older than 3 periods */
+    TUI_ROLE_STALE   = 'g',   /**< value older than its hold (3 periods, at least 300 ms) */
     TUI_ROLE_ALERT   = 'r',   /**< REC, TX ON, DISCONNECTED, errors */
     TUI_ROLE_HEADER  = 'h',   /**< header segments */
     TUI_ROLE_WARN    = 'y',   /**< warnings */
