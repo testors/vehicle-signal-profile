@@ -31,7 +31,9 @@ bool tui_profiles_find_dir(const char *explicit_dir, const char *exe_path, char 
     if (explicit_dir && explicit_dir[0]) return try_dir(explicit_dir, out, len);
     if (try_dir(getenv("VSP_PROFILES_DIR"), out, len)) return true;
     if (try_dir("profiles", out, len)) return true;
-    if (try_dir("../vehicle-signal-profile/profiles", out, len)) return true;
+#ifdef CAN_TOOLS_PROFILES_DIR
+    if (try_dir(CAN_TOOLS_PROFILES_DIR, out, len)) return true;  /* this repository's profiles/ (CMake) */
+#endif
     if (!exe_path || !exe_path[0]) return false;
 
     char real[PATH_MAX];
@@ -41,8 +43,6 @@ bool tui_profiles_find_dir(const char *explicit_dir, const char *exe_path, char 
         *slash = '\0';
         char cand[PATH_MAX + 64];
         snprintf(cand, sizeof(cand), "%s/profiles", real);
-        if (try_dir(cand, out, len)) return true;
-        snprintf(cand, sizeof(cand), "%s/../vehicle-signal-profile/profiles", real);
         if (try_dir(cand, out, len)) return true;
         slash = strrchr(real, '/');
     }

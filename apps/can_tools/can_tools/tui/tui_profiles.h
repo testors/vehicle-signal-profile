@@ -39,9 +39,11 @@ typedef struct {
     int                  ndrafts;
 } tui_profile_index_t;
 
-/** Profile folder: explicit_dir, else $VSP_PROFILES_DIR, ./profiles,
- *  ../vehicle-signal-profile/profiles, then the same two below each parent
- *  folder of the executable. False when none exists. */
+/** Profile folder: explicit_dir, else $VSP_PROFILES_DIR, ./profiles, the
+ *  repository's profiles/ (CAN_TOOLS_PROFILES_DIR, an absolute path set by
+ *  CMake), then profiles/ in the executable's folder and up to three parents
+ *  (apps/can_tools/build/can_tools reaches the repository root). False when
+ *  none exists. */
 bool tui_profiles_find_dir(const char *explicit_dir, const char *exe_path, char *out, size_t len);
 
 /** List the .vsp files in dir (names only, nothing loaded yet). dir NULL = no folder. */

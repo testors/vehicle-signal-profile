@@ -64,7 +64,7 @@ static void tui_usage(void) {
             "  --device NAME    connect to the first adapter whose name contains NAME\n"
             "  --profile VSP    load this profile (none = raw CAN only); else the picker\n"
             "  --profiles DIR   profile folder (default: VSP_PROFILES_DIR, ./profiles,\n"
-            "                   ../vehicle-signal-profile/profiles)\n"
+            "                   the repository's profiles/)\n"
             "  --no-tx          TX mode stays off      --no-rec  start without recording\n"
             "  --captures DIR   session folders (default captures/)\n"
             "  --replay PATH    a *.frames.tsv file or a capture folder (live*.frames.tsv,\n"

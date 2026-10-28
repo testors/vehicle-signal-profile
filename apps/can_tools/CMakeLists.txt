@@ -150,6 +150,8 @@ target_include_directories(can_tools_objs PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/can_tools
     ${CMAKE_CURRENT_SOURCE_DIR}/can_tools/tui
 )
+# The TUI profile picker looks here when VSP_PROFILES_DIR and ./profiles are absent.
+target_compile_definitions(can_tools_objs PRIVATE CAN_TOOLS_PROFILES_DIR="${VSP_PROFILES_DIR}")
 target_link_libraries(can_tools_objs PUBLIC
     discover_session   # libm via can_discover_core
     vsp_engine
