@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
-"""Generate common/can_discover_priors.h from vehicle-signal-profile (*.vsp) files.
+"""Generate can_discover_priors.h from vehicle-signal-profile (*.vsp) files.
+
+The build runs this on the repository's profiles/ (../../profiles from
+apps/can_tools) and writes build/generated/can_discover_priors.h; the header
+is not committed.
 
 Usage:
-    tools/gen_can_discover_priors.py [profiles_path] -o common/can_discover_priors.h
-    tools/gen_can_discover_priors.py --check        # exit 1 if the header is stale
+    tools/gen_can_discover_priors.py [profiles_path] -o OUTPUT.h
+    tools/gen_can_discover_priors.py --check        # exit 1 if the build's header is stale
 
 Only classic CAN layouts the engine can use are emitted: DLC 1..8, bit length
 1..32, field inside the frame, not multiplexed, and strings that fit the C
@@ -68,8 +72,10 @@ STRING_LIMITS = {
     "canonical": 47,  # canonical[48]
 }
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_OUTPUT = REPO_ROOT / "common" / "can_discover_priors.h"
+REPO_ROOT = Path(__file__).resolve().parents[1]           # apps/can_tools
+VSP_REPO_ROOT = REPO_ROOT.parents[1]                       # the vehicle-signal-profile repo
+DEFAULT_PROFILES_DIR = VSP_REPO_ROOT / "profiles"
+DEFAULT_OUTPUT = REPO_ROOT / "build" / "generated" / "can_discover_priors.h"
 
 
 @dataclass(frozen=True)
@@ -230,16 +236,12 @@ def git_revision(profiles_path: Path) -> str:
 
 
 def display_path(path: Path) -> str:
-    """Path relative to the repo root (e.g. ../vehicle-signal-profile/profiles),
-    or absolute when it is not inside the repo or a sibling of it."""
-    absolute = os.path.abspath(path)
-    try:
-        rel = Path(os.path.relpath(absolute, REPO_ROOT)).as_posix()
-    except ValueError:  # different drive on Windows
-        return Path(absolute).as_posix()
-    if rel.startswith("../../"):
-        return Path(absolute).as_posix()
-    return rel
+    """Path relative to apps/can_tools (e.g. ../../profiles) when it is inside
+    the vehicle-signal-profile repo, else absolute."""
+    absolute = Path(os.path.realpath(path))
+    if absolute != VSP_REPO_ROOT and VSP_REPO_ROOT not in absolute.parents:
+        return absolute.as_posix()
+    return Path(os.path.relpath(absolute, REPO_ROOT)).as_posix()
 
 
 def field_bits(start_bit: int, bit_length: int, byte_order: int) -> list[int]:
@@ -553,17 +555,16 @@ def print_summary(stats: Stats, provenance: Provenance) -> None:
 
 
 def main() -> int:
-    default_profiles_dir = REPO_ROOT.parent / "vehicle-signal-profile" / "profiles"
     parser = argparse.ArgumentParser(
         description="Generate embedded can_discover priors from VSP profiles."
     )
-    parser.add_argument("profiles_path", nargs="?", default=str(default_profiles_dir))
+    parser.add_argument("profiles_path", nargs="?", default=str(DEFAULT_PROFILES_DIR))
     parser.add_argument(
         "-o",
         "--output",
         default=None,
         help="Output header path, or - for stdout (default: stdout; "
-             "with --check: common/can_discover_priors.h)",
+             "with --check: build/generated/can_discover_priors.h)",
     )
     parser.add_argument(
         "--check",

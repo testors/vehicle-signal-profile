@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.12)
 project(can_tools C OBJC)
 
 set(CMAKE_C_STANDARD 11)
@@ -12,13 +12,41 @@ endif()
 # Common include path
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/common)
 
+# This repository's VSP profiles (apps/can_tools/../../profiles)
+get_filename_component(VSP_PROFILES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../profiles ABSOLUTE)
+
+# --- VSP corpus prior table: generated from the profiles at build time, not committed ---
+find_program(PYTHON3_EXECUTABLE python3)
+if(NOT PYTHON3_EXECUTABLE)
+    message(FATAL_ERROR "python3 is required: the build generates can_discover_priors.h "
+                        "from ${VSP_PROFILES_DIR} with tools/gen_can_discover_priors.py")
+endif()
+file(GLOB_RECURSE VSP_PROFILE_FILES CONFIGURE_DEPENDS ${VSP_PROFILES_DIR}/*.vsp)
+set(PRIORS_DIR ${CMAKE_CURRENT_BINARY_DIR}/generated)
+set(PRIORS_HEADER ${PRIORS_DIR}/can_discover_priors.h)
+# Rewritten only when the file list changes, so a removed profile also regenerates the header.
+string(REPLACE ";" "\n" VSP_PROFILE_LIST "${VSP_PROFILE_FILES}")
+file(GENERATE OUTPUT ${PRIORS_DIR}/profiles.list CONTENT "${VSP_PROFILE_LIST}\n")
+add_custom_command(
+    OUTPUT ${PRIORS_HEADER}
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${PRIORS_DIR}
+    COMMAND ${PYTHON3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tools/gen_can_discover_priors.py
+            ${VSP_PROFILES_DIR} -o ${PRIORS_HEADER}
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/tools/gen_can_discover_priors.py
+            ${PRIORS_DIR}/profiles.list ${VSP_PROFILE_FILES}
+    COMMENT "Generating can_discover_priors.h from ${VSP_PROFILES_DIR}"
+    VERBATIM
+)
+
 # Discovery core library
 add_library(can_discover_core STATIC
     common/can_discover.c
+    ${PRIORS_HEADER}
 )
 target_include_directories(can_discover_core PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/common
 )
+target_include_directories(can_discover_core PRIVATE ${PRIORS_DIR})
 target_link_libraries(can_discover_core PUBLIC m)
 
 # Frame sources (live/replay interface), capture TSV reader, CLI helpers (plain C)
