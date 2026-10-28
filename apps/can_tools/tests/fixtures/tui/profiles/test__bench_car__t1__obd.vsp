@@ -1,0 +1,83 @@
+{
+  "schema": "vehicle_data_profile.v1",
+  "vehicle": {
+    "manufacturer": "Test",
+    "model": "Bench Car"
+  },
+  "applicability": {
+    "generation": "T1",
+    "platform": null,
+    "year_start": 2020,
+    "year_end": null,
+    "market": null,
+    "trim": null,
+    "powertrain": null
+  },
+  "buses": [
+    {
+      "id": "can0",
+      "type": "can",
+      "bitrate": 500000
+    }
+  ],
+  "can_frames": [
+    {
+      "bus": "can0",
+      "frame_id": 243,
+      "frame_id_hex": "0x0F3",
+      "id_format": "standard",
+      "name": "F",
+      "dlc": 8,
+      "signals": []
+    }
+  ],
+  "diagnostic_queries": [],
+  "signals": [
+    {
+      "name": "Engine_RPM",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 243,
+        "frame_id_hex": "0x0F3"
+      },
+      "decode": {
+        "start_bit": 39,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.25,
+        "offset": 0,
+        "unit": "rpm",
+        "mux": null
+      },
+      "canonical": {
+        "id": "engine.speed"
+      }
+    },
+    {
+      "name": "RPM_OBD",
+      "acquisition": {
+        "type": "diagnostic_query",
+        "bus": "can0",
+        "query_id": "q",
+        "tx_id": 2015,
+        "rx_id": 2024,
+        "request_hex": "01 0C"
+      },
+      "decode": {
+        "start_bit": 31,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.25,
+        "offset": 0,
+        "unit": "rpm",
+        "mux": null
+      },
+      "canonical": {
+        "id": "engine.speed"
+      }
+    }
+  ]
+}

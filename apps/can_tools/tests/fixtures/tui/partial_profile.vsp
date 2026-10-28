@@ -1,0 +1,184 @@
+{
+  "schema": "vehicle_data_profile.v1",
+  "vehicle": {
+    "manufacturer": "Test",
+    "model": "Partial"
+  },
+  "applicability": {
+    "generation": "T1",
+    "platform": null,
+    "year_start": 2020,
+    "year_end": null,
+    "market": null,
+    "trim": null,
+    "powertrain": null
+  },
+  "buses": [
+    {
+      "id": "can0",
+      "type": "can",
+      "bitrate": 500000
+    }
+  ],
+  "can_frames": [
+    {
+      "bus": "can0",
+      "frame_id": 243,
+      "frame_id_hex": "0x0F3",
+      "id_format": "standard",
+      "name": "ENGINE",
+      "dlc": 8,
+      "cycle_ms": 10,
+      "signals": []
+    },
+    {
+      "bus": "can0",
+      "frame_id": 165,
+      "frame_id_hex": "0x0A5",
+      "id_format": "standard",
+      "name": "STEERING",
+      "dlc": 8,
+      "cycle_ms": 10,
+      "signals": []
+    },
+    {
+      "bus": "can0",
+      "frame_id": 416,
+      "frame_id_hex": "0x1A0",
+      "id_format": "standard",
+      "name": "BRAKE_WHEEL",
+      "dlc": 8,
+      "cycle_ms": 20,
+      "signals": []
+    },
+    {
+      "bus": "can0",
+      "frame_id": 217,
+      "frame_id_hex": "0x0D9",
+      "id_format": "standard",
+      "name": "PEDALS",
+      "dlc": 6,
+      "cycle_ms": 50,
+      "signals": []
+    },
+    {
+      "bus": "can0",
+      "frame_id": 480,
+      "frame_id_hex": "0x1E0",
+      "id_format": "standard",
+      "name": "TRANS",
+      "dlc": 8,
+      "cycle_ms": 50,
+      "signals": []
+    },
+    {
+      "bus": "can0",
+      "frame_id": 944,
+      "frame_id_hex": "0x3B0",
+      "id_format": "standard",
+      "name": "COOLANT",
+      "dlc": 8,
+      "cycle_ms": 1000,
+      "signals": []
+    },
+    {
+      "bus": "can0",
+      "frame_id": 708,
+      "frame_id_hex": "0x2C4",
+      "id_format": "standard",
+      "name": "LAP",
+      "dlc": 8,
+      "cycle_ms": 20,
+      "signals": []
+    },
+    {
+      "bus": "can0",
+      "frame_id": 946,
+      "frame_id_hex": "0x3B2",
+      "id_format": "standard",
+      "name": "GEARBOX",
+      "dlc": 8,
+      "cycle_ms": 1000,
+      "signals": []
+    },
+    {
+      "bus": "can0",
+      "frame_id": 218,
+      "frame_id_hex": "0x0DA",
+      "id_format": "standard",
+      "name": "PEDALS_ECU",
+      "dlc": 8,
+      "cycle_ms": 20,
+      "signals": []
+    }
+  ],
+  "diagnostic_queries": [],
+  "signals": [
+    {
+      "name": "Engine_RPM",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 243,
+        "frame_id_hex": "0x0F3"
+      },
+      "decode": {
+        "start_bit": 39,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.25,
+        "offset": 0,
+        "unit": "rpm",
+        "mux": null
+      },
+      "canonical": {
+        "id": "engine.speed"
+      }
+    },
+    {
+      "name": "Steering_Angle",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 165,
+        "frame_id_hex": "0x0A5"
+      },
+      "decode": {
+        "start_bit": 16,
+        "bit_length": 16,
+        "byte_order": "little_endian",
+        "signed": true,
+        "factor": 0.1,
+        "offset": 0,
+        "unit": "deg",
+        "mux": null
+      },
+      "canonical": {
+        "id": "steering.wheel.angle"
+      }
+    },
+    {
+      "name": "Coolant_Temp",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 944,
+        "frame_id_hex": "0x3B0"
+      },
+      "decode": {
+        "start_bit": 0,
+        "bit_length": 8,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 1,
+        "offset": -40,
+        "unit": "°C",
+        "mux": null
+      },
+      "canonical": {
+        "id": "engine.coolant.temperature"
+      }
+    }
+  ]
+}

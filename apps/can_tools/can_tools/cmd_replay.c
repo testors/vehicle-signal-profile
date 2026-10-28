@@ -1,18 +1,21 @@
 /**
- * @file discover_replay.c
+ * @file cmd_replay.c
  * @brief Offline replay of a saved can_discover capture session
  *
  * Re-runs PT-CAN signal discovery on a capture session folder written by
  * can_discover / can_reader discover (NN_<slug>.frames.tsv + manifest.json),
  * so the engine can be validated on real captures without the car.
  *
- * Usage: discover_replay <session_dir> [--out-dir DIR]
+ * Usage: can_tools replay <session_dir> [--out-dir DIR]
+ *        discover_replay <session_dir> [--out-dir DIR]   (alias)
+ *
+ * Moved from tools/discover_replay.c (main renamed cmd_replay_main).
  *
  * Writes result.json, ptcan_discover_draft.dbc and ptcan_discover_draft.vsp
  * into the output directory (default: <session_dir>/replay). The result JSON
  * is also printed on stdout; logs and the per-signal summary go to stderr.
  *
- * Plain C11 + POSIX; depends only on can_discover_core.
+ * Plain C11 + POSIX; depends only on can_discover_core and common/frame_tsv.c.
  */
 
 #define _POSIX_C_SOURCE 200809L
@@ -26,13 +29,13 @@
 #include <sys/types.h>
 
 #include "can_discover.h"
+#include "frame_tsv.h"
+#include "commands.h"
 
 #define REPLAY_PATH_MAX       1024
-#define REPLAY_LINE_MAX       1024
-#define REPLAY_MAX_ROW_WARNINGS 5
 
 /*******************************************************************************
- * Phase naming (must match disc_phase_slug() in can_discover/main.m)
+ * Phase naming (must match disc_phase_slug() in common/discover_session.m)
  ******************************************************************************/
 
 static const char *const kPhaseSlugs[DISC_NUM_PHASES] = {
@@ -73,13 +76,6 @@ static bool make_dirs(const char *path) {
     return is_directory(path);
 }
 
-static int hex_nibble(char c) {
-    if (c >= '0' && c <= '9') return c - '0';
-    if (c >= 'a' && c <= 'f') return c - 'a' + 10;
-    if (c >= 'A' && c <= 'F') return c - 'A' + 10;
-    return -1;
-}
-
 static int compare_int64(const void *a, const void *b) {
     int64_t x = *(const int64_t *)a;
     int64_t y = *(const int64_t *)b;
@@ -108,173 +104,8 @@ static void json_print_string(FILE *f, const char *s) {
 }
 
 /*******************************************************************************
- * Frame TSV loading
+ * Frame TSV loading (frame_list_t, frame_tsv_load: common/frame_tsv.c)
  ******************************************************************************/
-
-typedef struct {
-    can_frame_t *frames;
-    int          count;
-    int          capacity;
-    int          malformed;     /**< Rows rejected by the parser */
-} frame_list_t;
-
-static bool frame_list_push(frame_list_t *list, const can_frame_t *frame) {
-    if (list->count >= list->capacity) {
-        int new_capacity = list->capacity > 0 ? list->capacity * 2 : 4096;
-        can_frame_t *grown = (can_frame_t *)realloc(list->frames,
-                                                    (size_t)new_capacity * sizeof(*grown));
-        if (!grown) return false;
-        list->frames = grown;
-        list->capacity = new_capacity;
-    }
-    list->frames[list->count++] = *frame;
-    return true;
-}
-
-static void frame_list_free(frame_list_t *list) {
-    free(list->frames);
-    memset(list, 0, sizeof(*list));
-}
-
-/**
- * Parse one data row: timestamp_ms \t 0xID \t is_extended \t dlc \t data_hex
- * (the format disc_write_phase_dump() writes). The line is modified in place.
- */
-static bool parse_frame_row(char *line, can_frame_t *out) {
-    char *fields[5];
-    int field_count = 0;
-    char *p = line;
-    fields[field_count++] = p;
-    for (; *p; p++) {
-        if (*p != '\t') continue;
-        if (field_count >= 5) return false;
-        *p = '\0';
-        fields[field_count++] = p + 1;
-    }
-    if (field_count != 5) return false;
-
-    memset(out, 0, sizeof(*out));
-
-    /* timestamp_ms: decimal */
-    char *end = NULL;
-    if (!isdigit((unsigned char)fields[0][0]) && fields[0][0] != '-') return false;
-    errno = 0;
-    long long ts = strtoll(fields[0], &end, 10);
-    if (errno != 0 || *end != '\0') return false;
-    out->timestamp_ms = (int64_t)ts;
-
-    /* can_id: hex, optional 0x prefix */
-    const char *id_str = fields[1];
-    if (id_str[0] == '0' && (id_str[1] == 'x' || id_str[1] == 'X')) id_str += 2;
-    if (!isxdigit((unsigned char)id_str[0])) return false;
-    errno = 0;
-    unsigned long can_id = strtoul(id_str, &end, 16);
-    if (errno != 0 || *end != '\0' || can_id > 0x1FFFFFFFUL) return false;
-    out->can_id = (uint32_t)can_id;
-
-    /* is_extended: 0 / 1 */
-    if (strcmp(fields[2], "0") == 0) out->is_extended = false;
-    else if (strcmp(fields[2], "1") == 0) out->is_extended = true;
-    else return false;
-
-    /* dlc: 0..8 */
-    if (fields[3][0] < '0' || fields[3][0] > '8' || fields[3][1] != '\0') return false;
-    out->dlc = (uint8_t)(fields[3][0] - '0');
-
-    /* data_hex: exactly 2 * dlc hex digits */
-    const char *hex = fields[4];
-    if (strlen(hex) != (size_t)out->dlc * 2) return false;
-    for (int b = 0; b < out->dlc; b++) {
-        int hi = hex_nibble(hex[2 * b]);
-        int lo = hex_nibble(hex[2 * b + 1]);
-        if (hi < 0 || lo < 0) return false;
-        out->data[b] = (uint8_t)((hi << 4) | lo);
-    }
-    return true;
-}
-
-/** Strip trailing CR/LF in place. Tabs are kept: a dlc=0 row ends in "\t". */
-static void strip_eol(char *s) {
-    size_t n = strlen(s);
-    while (n > 0 && (s[n - 1] == '\n' || s[n - 1] == '\r')) {
-        s[--n] = '\0';
-    }
-}
-
-static bool is_blank(const char *s) {
-    for (; *s; s++) {
-        if (!isspace((unsigned char)*s)) return false;
-    }
-    return true;
-}
-
-/**
- * Load a phase dump. Returns 1 if loaded, 0 if the file does not exist,
- * -1 on I/O or allocation error.
- */
-static int load_frames_tsv(const char *path, const char *display_name,
-                           frame_list_t *list) {
-    memset(list, 0, sizeof(*list));
-
-    FILE *f = fopen(path, "r");
-    if (!f) {
-        if (errno == ENOENT) return 0;
-        fprintf(stderr, "[ERROR] Cannot open %s: %s\n", path, strerror(errno));
-        return -1;
-    }
-
-    char line[REPLAY_LINE_MAX];
-    int line_no = 0;
-    bool saw_content = false;
-    while (fgets(line, sizeof(line), f)) {
-        line_no++;
-        size_t n = strlen(line);
-        bool too_long = (n == sizeof(line) - 1 && line[n - 1] != '\n' && !feof(f));
-        if (too_long) {
-            int c;
-            while ((c = fgetc(f)) != EOF && c != '\n')
-                ;
-        }
-
-        strip_eol(line);
-        if (!too_long && is_blank(line)) continue;
-
-        /* Header: first non-blank line naming the columns */
-        if (!saw_content) {
-            saw_content = true;
-            if (!too_long && strncmp(line, "timestamp_ms", 12) == 0) continue;
-        }
-
-        can_frame_t frame;
-        if (too_long || !parse_frame_row(line, &frame)) {
-            if (list->malformed < REPLAY_MAX_ROW_WARNINGS) {
-                fprintf(stderr, "[WARN] %s:%d: malformed row skipped\n",
-                        display_name, line_no);
-            }
-            list->malformed++;
-            continue;
-        }
-        if (!frame_list_push(list, &frame)) {
-            fprintf(stderr, "[ERROR] Out of memory loading %s\n", path);
-            fclose(f);
-            frame_list_free(list);
-            return -1;
-        }
-    }
-
-    bool read_error = ferror(f) != 0;
-    fclose(f);
-    if (read_error) {
-        fprintf(stderr, "[ERROR] Read error on %s\n", path);
-        frame_list_free(list);
-        return -1;
-    }
-    if (list->malformed > REPLAY_MAX_ROW_WARNINGS) {
-        fprintf(stderr, "[WARN] %s: %d malformed rows skipped in total\n",
-                display_name, list->malformed);
-    }
-    return 1;
-}
 
 /**
  * Time covered by the frames: (last - first) plus one median inter-frame
@@ -442,7 +273,7 @@ static bool load_manifest(const char *path, manifest_phase_t out[DISC_NUM_PHASES
  * Output
  ******************************************************************************/
 
-/** Same object shape as disc_write_result_json_object() in can_discover/main.m */
+/** Same object shape as disc_write_result_json_object() in common/discover_session.m */
 static void write_result_json_object(FILE *f,
                                      bool have_bus_mode,
                                      disc_bus_mode_t bus_mode,
@@ -578,7 +409,7 @@ static void print_usage(void) {
             "  Result JSON on stdout, logs on stderr.\n");
 }
 
-int main(int argc, char *argv[]) {
+int cmd_replay_main(int argc, char *argv[]) {
     const char *session_dir = NULL;
     const char *out_dir_arg = NULL;
 
@@ -661,7 +492,7 @@ int main(int argc, char *argv[]) {
         }
 
         frame_list_t frames;
-        int rc = load_frames_tsv(path, leaf, &frames);
+        int rc = frame_tsv_load(path, leaf, &frames);
         if (rc < 0) {
             exit_code = 1;
             goto cleanup;

@@ -8,30 +8,78 @@
 static NSString * const kOBDAdapterServiceUUID = @"FFF0";
 static const NSTimeInterval kOBDAdapterDefaultTimeout = 3.0;
 
+/* Ownership (compiled without ARC): every object ivar is retained by the
+ * adapter and released in -dealloc. Connection objects are replaced through
+ * obd_replace(), which releases the old object at the next autorelease pool
+ * drain rather than immediately, so a delegate callback never frees the
+ * object that is calling it. */
+static void obd_replace(id *slot, id value) {
+    if (*slot == value) return;
+    [value retain];
+    [*slot autorelease];
+    *slot = value;
+}
+
 @implementation OBDAdapter {
     obd_adapter_frame_callback_t _frameCallback;
     void *_frameContext;
+}
+
++ (NSArray<NSString *> *)defaultNameHints {
+    return @[ @"OBDLink", @"vLinker", @"VLINKER", @"VLinker",
+              @"ELM327", @"OBD", @"iOBD" ];
+}
+
+/* Per-command diagnostics (logCommandErrors) */
+- (BOOL)_logErrors {
+    return _logCommandErrors && !_quiet;
 }
 
 - (instancetype)initWithNameHints:(NSArray<NSString *> *)nameHints quiet:(BOOL)quiet {
     self = [super init];
     if (self) {
         _quiet = quiet;
-        _nameHints = nameHints ?: @[];
-        _discoveredDevices = [NSMutableArray array];
-        _discoveredNames = [NSMutableArray array];
-        _discoveredRSSIs = [NSMutableArray array];
-        _classicDevices = [NSMutableArray array];
-        _discoveredTransports = [NSMutableArray array];
-        _discoveredSourceIndices = [NSMutableArray array];
+        _nameHints = [(nameHints ?: @[]) copy];
+        _discoveredDevices = [[NSMutableArray alloc] init];
+        _discoveredNames = [[NSMutableArray alloc] init];
+        _discoveredRSSIs = [[NSMutableArray alloc] init];
+        _classicDevices = [[NSMutableArray alloc] init];
+        _discoveredTransports = [[NSMutableArray alloc] init];
+        _discoveredSourceIndices = [[NSMutableArray alloc] init];
         _central = [[CBCentralManager alloc] initWithDelegate:self
                                                         queue:nil
                                                       options:@{CBCentralManagerOptionShowPowerAlertKey: @YES}];
-        _classicInquiry = [IOBluetoothDeviceInquiry inquiryWithDelegate:self];
+        _classicInquiry = [[IOBluetoothDeviceInquiry inquiryWithDelegate:self] retain];
         _classicInquiry.inquiryLength = 4;
         _classicInquiry.updateNewDeviceNames = YES;
     }
     return self;
+}
+
+- (void)dealloc {
+    _frameCallback = NULL;
+    _frameContext = NULL;
+    _canMonitorActive = NO;
+    if (_isScanning) [self stopScan];
+    [_classicInquiry setDelegate:nil];
+    [_classicInquiry release];
+    _central.delegate = nil;
+    [_central release];
+    _connectedPeripheral.delegate = nil;
+    [_connectedPeripheral release];
+    [_rxCharacteristic release];
+    [_txCharacteristic release];
+    [_rfcommChannel setDelegate:nil];
+    [_rfcommChannel release];
+    [_connectedClassicDevice release];
+    [_discoveredDevices release];
+    [_discoveredNames release];
+    [_discoveredRSSIs release];
+    [_classicDevices release];
+    [_discoveredTransports release];
+    [_discoveredSourceIndices release];
+    [_nameHints release];
+    [super dealloc];
 }
 
 - (NSString *)connectedDeviceName {
@@ -89,7 +137,7 @@ static const NSTimeInterval kOBDAdapterDefaultTimeout = 3.0;
 
 - (void)_addClassicDeviceIfMatched:(IOBluetoothDevice *)device {
     NSString *name = device.name;
-    if (!name || name.length == 0) return;
+    if (![self _nameMatchesHints:name]) return;
 
     for (IOBluetoothDevice *existing in _classicDevices) {
         if ([existing.addressString isEqualToString:device.addressString]) return;
@@ -130,7 +178,7 @@ static const NSTimeInterval kOBDAdapterDefaultTimeout = 3.0;
     (void)central;
     _isConnecting = NO;
     _isConnected = YES;
-    _connectedPeripheral = peripheral;
+    obd_replace(&_connectedPeripheral, peripheral);
     peripheral.delegate = self;
     [peripheral discoverServices:@[[CBUUID UUIDWithString:kOBDAdapterServiceUUID]]];
 }
@@ -154,9 +202,9 @@ didDisconnectPeripheral:(CBPeripheral *)peripheral
     (void)peripheral;
     (void)error;
     _isConnected = NO;
-    _connectedPeripheral = nil;
-    _rxCharacteristic = nil;
-    _txCharacteristic = nil;
+    obd_replace(&_connectedPeripheral, nil);
+    obd_replace(&_rxCharacteristic, nil);
+    obd_replace(&_txCharacteristic, nil);
     _serviceDiscoveryDone = NO;
 }
 
@@ -189,15 +237,19 @@ didDiscoverCharacteristicsForService:(CBService *)service
     for (CBCharacteristic *characteristic in service.characteristics) {
         NSString *uuid = [characteristic.UUID.UUIDString uppercaseString];
         if ([uuid containsString:@"FFF1"]) {
-            _rxCharacteristic = characteristic;
+            obd_replace(&_rxCharacteristic, characteristic);
         } else if ([uuid containsString:@"FFF2"]) {
-            _txCharacteristic = characteristic;
+            obd_replace(&_txCharacteristic, characteristic);
             [peripheral setNotifyValue:YES forCharacteristic:characteristic];
         }
     }
 
     if (_rxCharacteristic && _txCharacteristic) {
         _serviceDiscoveryDone = YES;
+    } else if ([self _logErrors]) {
+        fprintf(stderr, "[WARN] Missing required characteristics (RX=%s, TX=%s)\n",
+                _rxCharacteristic ? "OK" : "missing",
+                _txCharacteristic ? "OK" : "missing");
     }
 }
 
@@ -303,8 +355,8 @@ didUpdateNotificationStateForCharacteristic:(CBCharacteristic *)characteristic
 - (void)rfcommChannelClosed:(IOBluetoothRFCOMMChannel *)rfcommChannel {
     (void)rfcommChannel;
     _isConnected = NO;
-    _connectedClassicDevice = nil;
-    _rfcommChannel = nil;
+    obd_replace(&_connectedClassicDevice, nil);
+    obd_replace(&_rfcommChannel, nil);
     _serviceDiscoveryDone = NO;
 }
 
@@ -337,7 +389,14 @@ didUpdateNotificationStateForCharacteristic:(CBCharacteristic *)characteristic
 }
 
 - (BOOL)connectToDevice:(int)index {
-    if (index < 0 || index >= (int)_discoveredNames.count || _isConnected) return NO;
+    if (index < 0 || index >= (int)_discoveredNames.count) {
+        if ([self _logErrors]) fprintf(stderr, "[ERROR] Invalid device index\n");
+        return NO;
+    }
+    if (_isConnected) {
+        if ([self _logErrors]) fprintf(stderr, "[ERROR] Already connected. Disconnect first\n");
+        return NO;
+    }
 
     OBDAdapterTransport transport =
         (OBDAdapterTransport)[_discoveredTransports[index] intValue];
@@ -366,77 +425,30 @@ didUpdateNotificationStateForCharacteristic:(CBCharacteristic *)characteristic
         return NO;
     }
 
-    _rfcommChannel = channel;
-    _connectedClassicDevice = device;
+    obd_replace(&_rfcommChannel, channel);
+    obd_replace(&_connectedClassicDevice, device);
     _isConnected = YES;
     _serviceDiscoveryDone = YES;
     return YES;
-}
-
-- (BOOL)scanAndConnectMatching:(NSString *)namePart scanSeconds:(double)scanSeconds {
-    [self waitForBleReady:5.0];
-    [self startScan];
-    [self runLoopFor:scanSeconds];
-    [self stopScan];
-
-    if (_discoveredNames.count == 0) {
-        [self startScan];
-        [self runLoopFor:scanSeconds];
-        [self stopScan];
-    }
-
-    NSString *needle = [[namePart ?: @"" uppercaseString] copy];
-    int matchIdx = -1;
-    for (int i = 0; i < (int)_discoveredNames.count; i++) {
-        NSString *name = [_discoveredNames[i] uppercaseString];
-        if (needle.length == 0 || [name containsString:needle]) {
-            matchIdx = i;
-            break;
-        }
-    }
-
-    if (matchIdx < 0) {
-        if (!_quiet) {
-            fprintf(stderr, "[ERROR] No matching OBD adapter found");
-            if (namePart) fprintf(stderr, " for '%s'", namePart.UTF8String);
-            fprintf(stderr, "\n");
-            for (int i = 0; i < (int)_discoveredNames.count; i++) {
-                fprintf(stderr, "  [%d] %s\n", i, _discoveredNames[i].UTF8String);
-            }
-        }
-        return NO;
-    }
-
-    if (![self connectToDevice:matchIdx]) return NO;
-
-    NSDate *timeout = [NSDate dateWithTimeIntervalSinceNow:10.0];
-    while (!_serviceDiscoveryDone &&
-           [[NSDate date] compare:timeout] == NSOrderedAscending) {
-        @autoreleasepool {
-            [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode
-                                     beforeDate:[NSDate dateWithTimeIntervalSinceNow:0.05]];
-        }
-    }
-    return _serviceDiscoveryDone;
 }
 
 - (void)disconnect {
     if (_activeTransport == OBD_ADAPTER_TRANSPORT_CLASSIC) {
         if (_rfcommChannel) {
             [_rfcommChannel closeChannel];
-            _rfcommChannel = nil;
+            obd_replace(&_rfcommChannel, nil);
         }
         if (_connectedClassicDevice) {
             [_connectedClassicDevice closeConnection];
-            _connectedClassicDevice = nil;
+            obd_replace(&_connectedClassicDevice, nil);
         }
     } else {
         if (_connectedPeripheral) {
             [_central cancelPeripheralConnection:_connectedPeripheral];
-            _connectedPeripheral = nil;
+            obd_replace(&_connectedPeripheral, nil);
         }
-        _rxCharacteristic = nil;
-        _txCharacteristic = nil;
+        obd_replace(&_rxCharacteristic, nil);
+        obd_replace(&_txCharacteristic, nil);
     }
     _isConnected = NO;
     _serviceDiscoveryDone = NO;
@@ -454,10 +466,15 @@ didUpdateNotificationStateForCharacteristic:(CBCharacteristic *)characteristic
             response:(char *)resp
               maxLen:(int)maxLen
              timeout:(double)timeoutSeconds {
-    if (!_isConnected || !_serviceDiscoveryDone || !cmd || !resp || maxLen <= 0) {
+    if (!_isConnected || !_serviceDiscoveryDone) {
+        if ([self _logErrors]) fprintf(stderr, "[ERROR] Not connected or service not ready\n");
+        return NO;
+    }
+    if (!cmd || !resp || maxLen <= 0) {
         return NO;
     }
     if (_activeTransport == OBD_ADAPTER_TRANSPORT_BLE && !_rxCharacteristic) {
+        if ([self _logErrors]) fprintf(stderr, "[ERROR] BLE characteristic not ready\n");
         return NO;
     }
 
@@ -488,7 +505,10 @@ didUpdateNotificationStateForCharacteristic:(CBCharacteristic *)characteristic
                                      beforeDate:[NSDate dateWithTimeIntervalSinceNow:0.01]];
         }
     }
-    if (!_responseReady) return NO;
+    if (!_responseReady) {
+        if ([self _logErrors]) fprintf(stderr, "[WARN] Command timeout: %s\n", cmd);
+        return NO;
+    }
 
     char *src = _responseBuf;
     int dstLen = 0;
@@ -539,6 +559,10 @@ didUpdateNotificationStateForCharacteristic:(CBCharacteristic *)characteristic
     _frameContext = context;
     _canLineLen = 0;
     _canMonitorActive = YES;
+
+    memset(_responseBuf, 0, sizeof(_responseBuf));
+    _responseLen = 0;
+    _responseReady = NO;
 }
 
 - (void)stopMonitor {

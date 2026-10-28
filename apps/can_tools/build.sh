@@ -6,4 +6,4 @@ cd build
 cmake .. -DCMAKE_BUILD_TYPE=Debug
 make -j$(sysctl -n hw.ncpu)
 echo ""
-echo "Built: build/can_reader, build/can_discover, build/vsp_probe"
+echo "Built: build/can_tools (aliases: build/can_reader, build/can_discover, build/vsp_probe, build/discover_replay)"
