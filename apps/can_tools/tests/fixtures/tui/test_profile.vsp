@@ -1,0 +1,471 @@
+{
+  "schema": "vehicle_data_profile.v1",
+  "vehicle": {
+    "manufacturer": "Test",
+    "model": "Bench Car"
+  },
+  "applicability": {
+    "generation": "T1",
+    "platform": null,
+    "year_start": 2020,
+    "year_end": null,
+    "market": null,
+    "trim": null,
+    "powertrain": null
+  },
+  "buses": [
+    {
+      "id": "can0",
+      "type": "can",
+      "bitrate": 500000
+    }
+  ],
+  "can_frames": [
+    {
+      "bus": "can0",
+      "frame_id": 243,
+      "frame_id_hex": "0x0F3",
+      "id_format": "standard",
+      "name": "ENGINE",
+      "dlc": 8,
+      "cycle_ms": 10,
+      "signals": []
+    },
+    {
+      "bus": "can0",
+      "frame_id": 165,
+      "frame_id_hex": "0x0A5",
+      "id_format": "standard",
+      "name": "STEERING",
+      "dlc": 8,
+      "cycle_ms": 10,
+      "signals": []
+    },
+    {
+      "bus": "can0",
+      "frame_id": 416,
+      "frame_id_hex": "0x1A0",
+      "id_format": "standard",
+      "name": "BRAKE_WHEEL",
+      "dlc": 8,
+      "cycle_ms": 20,
+      "signals": []
+    },
+    {
+      "bus": "can0",
+      "frame_id": 217,
+      "frame_id_hex": "0x0D9",
+      "id_format": "standard",
+      "name": "PEDALS",
+      "dlc": 6,
+      "cycle_ms": 50,
+      "signals": []
+    },
+    {
+      "bus": "can0",
+      "frame_id": 480,
+      "frame_id_hex": "0x1E0",
+      "id_format": "standard",
+      "name": "TRANS",
+      "dlc": 8,
+      "cycle_ms": 50,
+      "signals": []
+    },
+    {
+      "bus": "can0",
+      "frame_id": 944,
+      "frame_id_hex": "0x3B0",
+      "id_format": "standard",
+      "name": "COOLANT",
+      "dlc": 8,
+      "cycle_ms": 1000,
+      "signals": []
+    },
+    {
+      "bus": "can0",
+      "frame_id": 708,
+      "frame_id_hex": "0x2C4",
+      "id_format": "standard",
+      "name": "LAP",
+      "dlc": 8,
+      "cycle_ms": 20,
+      "signals": []
+    },
+    {
+      "bus": "can0",
+      "frame_id": 946,
+      "frame_id_hex": "0x3B2",
+      "id_format": "standard",
+      "name": "GEARBOX",
+      "dlc": 8,
+      "cycle_ms": 1000,
+      "signals": []
+    },
+    {
+      "bus": "can0",
+      "frame_id": 218,
+      "frame_id_hex": "0x0DA",
+      "id_format": "standard",
+      "name": "PEDALS_ECU",
+      "dlc": 8,
+      "cycle_ms": 20,
+      "signals": []
+    }
+  ],
+  "diagnostic_queries": [
+    {
+      "id": "diag_7DF_012F",
+      "bus": "can0",
+      "kind": "obd_mode_01",
+      "role": "channel_query",
+      "tx_id": 2015,
+      "rx_id": 2024,
+      "request_hex": "01 2F",
+      "payload_hex": "02 01 2F 55 55 55 55 55"
+    }
+  ],
+  "signals": [
+    {
+      "name": "Engine_RPM",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 243,
+        "frame_id_hex": "0x0F3"
+      },
+      "decode": {
+        "start_bit": 39,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.25,
+        "offset": 0,
+        "unit": "rpm",
+        "mux": null
+      },
+      "canonical": {
+        "id": "engine.speed"
+      }
+    },
+    {
+      "name": "Steering_Angle",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 165,
+        "frame_id_hex": "0x0A5"
+      },
+      "decode": {
+        "start_bit": 16,
+        "bit_length": 16,
+        "byte_order": "little_endian",
+        "signed": true,
+        "factor": 0.1,
+        "offset": 0,
+        "unit": "deg",
+        "mux": null
+      },
+      "canonical": {
+        "id": "steering.wheel.angle"
+      }
+    },
+    {
+      "name": "Throttle_ECU",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 218,
+        "frame_id_hex": "0x0DA"
+      },
+      "decode": {
+        "start_bit": 16,
+        "bit_length": 12,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 0.025,
+        "offset": 0,
+        "unit": "%",
+        "mux": null
+      },
+      "canonical": {
+        "id": "throttle.position"
+      }
+    },
+    {
+      "name": "Throttle_Pos",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 217,
+        "frame_id_hex": "0x0D9"
+      },
+      "decode": {
+        "start_bit": 16,
+        "bit_length": 12,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 0.025,
+        "offset": 0,
+        "unit": "%",
+        "mux": null
+      },
+      "canonical": {
+        "id": "throttle.position"
+      }
+    },
+    {
+      "name": "Brake_Pressure",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 416,
+        "frame_id_hex": "0x1A0"
+      },
+      "decode": {
+        "start_bit": 0,
+        "bit_length": 16,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 0.01,
+        "offset": 0,
+        "unit": "bar",
+        "mux": null
+      },
+      "canonical": {
+        "id": "brake.pressure"
+      }
+    },
+    {
+      "name": "Wheel_Speed_FL",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 416,
+        "frame_id_hex": "0x1A0"
+      },
+      "decode": {
+        "start_bit": 16,
+        "bit_length": 16,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 0.01,
+        "offset": 0,
+        "unit": "km/h",
+        "mux": null
+      },
+      "canonical": {
+        "id": "wheel.speed.front_left"
+      }
+    },
+    {
+      "name": "Vehicle_Speed",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 217,
+        "frame_id_hex": "0x0D9"
+      },
+      "decode": {
+        "start_bit": 32,
+        "bit_length": 16,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 0.01,
+        "offset": 0,
+        "unit": "km/h",
+        "mux": null
+      },
+      "canonical": {
+        "id": "vehicle.speed"
+      }
+    },
+    {
+      "name": "Gear",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 480,
+        "frame_id_hex": "0x1E0"
+      },
+      "decode": {
+        "start_bit": 0,
+        "bit_length": 4,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 1,
+        "offset": 0,
+        "unit": "",
+        "mux": null,
+        "values": [
+          {
+            "raw": 0,
+            "label": "P",
+            "value": null
+          },
+          {
+            "raw": 1,
+            "label": "R",
+            "value": -1
+          },
+          {
+            "raw": 2,
+            "label": "N",
+            "value": 0
+          },
+          {
+            "raw": 3,
+            "label": "D",
+            "value": null
+          },
+          {
+            "raw": 4,
+            "label": "1",
+            "value": 1
+          },
+          {
+            "raw": 5,
+            "label": "2",
+            "value": 2
+          },
+          {
+            "raw": 6,
+            "label": "3",
+            "value": 3
+          },
+          {
+            "raw": 7,
+            "label": "4",
+            "value": 4
+          },
+          {
+            "raw": 8,
+            "label": "5",
+            "value": 5
+          },
+          {
+            "raw": 9,
+            "label": "6",
+            "value": 6
+          },
+          {
+            "raw": 10,
+            "label": "7",
+            "value": 7
+          }
+        ]
+      },
+      "canonical": {
+        "id": "transmission.gear.selected"
+      }
+    },
+    {
+      "name": "Coolant_Temp",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 944,
+        "frame_id_hex": "0x3B0"
+      },
+      "decode": {
+        "start_bit": 0,
+        "bit_length": 8,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 1,
+        "offset": -40,
+        "unit": "°C",
+        "mux": null
+      },
+      "canonical": {
+        "id": "engine.coolant.temperature"
+      }
+    },
+    {
+      "name": "Oil_Temp",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 944,
+        "frame_id_hex": "0x3B0"
+      },
+      "decode": {
+        "start_bit": 8,
+        "bit_length": 8,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 1,
+        "offset": -40,
+        "unit": "°C",
+        "mux": null
+      },
+      "canonical": {
+        "id": "engine.oil.temperature"
+      }
+    },
+    {
+      "name": "Gearbox_Oil_Temp",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 946,
+        "frame_id_hex": "0x3B2"
+      },
+      "decode": {
+        "start_bit": 0,
+        "bit_length": 8,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 1,
+        "offset": -40,
+        "unit": "°C",
+        "mux": null
+      },
+      "canonical": {
+        "id": "transmission.oil.temperature"
+      }
+    },
+    {
+      "name": "Lap_Trigger",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 708,
+        "frame_id_hex": "0x2C4"
+      },
+      "decode": {
+        "start_bit": 0,
+        "bit_length": 1,
+        "byte_order": "little_endian",
+        "signed": false,
+        "factor": 1,
+        "offset": 0,
+        "unit": "",
+        "mux": null
+      }
+    },
+    {
+      "name": "Fuel_Level",
+      "acquisition": {
+        "type": "diagnostic_query",
+        "bus": "can0",
+        "query_id": "diag_7DF_012F",
+        "tx_id": 2015,
+        "rx_id": 2024,
+        "request_hex": "01 2F"
+      },
+      "decode": {
+        "start_bit": 31,
+        "bit_length": 8,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.392156862745098,
+        "offset": 0,
+        "unit": "%",
+        "mux": null
+      },
+      "canonical": {
+        "id": "fuel.level"
+      }
+    }
+  ]
+}

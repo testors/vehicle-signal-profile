@@ -1,0 +1,82 @@
+--- snapshot T=33.000 120x40 ---
+┌ discover_session · PT-CAN DIRECT ──────────────────────┬─ test bench_car t1 ─┬─ 0 fr/s · 00:00:33 ─┬ END 00:31/00:31 ┐
+│┌ Gauges ──────────────────────────────────────────────────────────────── scale  rpm 7k · speed 200 · brake 300 bar ─┐│
+││ Throttle      0 %    ■■■■■■■■■■■■■■■  Brake     298.6 bar  ■■■■■■■■■■■■■■■  Steering      0 °    ■■■■■■■┃■■■■■■■   ││
+││ RPM       3,004 rpm  ■■■■■■■■■■■■■■■  Speed         0 km/h ■■■■■■■■■■■■■■■  Gear          — R N 1 2 3 4 5 6 7      ││
+││ Coolant       — °C   ■■■■■■■■■■■■■■■  Oil           — °C   ■■■■■■■■■■■■■■■  Gearbox       — °C   ■■■■■■■■■■■■■■■   ││
+│└────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘│
+│┌ Signals (6/13 live) ───────────────────────────────────────────────────────────────────────────────────────────────┐│
+││ name                  value  unit    hz    age   last 10 s                                                   src   ││
+││ Engine_RPM            3,004  rpm      0   1.1s   ⣿    ⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀      0x0F3 ││
+││ Gear                      —           —      —   no frame yet                                                0x1E0 ││
+││ Steering_Angle         -0.1  deg      0   1.1s   ⠤    ⠤⠤⠤⠤⠤⠤⠤⠤⠤⠤⠤⠤⠤⠤⠤⠤⠤⠤⠤⠤⠤⠤⠤⠤⠤⠤⠤⠤⠤⠤⠤⠤⠤⠤⠤⠤⠤⠤⠤⠤⠤⠤⠤⠤⠤⠤⠤⠤⠤      0x0A5 ││
+││ Throttle_ECU              —  %        —      —   no frame yet                                                0x0DA ││
+││ Throttle_Pos           0.00  %        0   1.1s   ⣿    ⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⡀      0x0D9 ││
+││ Brake_Pressure  ┌ Discover result ─ cap/snapshot_replay ────────────────────────── bus: DIRECT ─┐⣿⣿⣿⣿⣿⡇      0x1A0 ││
+││ Coolant_Temp    │  signal     id      layout         hz    conf     raw range       prior       │            0x3B0 ││
+││ Gearbox_Oil_Temp│  rpm        0x0F3   39|14@0+       50    HIGH     3005..5503      —           │            0x3B2 ││
+││ Lap_Trigger     │  steering   0x0A5   16|16@1-       50    HIGH     -3999..3999     —           │            0x2C4 ││
+││ Oil_Temp        │  throttle   0x0D9   16|12@1+       20    HIGH     33..3999        ×7          │            0x3B0 ││
+││ Vehicle_Speed   │  brake      0x1A0   0|16@1+        20    HIGH     252..29999      —           │⠤⠤⠤⠤⠤⠄      0x0D9 ││
+││ Wheel_Speed_FL  │  gear       —       skipped                                                   │⠤⠤⠤⠤⠤⠄      0x1A0 ││
+││ Fuel_Level      │  wheel      —       skipped                                                   │            obd   ││
+│└─────────────────│                                                                               │──────────────────┘│
+│┌ Raw CAN (5 IDs) │  written: ptcan_discover_draft.dbc · ptcan_discover_draft.vsp · result.json   │──────────────────┐│
+││ id       hz dlc ├───────────────────────────────────────────────────────────────────────────────┤ignals found      ││
+││ 0x0A5  23.5   8 │ ⏎ load draft VSP into dashboard  v view JSON  esc close                       │shot_replay/ptcan…││
+││ 0x0F3  23.5   8 └───────────────────────────────────────────────────────────────────────────────┘shot_replay/ptcan…││
+││ 0x0D9   9.0   6   00 00 00 00 00 00                          ││ 00:32 discover Wheel Speed: skipped                ││
+││ 0x1A0   9.0   8   A5 74 00 00 00 00 00 00                    ││ 00:32 discover Gear: skipped                       ││
+││ 0x316   2.0   8   0F 0F 0F 0F 0F 0F 0F 0F                    ││ 00:31 discover Brake: 1,149 frames, 5 IDs          ││
+││                                                              ││ 00:31 replay end                                   ││
+││                                                              ││ 00:24 discover 4/6 Brake: capturing 8 s            ││
+││                                                              ││ 00:23 discover Throttle: 1,153 frames, 5 IDs       ││
+││                                                              ││ 00:15 discover 3/6 Throttle: capturing 8 s         ││
+││                                                              ││ 00:14 discover Steering: 1,155 frames, 5 IDs       ││
+││                                                              ││ 00:06 discover 2/6 Steering: capturing 8 s         ││
+││                                                              ││ 00:05 discover baseline: bus DIRECT (PT-CAN)       ││
+│└──────────────────────────────────────────────────────────────┘└───────────────────────────────────────── ▼ 7 more ─┘│
+├──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ tab panel  / filter  s sort  d discover  space pause  [ ] speed  p profile  R replay list  ? help  q quit            │
+└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+--- color-map T=33.000 120x40 ---
+dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+ddddddddddddddddddd..bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb............................ddddddddddd...dddddddddddddddddddd
+ddddddddddddddddddd...dddddd.....dd......dddddd.........dd....dddd.....ddddddddd.......ddddd........dddddddddddddddddddd
+ddddddddddddddddddd...........................................bbbb.....................d............dddddddddddddddddddd
+ddddddddddddddddddd...........................................bbbb.....................d............dddddddddddddddddddd
+ddddddddddddddddddd...........................................bbbb.....................dd...........dddddddddddddddddddd
+ddddddddddddddddddd...........................................bbbb.....................d............dddddddddddddddddddd
+ddddddddddddddddddd..............d.......ddddddd....................................................dddddddddddddddddddd
+ddddddddddddddddddd..............d.......ddddddd....................................................dddddddddddddddddddd
+ddddddddddddddddddd.................................................................................dddddddddddddddddddd
+ddddddddddddddddddd.................................................................................dddddddddddddddddddd
+ddddddddddddddddddd.................................................................................dddddddddddddddddddd
+ddddddddddddddddddd..b................................b............bbb..............................dddddddddddddddddddd
+ddddddddddddddddddd.................................................................................dddddddddddddddddddd
+dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd

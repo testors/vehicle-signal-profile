@@ -1,0 +1,59 @@
+{
+  "schema": "vehicle_data_profile.v1",
+  "vehicle": {
+    "manufacturer": "Other",
+    "model": "Roadster"
+  },
+  "applicability": {
+    "generation": "R2",
+    "platform": null,
+    "year_start": 2009,
+    "year_end": 2014,
+    "market": null,
+    "trim": null,
+    "powertrain": null
+  },
+  "buses": [
+    {
+      "id": "can0",
+      "type": "can",
+      "bitrate": 500000
+    }
+  ],
+  "can_frames": [
+    {
+      "bus": "can0",
+      "frame_id": 496,
+      "frame_id_hex": "0x1F0",
+      "id_format": "standard",
+      "name": "F",
+      "dlc": 8,
+      "signals": []
+    }
+  ],
+  "diagnostic_queries": [],
+  "signals": [
+    {
+      "name": "RPM",
+      "acquisition": {
+        "type": "can_frame",
+        "bus": "can0",
+        "frame_id": 496,
+        "frame_id_hex": "0x1F0"
+      },
+      "decode": {
+        "start_bit": 39,
+        "bit_length": 16,
+        "byte_order": "big_endian",
+        "signed": false,
+        "factor": 0.25,
+        "offset": 0,
+        "unit": "rpm",
+        "mux": null
+      },
+      "canonical": {
+        "id": "engine.speed"
+      }
+    }
+  ]
+}
