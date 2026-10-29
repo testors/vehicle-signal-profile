@@ -340,10 +340,14 @@ Phase 6: Wheel Speed (15초)  — 저속 주행 30+ km/h [스킵 가능]
 
 각 Phase 후 사람이 CAN 후보를 고르지 않는다. 캡처가 끝나면 툴이 자동으로 추정한다:
 
-1. phase마다 CAN ID별 raw frame을 baseline과 비교하고, counter/checksum/상수 바이트를 걸러낸다.
+1. phase마다 CAN ID별 raw frame을 baseline과 비교하고, counter/checksum/상수 바이트를 걸러낸다. 두 phase 모두
+   값이 16종 이상인 바이트는 프레임 사이 평균 변화량(0–128, 짧은 쪽으로 잼)도 32 이상일 때만 checksum으로
+   본다: checksum은 평균 ~64로 튀고, 정지 중 잡음이 16종 넘는 센서 바이트는 작게 움직이므로 남는다.
 2. 신호별로 해당 phase에서 많이 변한 ID를 고르고, 변하는 바이트 묶음(region) 안에서 실제 bitfield
    (시작 비트, 길이, byte order, 부호)를 탐색한다. steering은 unsigned·2의 보수 외에 sign-magnitude
-   (크기 + 별도 부호 비트, 예: Porsche/Audi 0x0A0 `32|12` + 부호 bit 44)도 시도한다.
+   (크기 + 별도 부호 비트, 예: Porsche/Audi 0x0A0 `32|12` + 부호 bit 44)도 시도한다. 8비트 이하
+   Motorola 필드는 한 바이트 안에 있으면 Intel과 같은 비트라 건너뛰고, 바이트 경계를 넘으면(`19|8@0`)
+   따로 탐색한다.
 3. 후보 필드마다 점수를 매긴다.
    - **evidence**: 해당 phase에서 그 필드가 baseline 대비 얼마나 변했는지
    - **specificity**: 그 신호가 움직이면 안 되는 phase에서 조용한지
@@ -354,17 +358,28 @@ Phase 6: Wheel Speed (15초)  — 저속 주행 30+ km/h [스킵 가능]
      하나이므로, throttle과 wheel speed는 baseline의 alive counter를 신호로 보지 않는다: counter 비트를
      포함한 필드는 감점하고, 필드 바로 옆이 counter면 필드가 잘렸다고 보지 않으며, counter 바로 위 비트도
      필드 LSB 후보로 시도한다. counter는 ID마다 baseline 프레임에서 찾는다: 거의 매 프레임(95%) 뒤집히는
-     비트에서 시작해, 그 위 비트를 붙여도 묶음 값이 매 프레임 앞으로(범위 절반 미만) 또는 일정한 폭으로
-     움직이는 동안(최대 8비트)이다. checksum 비트와 신호 자체의 떨림(예: idle의 스로틀 밸브 각도)은
+     비트, 또는 바로 위 비트와의 2비트 묶음이 매 프레임 같은 홀수 폭으로 바뀌고(60% 이상) 값이 거의
+     반복되지 않는(5% 이하) 비트에서 시작한다. 뒤의 조건은 프레임 유실 때문이다: 한 프레임을 놓치면
+     최하위 비트가 안 뒤집히고 2칸 뛰므로 5% 유실이면 반전이 ~95%로 떨어진다. 그 위 비트를 붙여도 묶음
+     값이 매 프레임 앞으로(범위 절반 미만) 또는 일정한 폭으로 움직이는 동안(최대 8비트)이다. checksum 비트와 신호 자체의 떨림(예: idle의 스로틀 밸브 각도)은
      해당하지 않는다. 예: 992 GT3 `0x121`은 byte0 checksum, bit 8–11 counter, bit 12부터 페달.
    - **prior**: VSP corpus에 **같은 ID와 같은 layout**의 신호가 있는지 (ID만 같은 경우는 거의 점수 없음)
 4. 필드 단위 최소 변화량을 넘지 못한 후보(예: 50→51 한 번 바뀐 바이트)는 버린다.
 5. 모든 신호를 함께 배정해 두 신호가 같은 비트를 쓰지 않게 한다. 어떤 신호의 1순위 필드가 다른 신호에
    더 잘 맞으면 그 신호는 다음 후보로 넘어간다 (예: RPM과 throttle이 같은 phase에서 움직이는 경우).
 
-`confidence`는 증거의 강도와 2순위 후보와의 차이로 정한다. 단독 후보라도 증거가 강하면 HIGH가 될 수 있고,
-비슷한 후보가 남아 있으면 MEDIUM/LOW로 낮아진다. JSON의 `evidence` 객체와 VSP의 `discovery` 블록에서
-점수 구성을 확인할 수 있다.
+`confidence`는 증거의 강도와 두 가지 차이로 정한다.
+- **배정 차이**: 그 신호가 지금 위치(겹치는 비트 전부)를 못 쓴다고 하고 전체 배정을 다시 풀었을 때의 총점
+  차이. 다른 신호도 옮겨갈 수 있으므로, 두 신호를 서로 바꿔도 총점이 같으면(예: 똑같이 움직이는 두 필드에
+  RPM/throttle) 차이가 0이다. HIGH는 15점 또는 점수의 15% 이상.
+- **배치 차이**: 같은 비트 위를 다르게 읽는 차선 배치와의 점수 차이(예: counter를 포함한 `8|12`와 `12|8`).
+  폭·배율·상수 오프셋만 다른 배치(같은 값을 2^k배나 상수만큼 다르게 읽는 것, 예: 항상 0인 상위 비트를
+  더 붙인 필드)는 캡처로 구분할 수 없으므로 경쟁 후보로 치지 않는다. 같은 필드 데이터로 매긴 점수끼리라
+  HIGH는 10점 또는 10% 이상(discover_regression 시나리오로 맞춘 값).
+
+`ambiguity_margin`은 둘 중 작은 값이다. HIGH는 "이 위치와 비트 배치를 다른 해석과 구분할 근거가 있다"는
+뜻이지 scale·offset까지 맞다는 뜻은 아니다. 단독 후보라도 증거가 강하면 HIGH가 될 수 있고, 비슷한 후보가
+남아 있으면 MEDIUM/LOW로 낮아진다. JSON의 `evidence` 객체와 VSP의 `discovery` 블록에서 점수 구성을 확인할 수 있다.
 
 완료 시 JSON 결과와 함께 작업 디렉터리에 draft DBC와 draft VSP를 생성한다.
 DBC는 raw 값 기준의 호환 초안이고, VSP는 정보가 없는 차량의 profile 시작점이다.
@@ -413,7 +428,9 @@ prior table(`can_discover_priors.h`)은 빌드할 때 `tools/gen_can_discover_pr
 합성 캡처로 탐색 엔진을 검증한다 (RPM/throttle 분리, 같은 메시지의 두 신호, 저속 gateway,
 잡음만 있는 캡처, skip된 phase, 묶음 timestamp, counter 바로 옆 페달과 작은 RPM 블립(992 GT3 실차 캡처 패턴),
 같은 바이트에서 counter 위에 놓인 Motorola 페달, idle에서 하위 비트가 떨리는 스로틀,
-DBC/VSP 일치, cycle time, 512 KB 스레드 스택 등):
+DBC/VSP 일치, cycle time, 512 KB 스레드 스택 등). 엔진 리뷰의 경계 사례도 들어 있다: 무작위 프레임 유실
+3–10%(이름의 `_loss<P>_s<S>`), 바이트 경계를 넘는 8비트 Motorola 필드, 정지 중 값이 16종인 센서 바이트,
+상위 바이트가 안 움직이는 RPM, RPM/throttle을 구분할 수 없는 쌍둥이 필드(HIGH 금지):
 
 ```bash
 cd build && ctest --output-on-failure      # 또는 ./build/discover_regression

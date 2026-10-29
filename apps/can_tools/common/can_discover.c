@@ -595,15 +595,34 @@ static void raw_split_free(raw_split_t *s) {
 
 /*
  * Alive counters in one ID's frames. A bit that flips in nearly every frame is
- * a counter's lowest bit; the bits above it belong to the counter while the
- * group keeps stepping as one value from frame to frame (forward by less than
- * half its range, or by one steady step). Checksum bits flip about half the
- * time, and a signal's own jitter at rest neither flips every frame nor steps
- * steadily, so neither is taken.
+ * a counter's lowest bit; so is one whose 2-bit group with the bit above steps
+ * by one odd value per frame, with a lost frame showing as a double or triple
+ * step (a lost frame leaves the lowest bit unflipped: at 5 % loss only ~95 % of
+ * pairs flip). The bits above belong to the counter while the group keeps
+ * stepping as one value (forward by less than half its range, or by one steady
+ * step). Checksum bits flip about half the time, and a signal's own jitter at
+ * rest neither flips every frame nor steps steadily (it often repeats a value),
+ * so neither is taken.
  */
 #define DISC_ALIVE_FLIP_RATE   0.95
 #define DISC_ALIVE_STEADY_RATE 0.80
 #define DISC_ALIVE_MAX_BITS    8
+#define DISC_ALIVE_STEP_RATE   0.60   /* dominant step of a lossy counter's low bits */
+#define DISC_ALIVE_REPEAT_RATE 0.05   /* at most this many repeated values */
+
+/** Bits [lo, lo+2) count by one odd step per frame: nearly no repeats, that
+ *  step in most pairs (frames lost in between give the other steps). */
+static bool view_low_bits_count(const id_view_t *v, int lo) {
+    int hist[4] = {0}, total = v->count - 1;
+    for (int i = 1; i < v->count; i++) {
+        uint32_t a = (uint32_t)(v->le[i - 1] >> lo) & 3u;
+        uint32_t b = (uint32_t)(v->le[i] >> lo) & 3u;
+        hist[(b - a) & 3u]++;
+    }
+    if (total <= 0 || hist[0] > DISC_ALIVE_REPEAT_RATE * total) return false;
+    int d = hist[1] >= hist[3] ? 1 : 3;   /* counting up or down; odd, so bit lo flips */
+    return hist[d] >= DISC_ALIVE_STEP_RATE * total;
+}
 
 static bool view_group_steps_steadily(const id_view_t *v, int lo, int n) {
     uint32_t mod = 1u << n, mask = mod - 1u;
@@ -633,7 +652,8 @@ static uint64_t view_alive_bits(const id_view_t *v) {
         for (int i = 1; i < v->count; i++) {
             flips += (int)(((v->le[i] ^ v->le[i - 1]) >> bit) & 1ULL);
         }
-        if (flips < DISC_ALIVE_FLIP_RATE * total) continue;
+        if (flips < DISC_ALIVE_FLIP_RATE * total &&
+            !(bit + 1 < 64 && ((v->toggle >> (bit + 1)) & 1ULL) && view_low_bits_count(v, bit))) continue;
         int top = bit;
         while (top + 1 < 64 && top + 2 - bit <= DISC_ALIVE_MAX_BITS &&
                ((v->toggle >> (top + 1)) & 1ULL) &&
@@ -845,6 +865,32 @@ typedef struct {
     double      pair_score;     /* combined score of strongest adjacent pair */
 } id_cmp_t;
 
+/** Mean jump of one byte between consecutive frames, the short way round
+ *  (0..128): ~64 for a checksum, small for a sensor (noise or motion). -1
+ *  without enough frames. */
+static double view_byte_mean_jump(const id_view_t *v, int byte_idx) {
+    if (!v || v->count < 8 || byte_idx < 0 || byte_idx >= DISC_MAX_DLC) return -1.0;
+    bool have_prev = false;
+    uint8_t prev = 0;
+    long sum = 0;
+    int pairs = 0;
+    for (int i = 0; i < v->count; i++) {
+        const can_frame_t *frame = &v->frames[i];
+        if (frame->dlc <= byte_idx) continue;
+        uint8_t value = frame->data[byte_idx];
+        if (have_prev) {
+            int d = (uint8_t)(value - prev);
+            sum += d < 128 ? d : 256 - d;
+            pairs++;
+        }
+        prev = value;
+        have_prev = true;
+    }
+    return pairs >= 7 ? (double)sum / pairs : -1.0;
+}
+
+#define DISC_CRC_MEAN_JUMP 32.0   /* half a checksum's ~64 */
+
 static double view_byte_increment_ratio(const id_view_t *v, int byte_idx) {
     if (!v || v->count < 4) return 0.0;
     if (byte_idx < 0 || byte_idx >= DISC_MAX_DLC) return 0.0;
@@ -931,10 +977,15 @@ static bool compare_id(const disc_phase_t *baseline, const disc_phase_t *active,
         bc->active_unique = a_unique;
         bc->baseline_unique = b_unique;
 
-        /* Counter/CRC: both phases have many unique values */
+        /* Counter/CRC: both phases have many unique values and, when the raw
+         * frames are there, jump like a checksum from frame to frame. Sensor
+         * noise with 16+ values at rest moves by small steps, so it stays. */
         if (a_unique > 15 && b_unique > 15) {
-            bc->is_counter = true;
-            continue;
+            double ja = view_byte_mean_jump(act_view, b), jb = view_byte_mean_jump(base_view, b);
+            if (ja < 0.0 || jb < 0.0 || (ja >= DISC_CRC_MEAN_JUMP && jb >= DISC_CRC_MEAN_JUMP)) {
+                bc->is_counter = true;
+                continue;
+            }
         }
 
         if (a_unique > 8 || b_unique > 8) {
@@ -2200,8 +2251,10 @@ static int region_guesses(disc_ctx_t *ctx, disc_signal_t sig,
 
                 for (int wi = 0; wi < width_count; wi++) {
                     int len = widths[wi];
-                    if (len <= 8 && order == 0) continue;   /* same as Intel within a byte */
                     int start = field_start_from_lsb(lsb, len, order);
+                    /* A Motorola field inside one byte has the same bits as the Intel
+                       field: skip it. One that crosses a byte (19|8@0) is its own layout. */
+                    if (order == 0 && start >= 0 && start / 8 == lsb / 8) continue;
                     for (int si = 0; si < sign_variants; si++) {
                         field_t f;
                         if (si == 2) {
@@ -2547,7 +2600,39 @@ typedef struct {
     double           score;
     uint64_t         mask;      /* bits this option occupies in its message */
     bool             strong;
+    field_t          field;     /* the reported layout (after prior resolution) */
+    double           layout_alt;/* best other layout over the same bits that reads other
+                                   values (e.g. 8|12 over 12|8), -1 if none */
 } disc_option_t;
+
+/** a and b read the same quantity from these frames: one is the other times
+ *  2^k (|k| <= 8) plus a constant (bits that never change, e.g. a fixed upper
+ *  nibble). Only width, scale or offset differ, which the capture cannot tell
+ *  apart (priors and ranges decide those). A counter or flag inside one of
+ *  them makes the difference vary, so 8|12 over a counter is not 12|8. */
+static bool fields_read_alike(const field_t *a, const field_t *b,
+                              const id_view_t *v1, const id_view_t *v2) {
+    uint32_t ks = (1u << 17) - 1;   /* bit k + 8: k still possible */
+    int64_t offset[17];
+    bool seen = false;
+    const id_view_t *views[2] = { v1, v2 };
+    for (int vi = 0; vi < 2 && ks; vi++) {
+        const id_view_t *v = views[vi];
+        for (int i = 0; v && i < v->count && ks; i++) {
+            int64_t x = field_value(a, field_raw(a, v->le[i], v->be[i]));
+            int64_t y = field_value(b, field_raw(b, v->le[i], v->be[i]));
+            for (int k = -8; k <= 8; k++) {
+                if (!(ks & (1u << (k + 8)))) continue;
+                /* k >= 0: y = x * 2^k + c; k < 0: x = y * 2^-k + c */
+                int64_t c = k >= 0 ? y - x * ((int64_t)1 << k) : x - y * ((int64_t)1 << -k);
+                if (!seen) offset[k + 8] = c;
+                else if (c != offset[k + 8]) ks &= ~(1u << (k + 8));
+            }
+            seen = true;
+        }
+    }
+    return ks != 0;
+}
 
 typedef struct {
     int    idx;
@@ -2658,6 +2743,8 @@ static bool make_raw_option(disc_ctx_t *ctx, disc_signal_t sig, const id_cmp_t *
     c->prior_score = prior;
     c->prior_support = support;
     opt->score = score;
+    opt->field = f;
+    opt->layout_alt = -1.0;
     return true;
 }
 
@@ -2713,7 +2800,33 @@ static bool make_byte_option(disc_ctx_t *ctx, disc_signal_t sig, const id_cmp_t 
     c->prior_support = support;
     opt->mask = f.bits;
     opt->score = score;
+    opt->field = f;
+    opt->layout_alt = -1.0;
     return true;
+}
+
+#define DISC_LAYOUT_ALT_TRIES 6
+
+/** Score of the best other layout over the bits of guess g that reads other
+ *  values (after prior resolution), -1 if none: how sure the field's exact bits
+ *  are, which the non-overlapping options never compare. */
+static double layout_runner_up(disc_ctx_t *ctx, disc_signal_t sig, const id_cmp_t *row,
+                               const id_view_t *act, const id_view_t *base,
+                               const disc_raw_guess_t *guesses, int n, int g,
+                               const disc_option_t *chosen) {
+    double best = -1.0;
+    int tries = 0;
+    for (int h = 0; h < n && tries < DISC_LAYOUT_ALT_TRIES; h++) {
+        if (h == g || !(guesses[h].bitmask & guesses[g].bitmask)) continue;
+        tries++;
+        disc_option_t alt;
+        if (!make_raw_option(ctx, sig, row, act, base, &guesses[h], &alt)) continue;
+        /* another wheel of the same message is the same answer */
+        if (sig == DISC_SIG_WHEEL_SPEED && alt.mask == chosen->mask) continue;
+        if (fields_read_alike(&alt.field, &chosen->field, act, base)) continue;
+        if (alt.score > best) best = alt.score;
+    }
+    return best;
 }
 
 /** Collect the best scored field options for one signal. */
@@ -2795,6 +2908,7 @@ static int build_options(disc_ctx_t *ctx, disc_signal_t sig,
                 picked++;
                 disc_option_t opt;
                 if (make_raw_option(ctx, sig, row, act, base, &guesses[g], &opt)) {
+                    opt.layout_alt = layout_runner_up(ctx, sig, row, act, base, guesses, n, g, &opt);
                     option_add(pool, &pool_count, pool_max, &opt);
                 }
             }
@@ -2822,6 +2936,8 @@ typedef struct {
     int     best[DISC_SIG_COUNT];
     double  best_sum;
     double  bound[DISC_SIG_COUNT + 1];   /* best possible sum of signals s.. */
+    int     forbid_sig;                  /* -1 = none; else these options of it are off */
+    bool    forbid[DISC_OPTIONS_PER_SIGNAL];
 } assign_state_t;
 
 static void assign_dfs(assign_state_t *st, int s, double sum) {
@@ -2835,6 +2951,7 @@ static void assign_dfs(assign_state_t *st, int s, double sum) {
     if (sum + st->bound[s] <= st->best_sum + 1e-9) return;
 
     for (int j = 0; j < st->count[s]; j++) {
+        if (s == st->forbid_sig && st->forbid[j]) continue;
         const disc_option_t *o = &st->opts[s][j];
         bool clash = false;
         for (int t = 0; t < s && !clash; t++) {
@@ -2889,6 +3006,7 @@ static void disc_analyze_internal(const disc_phase_t phases[DISC_NUM_PHASES],
     st.opts = opts;
     st.count = count;
     st.best_sum = -1.0;
+    st.forbid_sig = -1;
     for (int s = 0; s < DISC_SIG_COUNT; s++) {
         st.cur[s] = -1;
         st.best[s] = -1;
@@ -2904,24 +3022,31 @@ static void disc_analyze_internal(const disc_phase_t phases[DISC_NUM_PHASES],
         if (j < 0) continue;
         const disc_option_t *chosen = &opts[s][j];
 
-        /* Runner-up: the best other location for this signal that is not the
-         * same field and not explained by another chosen signal. */
-        double alt = -1.0;
+        /* Runner-up assignment: the best total with this signal kept off its
+         * location (every option over the same bits; the exact bits are the
+         * layout margin below). The others may move, so two signals that swap
+         * at an equal total get no margin. */
+        assign_state_t alt = st;
+        alt.best_sum = -1.0;
+        alt.forbid_sig = s;
         for (int k = 0; k < count[s]; k++) {
-            if (k == j) continue;
-            const disc_option_t *o = &opts[s][k];
-            if (options_conflict(o, chosen)) continue;
-            bool taken = false;
-            for (int t = 0; t < DISC_SIG_COUNT && !taken; t++) {
-                if (t != s && st.best[t] >= 0) taken = options_conflict(o, &opts[t][st.best[t]]);
-            }
-            if (!taken && o->score > alt) alt = o->score;
+            alt.forbid[k] = options_conflict(&opts[s][k], chosen);
         }
-        double margin = (alt < 0.0) ? chosen->score : chosen->score - alt;
+        for (int t = 0; t < DISC_SIG_COUNT; t++) alt.cur[t] = -1;
+        assign_dfs(&alt, 0, 0.0);
+        double assign_margin = st.best_sum - (alt.best_sum > 0.0 ? alt.best_sum : 0.0);
+        if (assign_margin < 0.0) assign_margin = 0.0;
+        /* ... and the best other reading of the same bits (12|8 vs 8|12). Both
+         * readings are scored on the same field data, so a smaller gap separates
+         * them than separates locations (calibrated on discover_regression). */
+        double layout_margin = chosen->layout_alt >= 0.0 ? chosen->score - chosen->layout_alt : chosen->score;
+        if (layout_margin < 0.0) layout_margin = 0.0;
+        double margin = assign_margin < layout_margin ? assign_margin : layout_margin;
 
         disc_candidate_t cand = chosen->cand;
         cand.ambiguity_margin = margin;
-        bool clear = margin >= 15.0 || margin >= 0.15 * chosen->score;
+        bool clear = (assign_margin >= 15.0 || assign_margin >= 0.15 * chosen->score) &&
+                     (layout_margin >= 10.0 || layout_margin >= 0.10 * chosen->score);
         bool some = margin >= 5.0 || margin >= 0.05 * chosen->score;
         if (chosen->strong && clear && cand.specificity_score >= 0.0) {
             cand.confidence = DISC_CONF_HIGH;

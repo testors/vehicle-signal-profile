@@ -110,6 +110,7 @@ typedef struct {
     bool present;              /* signal exists in this capture */
     int alt_count;
     field_ref_t alt[MAX_ALT];  /* acceptable locations */
+    bool not_high;             /* the capture cannot tell the alternatives apart: never HIGH */
 } expect_t;
 
 typedef void (*gen_fn)(int phase, int k, double t, sink_t *sink);
@@ -119,7 +120,8 @@ typedef struct {
     gen_fn gen;
     int tick_hz;                       /* generator tick rate */
     double durations[DISC_NUM_PHASES]; /* seconds; 0 = phase skipped */
-    expect_t expect[DISC_SIG_COUNT];
+    expect_t expect[DISC_SIG_COUNT];   /* a "_loss<P>_s<S>" name suffix drops P % of the
+                                          frames at random (seed S), as a lossy adapter does */
 } scenario_t;
 
 #define FIELD(i, s, l, o) { (i), (s), (l), (o) }
@@ -661,6 +663,57 @@ static void gen_batched(int p, int k, double t, sink_t *sink) {
     }
 }
 
+/* --- Engine review edge cases (one test message 0x6FA) ---------------------
+ * RPM elsewhere on 0x6FB (LE16 @48) unless the case is about RPM itself. */
+
+typedef enum {
+    EDGE_BE8_ACROSS = 0,   /* 8-bit Motorola 19|8 across bytes 2-3: counter below, flag above */
+    EDGE_NOISY_BYTE,       /* one-byte sensor with 16 values at rest (the old CRC cut) */
+    EDGE_TWINS,            /* the same 12-bit value at 0 and 24: RPM / throttle undecidable */
+    EDGE_RPM_FLAT_HIGH,    /* LE16 RPM whose high byte never moves; idle has 16 low-byte values */
+} edge_mode_t;
+static edge_mode_t g_edge;
+
+static void gen_edge(int p, int k, double t, sink_t *sink) {
+    int64_t ts = (int64_t)p * 100000 + (int64_t)k * 10 + 1;
+    uint8_t d[8] = {0};
+    int thr = (p == 2) ? (int)lround(125 + 120 * sin(t * 3)) : 0;
+    switch (g_edge) {
+        case EDGE_BE8_ACROSS:
+            put_field(d, 19, 8, 0, (uint32_t)thr);
+            d[3] |= (uint8_t)(k & 15);            /* alive counter right below the LSB */
+            d[2] |= (uint8_t)((k % 2) << 4);      /* toggling flag right above the MSB */
+            break;
+        case EDGE_NOISY_BYTE:
+            if (p != 2) thr = (int)(rng_next() % 16);
+            d[2] = (uint8_t)thr;
+            break;
+        case EDGE_TWINS: {
+            int v = (p == 2) ? (int)(1000 + 900 * sin(t * 3)) : 0;
+            put_field(d, 0, 12, 1, (uint32_t)v);
+            put_field(d, 24, 12, 1, (uint32_t)v);
+            break;
+        }
+        case EDGE_RPM_FLAT_HIGH: {
+            int rpm = (p == 2) ? (int)(1142 + 118 * sin(t * 3)) : 1024 + (int)(rng_next() % 16);
+            put_field(d, 16, 16, 1, (uint32_t)rpm);
+            break;
+        }
+    }
+    sink_push(sink, 0x6FA, d, 8, ts);
+    if (g_edge == EDGE_BE8_ACROSS || g_edge == EDGE_NOISY_BYTE) {
+        memset(d, 0, 8);
+        int rpm = (p == 2) ? (int)(8000 + 4000 * sin(t * 3)) : 3200 + (int)(rng_next() % 4);
+        put_field(d, 48, 16, 1, (uint32_t)rpm);
+        sink_push(sink, 0x6FB, d, 8, ts);
+    }
+}
+
+static void gen_edge_be8(int p, int k, double t, sink_t *sink) { g_edge = EDGE_BE8_ACROSS; gen_edge(p, k, t, sink); }
+static void gen_edge_noisy(int p, int k, double t, sink_t *sink) { g_edge = EDGE_NOISY_BYTE; gen_edge(p, k, t, sink); }
+static void gen_edge_twins(int p, int k, double t, sink_t *sink) { g_edge = EDGE_TWINS; gen_edge(p, k, t, sink); }
+static void gen_edge_rpm_flat(int p, int k, double t, sink_t *sink) { g_edge = EDGE_RPM_FLAT_HIGH; gen_edge(p, k, t, sink); }
+
 /*******************************************************************************
  * Scenario table
  ******************************************************************************/
@@ -668,10 +721,20 @@ static void gen_batched(int p, int k, double t, sink_t *sink) {
 #define DUR_DEFAULT { 5, 8, 8, 8, 10, 15 }
 #define REVIEW_DUR  { 10, 10, 10, 10, 10, 10 }
 
-#define EXPECT_NONE { false, 0, {{0}} }
-#define EXPECT1(...) { true, 1, { __VA_ARGS__ } }
-#define EXPECT2(...) { true, 2, { __VA_ARGS__ } }
-#define EXPECT4(...) { true, 4, { __VA_ARGS__ } }
+#define EXPECT_NONE { false, 0, {{0}}, false }
+#define EXPECT1(...) { true, 1, { __VA_ARGS__ }, false }
+#define EXPECT2(...) { true, 2, { __VA_ARGS__ }, false }
+#define EXPECT4(...) { true, 4, { __VA_ARGS__ }, false }
+#define EXPECT2_NOT_HIGH(...) { true, 2, { __VA_ARGS__ }, true }
+#define EDGE_DUR    { 5, 8, 8, 8, 8, 8 }
+#define GT3_EXPECT  { EXPECT1(FIELD(0x0A0, 32, 13, 1)), EXPECT1(FIELD(0x0A8, 48, 16, 1)), \
+                      EXPECT1(FIELD(0x121, 12, 8, 1)), EXPECT1(FIELD(0x106, 16, 10, 1)), \
+                      EXPECT_NONE, EXPECT_NONE }
+#define MOTOROLA_PEDAL_EXPECT { EXPECT1(FIELD(0x0A5, 16, 16, 1)), EXPECT1(FIELD(0x0F3, 39, 16, 0)), \
+                      EXPECT1(FIELD(0x0D9, 23, 10, 0)), EXPECT1(FIELD(0x173, 0, 12, 1)), \
+                      EXPECT1(FIELD(0x3FD, 8, 4, 1)), \
+                      EXPECT4(FIELD(0x254, 0, 16, 1), FIELD(0x254, 16, 16, 1), \
+                              FIELD(0x254, 32, 16, 1), FIELD(0x254, 48, 16, 1)) }
 
 static const review_cfg_t k_review_cfg[] = {
     { 4,  0x316, false, 0x300, false },  /* sim  */
@@ -791,13 +854,32 @@ static scenario_t g_scenarios[] = {
         EXPECT4(FIELD(0x254, 0, 16, 1), FIELD(0x254, 16, 16, 1),
                 FIELD(0x254, 32, 16, 1), FIELD(0x254, 48, 16, 1)) } },
     /* Pedal next to an alive counter; RPM prior with idle mid-range. */
-    { "gt3_counter_pedal_small_blips", gen_gt3_standing, 100, { 5, 8, 8, 8, 0, 0 }, {
-        EXPECT1(FIELD(0x0A0, 32, 13, 1)),
-        EXPECT1(FIELD(0x0A8, 48, 16, 1)),
-        EXPECT1(FIELD(0x121, 12, 8, 1)),
-        EXPECT1(FIELD(0x106, 16, 10, 1)),
+    { "gt3_counter_pedal_small_blips", gen_gt3_standing, 100, { 5, 8, 8, 8, 0, 0 }, GT3_EXPECT },
+    /* Engine review: frames lost at random (the counter LSB then misses flips). */
+    { "gt3_counter_pedal_small_blips_loss3_s3", gen_gt3_standing, 100, { 5, 8, 8, 8, 0, 0 }, GT3_EXPECT },
+    { "gt3_counter_pedal_small_blips_loss5_s1", gen_gt3_standing, 100, { 5, 8, 8, 8, 0, 0 }, GT3_EXPECT },
+    { "gt3_counter_pedal_small_blips_loss5_s2", gen_gt3_standing, 100, { 5, 8, 8, 8, 0, 0 }, GT3_EXPECT },
+    { "gt3_counter_pedal_small_blips_loss5_s3", gen_gt3_standing, 100, { 5, 8, 8, 8, 0, 0 }, GT3_EXPECT },
+    { "gt3_counter_pedal_small_blips_loss10_s1", gen_gt3_standing, 100, { 5, 8, 8, 8, 0, 0 }, GT3_EXPECT },
+    { "coupled_motorola_pedal_over_counter_loss10_s1", gen_be_pedal_counter, 100, DUR_DEFAULT,
+      MOTOROLA_PEDAL_EXPECT },
+    /* Engine review: 8-bit Motorola field across a byte boundary. */
+    { "motorola_8bit_across_bytes", gen_edge_be8, 100, EDGE_DUR, {
+        EXPECT_NONE, EXPECT1(FIELD(0x6FB, 48, 16, 1)), EXPECT1(FIELD(0x6FA, 19, 8, 0)),
+        EXPECT_NONE, EXPECT_NONE, EXPECT_NONE } },
+    /* Engine review: 16 byte values at rest is sensor noise, not a CRC. */
+    { "noisy_byte_sensor_16_values", gen_edge_noisy, 100, EDGE_DUR, {
+        EXPECT_NONE, EXPECT1(FIELD(0x6FB, 48, 16, 1)), EXPECT1(FIELD(0x6FA, 16, 8, 1)),
+        EXPECT_NONE, EXPECT_NONE, EXPECT_NONE } },
+    { "rpm_idle_16_values_flat_high_byte", gen_edge_rpm_flat, 100, EDGE_DUR, {
+        EXPECT_NONE, EXPECT1(FIELD(0x6FA, 16, 16, 1)), EXPECT_NONE,
+        EXPECT_NONE, EXPECT_NONE, EXPECT_NONE } },
+    /* Engine review: RPM and throttle swap at equal total: neither may be HIGH. */
+    { "twin_fields_rpm_throttle_undecidable", gen_edge_twins, 100, EDGE_DUR, {
         EXPECT_NONE,
-        EXPECT_NONE } },
+        EXPECT2_NOT_HIGH(FIELD(0x6FA, 0, 12, 1), FIELD(0x6FA, 24, 12, 1)),
+        EXPECT2_NOT_HIGH(FIELD(0x6FA, 0, 12, 1), FIELD(0x6FA, 24, 12, 1)),
+        EXPECT_NONE, EXPECT_NONE, EXPECT_NONE } },
 };
 
 #define SCENARIO_COUNT ((int)(sizeof(g_scenarios) / sizeof(g_scenarios[0])))
@@ -819,6 +901,10 @@ static void capture_build(const scenario_t *sc, int index, capture_t *cap) {
     if (sc->gen == gen_review) g_review = k_review_cfg[index];
 
     sink_t sink = {0};
+    int loss_pct = 0;
+    uint32_t loss = 1;   /* xorshift32 state */
+    const char *suffix = strstr(sc->name, "_loss");
+    if (suffix && sscanf(suffix, "_loss%d_s%u", &loss_pct, &loss) != 2) loss_pct = 0;
     for (int p = 0; p < DISC_NUM_PHASES; p++) {
         disc_phase_init(&cap->phases[p]);
         disc_raw_phase_init(&cap->raw[p]);
@@ -828,6 +914,17 @@ static void capture_build(const scenario_t *sc, int index, capture_t *cap) {
         int ticks = (int)lround(sc->durations[p] * sc->tick_hz);
         for (int k = 0; k < ticks; k++) {
             sc->gen(p, k, (double)k / sc->tick_hz, &sink);
+        }
+        if (loss_pct > 0) {
+            /* adapter loss: drop frames at random, the generator's values untouched */
+            int kept = 0;
+            for (int i = 0; i < sink.count; i++) {
+                loss ^= loss << 13;
+                loss ^= loss >> 17;
+                loss ^= loss << 5;
+                if (loss % 100 >= (uint32_t)loss_pct) sink.frames[kept++] = sink.frames[i];
+            }
+            sink.count = kept;
         }
         for (int i = 0; i < sink.count; i++) {
             disc_phase_add_frame(&cap->phases[p], sink.frames[i].can_id,
@@ -1040,7 +1137,9 @@ static int expected_steering_sign_bit(const scenario_t *sc) {
 /** Only gen_gateway relays every ID slowly; the rest are direct taps, including
  *  busy_bus where 20 slow sensor IDs pull the median rate below 10 Hz. */
 static disc_bus_mode_t expected_bus_mode(const scenario_t *sc) {
-    return sc->gen == gen_gateway ? DISC_BUS_GATEWAY : DISC_BUS_DIRECT;
+    /* one fast ID (the single-message edge cases) does not make a direct bus */
+    return (sc->gen == gen_gateway || sc->gen == gen_edge_twins || sc->gen == gen_edge_rpm_flat)
+               ? DISC_BUS_GATEWAY : DISC_BUS_DIRECT;
 }
 
 static bool run_scenario(int index, double *elapsed_ms) {
@@ -1078,6 +1177,10 @@ static bool run_scenario(int index, double *elapsed_ms) {
         }
         CHECK(r.found[s], "%s not found", disc_signal_name((disc_signal_t)s));
         if (!r.found[s]) continue;
+        if (e->not_high) {
+            CHECK(c->confidence != DISC_CONF_HIGH, "%s is HIGH but the capture cannot tell its "
+                  "alternatives apart (margin %.1f)", disc_signal_name((disc_signal_t)s), c->ambiguity_margin);
+        }
 
         bool match = false;
         int phase_idx = (s == DISC_SIG_STEERING) ? DISC_PHASE_STEERING :
@@ -1181,7 +1284,7 @@ static bool run_scenario(int index, double *elapsed_ms) {
             CHECK(strstr(dbc, "VAL_ 1017 ") != NULL && strstr(dbc, " 5 \"1\"") != NULL,
                   "draft DBC lacks the 0x3F9 VAL_ table");
         }
-        if (strcmp(sc->name, "gt3_counter_pedal_small_blips") == 0) {
+        if (strncmp(sc->name, "gt3_counter_pedal_small_blips", 29) == 0) {
             /* 49|12 also decodes these frames monotonically, but reads twice the
              * rpm and wraps above 2048: the 0.25 rpm prior has to be adopted. */
             const disc_candidate_t *c = &r.signals[DISC_SIG_RPM];
