@@ -559,6 +559,84 @@ def decode_raw_range(decode: dict[str, Any]) -> tuple[int, int]:
     return 0, (1 << bits) - 1
 
 
+def is_int(value: Any) -> bool:
+    return isinstance(value, int) and not isinstance(value, bool)
+
+
+def is_number(value: Any) -> bool:
+    """A finite JSON number (not a bool, NaN or infinity)."""
+    return isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value)
+
+
+HEX_BYTES_RE = re.compile(r"^[0-9A-Fa-f]{2}(?: [0-9A-Fa-f]{2})*$")
+CAN_ID_MAX = 0x1FFFFFFF
+
+
+def as_object(value: Any, label: str, errors: list[str]) -> dict[str, Any]:
+    """value when it is a JSON object; {} (with an error unless absent) otherwise."""
+    if isinstance(value, dict):
+        return value
+    if value is not None:
+        errors.append(f"{label} must be an object")
+    return {}
+
+
+def validate_hex_matches(label: str, obj: dict[str, Any], key: str, errors: list[str]) -> None:
+    """<key>_hex, when present, names the same number as <key>."""
+    text = obj.get(f"{key}_hex")
+    if text is None or not is_int(obj.get(key)):
+        return
+    try:
+        same = int(str(text), 16) == obj[key]
+    except ValueError:
+        same = False
+    if not same:
+        errors.append(f"{label}: {key}_hex {text!r} does not match {key} {obj[key]}")
+
+
+def validate_decode_fields(label: str, decode: dict[str, Any], errors: list[str], warnings: list[str]) -> bool:
+    """Types and values of the decode fields. False when the bit layout itself is unusable,
+    so the checks that walk its bits are skipped."""
+    ok = True
+    if not is_int(decode.get("start_bit")) or decode["start_bit"] < 0:
+        errors.append(f"{label}: start_bit must be a non-negative integer")
+        ok = False
+    if not is_int(decode.get("bit_length")) or not 1 <= decode["bit_length"] <= 64:
+        errors.append(f"{label}: bit_length must be an integer 1..64")
+        ok = False
+    if decode.get("byte_order") not in MUX_BYTE_ORDERS:
+        errors.append(f"{label}: byte_order must be little_endian or big_endian")
+        ok = False
+    if not isinstance(decode.get("signed"), bool):
+        errors.append(f"{label}: signed must be true or false")
+    for key in ("factor", "offset", "minimum", "maximum"):
+        if decode.get(key) is not None and not is_number(decode[key]):
+            errors.append(f"{label}: {key} must be a finite number")
+    lo, hi = decode.get("minimum"), decode.get("maximum")
+    if is_number(lo) and is_number(hi) and lo > hi:
+        warnings.append(f"{label}: minimum {lo} is above maximum {hi}")
+    if decode.get("unit") is not None and not isinstance(decode["unit"], str):
+        errors.append(f"{label}: unit must be a string")
+    if decode.get("values") and decode.get("polynomial") is not None:
+        errors.append(f"{label}: values and polynomial do not go together")
+    return ok
+
+
+def validate_decode(label: str, decode: Any, errors: list[str], warnings: list[str],
+                    dlc: Any = None, in_frame: bool = False) -> None:
+    """Every decode check, for a top-level signal or (in_frame) a frame layout entry."""
+    decode = as_object(decode, f"{label}: decode", errors)
+    if not validate_decode_fields(label, decode, errors, warnings):
+        return
+    validate_sign_bit(label, decode, errors)
+    validate_values(label, decode, errors)
+    validate_mux(label, decode, errors)
+    validate_value_type(label, decode, errors)
+    if in_frame:
+        validate_fits_frame(label, decode, dlc, errors)
+        warn_lsb_numbered(label, decode, warnings)
+
+
 def validate_values(label: str, decode: dict[str, Any], errors: list[str]) -> None:
     values = decode.get("values")
     if values is None:
@@ -583,10 +661,8 @@ def validate_values(label: str, decode: dict[str, Any], errors: list[str]) -> No
         seen.add(raw)
         if not isinstance(entry.get("label"), str) or not entry["label"]:
             errors.append(f"{label}: values raw {raw} needs a non-empty label")
-        if "value" in entry and entry["value"] is not None and (
-            isinstance(entry["value"], bool) or not isinstance(entry["value"], (int, float))
-        ):
-            errors.append(f"{label}: values raw {raw} value must be a number or null")
+        if "value" in entry and entry["value"] is not None and not is_number(entry["value"]):
+            errors.append(f"{label}: values raw {raw} value must be a finite number or null")
 
 
 def validate_sign_bit(label: str, decode: dict[str, Any], errors: list[str]) -> None:
@@ -738,6 +814,13 @@ DECODE_BASIS_RANK = {basis: rank for rank, basis in enumerate(reversed(DECODE_BA
 CYCLE_BASES = ("measured", "reference")
 # A signal that is no measurement to plot.
 SIGNAL_ROLES = ("counter", "checksum", "bitmask", "identifier")
+# canonical.preferred_unit: a unit, or a kind of value (docs/VSP_RUNTIME_SPEC.md, Units).
+PREFERRED_UNITS = VSP_UNITS | {"bool", "state", "count"}
+# How a canonical mapping was made (docs/CANONICAL_SIGNAL_IDS.md, Confidence).
+CANONICAL_CONFIDENCES = ("measured", "mapped", "heuristic", "contextual")
+# diagnostic_queries[].kind and .role, signals[].acquisition.request_kind.
+QUERY_KINDS = ("obd_mode_01", "uds_read_data_by_identifier", "legacy_read_data_by_local_id", "isotp_flow_control")
+QUERY_ROLES = ("channel_query", "inferred_channel_query", "support_query", "flow_control")
 
 
 def stronger_decode_basis(current: Any, incoming: Any) -> Any:
@@ -749,12 +832,16 @@ def stronger_decode_basis(current: Any, incoming: Any) -> Any:
 
 def validate_runtime_vocabulary(profile: dict[str, Any], errors: list[str]) -> None:
     """Units, frame periods, decode bases and signal roles use the spec's values."""
-    bus_types = {bus.get("id"): bus.get("type") for bus in profile.get("buses") or []}
+    buses = profile.get("buses") if isinstance(profile.get("buses"), list) else []
+    bus_types = {bus.get("id"): bus.get("type") for bus in buses if isinstance(bus, dict)}
     for frame in profile.get("can_frames") or []:
+        if not isinstance(frame, dict):
+            continue
         label = f"frame {frame.get('name') or frame.get('frame_id')}"
         if frame.get("reassembled") is not None and not isinstance(frame.get("reassembled"), bool):
             errors.append(f"{label}: reassembled must be true or false")
-        if bus_types.get(frame.get("bus")) == "can" and int(frame.get("dlc") or 0) > 8 and frame.get("reassembled") is not True:
+        dlc = frame.get("dlc")
+        if bus_types.get(frame.get("bus")) == "can" and is_int(dlc) and dlc > 8 and frame.get("reassembled") is not True:
             errors.append(f"{label}: dlc {frame.get('dlc')} is longer than a classical CAN frame; mark it reassembled")
         cycle = frame.get("cycle_ms")
         if cycle is not None and (isinstance(cycle, bool) or not isinstance(cycle, (int, float)) or not 0 < cycle <= 600000):
@@ -763,13 +850,18 @@ def validate_runtime_vocabulary(profile: dict[str, Any], errors: list[str]) -> N
         if basis is not None and (basis not in CYCLE_BASES or cycle is None):
             errors.append(f"{label}: cycle_basis must be one of {', '.join(CYCLE_BASES)} and needs cycle_ms")
         for frame_signal in frame.get("signals") or []:
-            unit = (frame_signal.get("decode") or {}).get("unit")
-            if unit is not None and unit not in VSP_UNITS:
+            if not isinstance(frame_signal, dict) or not isinstance(frame_signal.get("decode"), dict):
+                continue
+            unit = frame_signal["decode"].get("unit")
+            if isinstance(unit, str) and unit not in VSP_UNITS:
                 errors.append(f"{label} signal {frame_signal.get('name')}: unit {unit!r} is not a VSP unit")
     for signal in profile.get("signals") or []:
+        if not isinstance(signal, dict):
+            continue
         label = f"signal {signal.get('name') or '<unnamed>'}"
-        unit = (signal.get("decode") or {}).get("unit")
-        if unit is not None and unit not in VSP_UNITS:
+        decode = signal.get("decode") if isinstance(signal.get("decode"), dict) else {}
+        unit = decode.get("unit")
+        if isinstance(unit, str) and unit not in VSP_UNITS:
             errors.append(f"{label}: unit {unit!r} is not a VSP unit")
         if signal.get("decode_basis") is not None and signal["decode_basis"] not in DECODE_BASES:
             errors.append(f"{label}: decode_basis must be one of {', '.join(DECODE_BASES)}")
@@ -781,9 +873,13 @@ def warn_double_bias(profile: dict[str, Any], warnings: list[str]) -> None:
     """A signed field whose offset is also -2^(n-1) x factor is biased twice: it spans only
     one side of 0 (a VBOX or AiM source error; the offset is the unsigned bias)."""
     for signal in profile.get("signals") or []:
-        decode = signal.get("decode") or {}
-        length, factor, offset = int(decode.get("bit_length") or 0), decode.get("factor"), decode.get("offset")
-        if not decode.get("signed") or length < 2 or not factor or not offset or decode.get("polynomial"):
+        decode = signal.get("decode") if isinstance(signal, dict) else None
+        if not isinstance(decode, dict):
+            continue
+        length, factor, offset = decode.get("bit_length"), decode.get("factor"), decode.get("offset")
+        if not is_int(length) or not is_number(factor) or not is_number(offset):
+            continue
+        if decode.get("signed") is not True or length < 2 or not factor or not offset or decode.get("polynomial"):
             continue
         half = (1 << (length - 1)) * abs(float(factor))
         if abs(abs(float(offset)) - half) <= 0.005 * half:
@@ -791,74 +887,120 @@ def warn_double_bias(profile: dict[str, Any], warnings: list[str]) -> None:
                             "so it spans only one side of 0 (read it unsigned?)")
 
 
+def objects(value: Any, label: str, errors: list[str]) -> list[dict[str, Any]]:
+    """The objects of a JSON list (an error for a non-list or a non-object entry)."""
+    if value is None:
+        return []
+    if not isinstance(value, list):
+        errors.append(f"{label} must be a list")
+        return []
+    items = [item for item in value if isinstance(item, dict)]
+    if len(items) != len(value):
+        errors.append(f"{label} entries must be objects")
+    return items
+
+
+def list_length(value: Any) -> int:
+    return len(value) if isinstance(value, list) else 0
+
+
+def validate_can_id(label: str, value: Any, errors: list[str]) -> bool:
+    if not is_int(value) or not 0 <= value <= CAN_ID_MAX:
+        errors.append(f"{label} must be an integer CAN id 0..0x1FFFFFFF")
+        return False
+    return True
+
+
 def validate_profile(profile: dict[str, Any]) -> dict[str, Any]:
     errors: list[str] = []
     warnings: list[str] = []
+    if not isinstance(profile, dict):
+        counts = dict.fromkeys(("buses", "can_frames", "diagnostic_queries", "signals", "canonical_signals"), 0)
+        return {"errors": ["a profile must be a JSON object"], "warnings": [], "counts": counts}
 
     if profile.get("schema") != "vehicle_data_profile.v1":
         errors.append("schema must be vehicle_data_profile.v1")
+    as_object(profile.get("vehicle"), "vehicle", errors)
+    as_object(profile.get("applicability"), "applicability", errors)
 
-    buses = profile.get("buses") or []
+    buses = objects(profile.get("buses"), "buses", errors)
     bus_ids = {bus.get("id") for bus in buses if bus.get("id")}
     if not bus_ids:
         errors.append("at least one bus is required")
+    for bus in buses:
+        if bus.get("bitrate") is not None and (not is_int(bus["bitrate"]) or bus["bitrate"] <= 0):
+            errors.append(f"bus {bus.get('id')}: bitrate must be a positive integer (bit/s)")
 
     frames: dict[tuple[str, int], dict[str, Any]] = {}
-    for frame in profile.get("can_frames") or []:
+    for frame in objects(profile.get("can_frames"), "can_frames", errors):
         bus = frame.get("bus")
         frame_id = frame.get("frame_id")
+        label = f"frame {frame.get('name') or frame_id}"
         if bus not in bus_ids:
-            errors.append(f"frame {frame.get('name') or frame_id}: unknown bus {bus!r}")
+            errors.append(f"{label}: unknown bus {bus!r}")
         if frame_id is None:
             errors.append(f"frame {frame.get('name') or '<unnamed>'}: missing frame_id")
             continue
-        key = (str(bus), int(frame_id))
+        if not validate_can_id(f"{label}: frame_id", frame_id, errors):
+            continue
+        validate_hex_matches(label, frame, "frame_id", errors)
+        dlc = frame.get("dlc")
+        if not is_int(dlc) or dlc <= 0:
+            errors.append(f"{label}: dlc must be a positive integer")
+        key = (str(bus), frame_id)
         if key in frames:
-            errors.append(f"duplicate frame on {bus} id=0x{int(frame_id):X}")
+            errors.append(f"duplicate frame on {bus} id=0x{frame_id:X}")
         frames[key] = frame
         validate_frame_id_mask(frame, errors)
-        for frame_signal in frame.get("signals") or []:
+        for frame_signal in objects(frame.get("signals"), f"{label}: signals", errors):
             frame_label = f"frame {frame.get('name') or frame_id} signal {frame_signal.get('name') or '<unnamed>'}"
-            validate_sign_bit(frame_label, frame_signal.get("decode") or {}, errors)
-            validate_values(frame_label, frame_signal.get("decode") or {}, errors)
-            validate_mux(frame_label, frame_signal.get("decode") or {}, errors)
-            validate_value_type(frame_label, frame_signal.get("decode") or {}, errors)
-            validate_fits_frame(frame_label, frame_signal.get("decode") or {}, frame.get("dlc"), errors)
-            warn_lsb_numbered(frame_label, frame_signal.get("decode") or {}, warnings)
-        expected_format = id_format(int(frame_id))
+            validate_decode(frame_label, frame_signal.get("decode"), errors, warnings, dlc=dlc, in_frame=True)
+        expected_format = id_format(frame_id)
         if frame.get("id_format") and frame.get("id_format") != expected_format:
-            errors.append(f"frame {frame.get('name') or frame_id}: id_format should be {expected_format}")
+            errors.append(f"{label}: id_format should be {expected_format}")
 
     queries: dict[str, dict[str, Any]] = {}
-    for query in profile.get("diagnostic_queries") or []:
+    for query in objects(profile.get("diagnostic_queries"), "diagnostic_queries", errors):
         query_id = query.get("id")
-        if not query_id:
+        if not query_id or not isinstance(query_id, str):
             errors.append("diagnostic query without id")
             continue
+        label = f"diagnostic query {query_id}"
         if query_id in queries:
             errors.append(f"duplicate diagnostic query id {query_id}")
         queries[query_id] = query
         if query.get("bus") not in bus_ids:
-            errors.append(f"diagnostic query {query_id}: unknown bus {query.get('bus')!r}")
+            errors.append(f"{label}: unknown bus {query.get('bus')!r}")
+        if query.get("kind") is not None and query["kind"] not in QUERY_KINDS:
+            errors.append(f"{label}: kind must be one of {', '.join(QUERY_KINDS)}")
+        if query.get("role") is not None and query["role"] not in QUERY_ROLES:
+            errors.append(f"{label}: role must be one of {', '.join(QUERY_ROLES)}")
         if query.get("tx_id") is None:
-            errors.append(f"diagnostic query {query_id}: missing tx_id")
+            errors.append(f"{label}: missing tx_id")
+        else:
+            validate_can_id(f"{label}: tx_id", query["tx_id"], errors)
+        if query.get("rx_id") is not None:
+            validate_can_id(f"{label}: rx_id", query["rx_id"], errors)
+        validate_hex_matches(label, query, "tx_id", errors)
+        validate_hex_matches(label, query, "rx_id", errors)
+        for key in ("request_hex", "payload_hex"):
+            text = query.get(key)
+            if text is not None and (not isinstance(text, str) or not HEX_BYTES_RE.match(text.strip())):
+                errors.append(f"{label}: {key} must be hex bytes separated by spaces, like \"01 0C\"")
         if not normalize_hex_text(query.get("request_hex")):
-            errors.append(f"diagnostic query {query_id}: missing request_hex")
+            errors.append(f"{label}: missing request_hex")
         payload = normalize_hex_text(query.get("payload_hex"))
         request = normalize_hex_text(query.get("request_hex"))
         if payload and request and request not in payload:
-            warnings.append(f"diagnostic query {query_id}: request_hex is not visible inside payload_hex")
+            warnings.append(f"{label}: request_hex is not visible inside payload_hex")
 
     canonical_ids: dict[str, dict[str, list[str]]] = defaultdict(lambda: defaultdict(list))
-    for signal in profile.get("signals") or []:
+    for signal in objects(profile.get("signals"), "signals", errors):
         name = signal.get("name") or "<unnamed>"
-        acquisition = signal.get("acquisition") or {}
+        acquisition = as_object(signal.get("acquisition"), f"signal {name}: acquisition", errors)
         acquisition_type = acquisition.get("type")
         canonical = signal.get("canonical")
-        validate_sign_bit(f"signal {name}", signal.get("decode") or {}, errors)
-        validate_values(f"signal {name}", signal.get("decode") or {}, errors)
-        validate_mux(f"signal {name}", signal.get("decode") or {}, errors)
-        validate_value_type(f"signal {name}", signal.get("decode") or {}, errors)
+        validate_decode(f"signal {name}", signal.get("decode"), errors, warnings)
 
         if canonical is not None:
             if not isinstance(canonical, dict):
@@ -871,6 +1013,11 @@ def validate_profile(profile: dict[str, Any]) -> dict[str, Any]:
                     errors.append(f"signal {name}: invalid canonical.id {canonical_id!r}")
                 else:
                     canonical_ids[str(canonical_id)][str(acquisition_type)].append(str(name))
+                if canonical.get("confidence") is not None and canonical["confidence"] not in CANONICAL_CONFIDENCES:
+                    errors.append(f"signal {name}: canonical.confidence must be one of {', '.join(CANONICAL_CONFIDENCES)}")
+                unit = canonical.get("preferred_unit")
+                if unit is not None and unit not in PREFERRED_UNITS:
+                    errors.append(f"signal {name}: canonical.preferred_unit {unit!r} is not a VSP unit, bool, state or count")
 
         bus = acquisition.get("bus")
         if bus not in bus_ids:
@@ -881,14 +1028,17 @@ def validate_profile(profile: dict[str, Any]) -> dict[str, Any]:
             if frame_id is None:
                 errors.append(f"signal {name}: missing frame_id")
                 continue
-            frame = frames.get((str(bus), int(frame_id)))
+            if not validate_can_id(f"signal {name}: frame_id", frame_id, errors):
+                continue
+            validate_hex_matches(f"signal {name}", acquisition, "frame_id", errors)
+            frame = frames.get((str(bus), frame_id))
             if frame is None:
-                errors.append(f"signal {name}: missing referenced frame {bus}/0x{int(frame_id):X}")
+                errors.append(f"signal {name}: missing referenced frame {bus}/0x{frame_id:X}")
             elif not signal_matches_frame(signal, frame):
-                errors.append(f"signal {name}: decode does not match referenced frame {bus}/0x{int(frame_id):X}")
+                errors.append(f"signal {name}: decode does not match referenced frame {bus}/0x{frame_id:X}")
         elif acquisition_type == "diagnostic_query":
             query_id = acquisition.get("query_id")
-            query = queries.get(query_id)
+            query = queries.get(query_id) if isinstance(query_id, str) else None
             if query is None:
                 errors.append(f"signal {name}: missing referenced diagnostic query {query_id!r}")
                 continue
@@ -898,18 +1048,24 @@ def validate_profile(profile: dict[str, Any]) -> dict[str, Any]:
                 errors.append(f"signal {name}: tx_id does not match diagnostic query {query_id}")
             if normalize_hex_text(query.get("request_hex")) != normalize_hex_text(acquisition.get("request_hex")):
                 errors.append(f"signal {name}: request_hex does not match diagnostic query {query_id}")
+            if acquisition.get("request_kind") is not None and acquisition["request_kind"] != query.get("kind"):
+                errors.append(f"signal {name}: request_kind does not match diagnostic query {query_id}")
+            for key in ("tx_id", "rx_id", "response_frame_id"):
+                validate_hex_matches(f"signal {name}", acquisition, key, errors)
 
             response_frame_id = acquisition.get("response_frame_id")
             if response_frame_id is None:
                 errors.append(f"signal {name}: missing response_frame_id")
                 continue
-            if query.get("rx_id") is not None and int(query["rx_id"]) != int(response_frame_id):
+            if not validate_can_id(f"signal {name}: response_frame_id", response_frame_id, errors):
+                continue
+            if is_int(query.get("rx_id")) and query["rx_id"] != response_frame_id:
                 errors.append(f"signal {name}: response_frame_id does not match diagnostic query rx_id")
-            frame = frames.get((str(bus), int(response_frame_id)))
+            frame = frames.get((str(bus), response_frame_id))
             if frame is None:
-                errors.append(f"signal {name}: missing response frame {bus}/0x{int(response_frame_id):X}")
+                errors.append(f"signal {name}: missing response frame {bus}/0x{response_frame_id:X}")
             elif not signal_matches_frame(signal, frame):
-                errors.append(f"signal {name}: decode does not match response frame {bus}/0x{int(response_frame_id):X}")
+                errors.append(f"signal {name}: decode does not match response frame {bus}/0x{response_frame_id:X}")
         else:
             errors.append(f"signal {name}: unknown acquisition type {acquisition_type!r}")
 
@@ -928,10 +1084,11 @@ def validate_profile(profile: dict[str, Any]) -> dict[str, Any]:
         "warnings": warnings,
         "counts": {
             "buses": len(buses),
-            "can_frames": len(profile.get("can_frames") or []),
-            "diagnostic_queries": len(profile.get("diagnostic_queries") or []),
-            "signals": len(profile.get("signals") or []),
-            "canonical_signals": sum(1 for signal in profile.get("signals") or [] if signal.get("canonical")),
+            "can_frames": list_length(profile.get("can_frames")),
+            "diagnostic_queries": list_length(profile.get("diagnostic_queries")),
+            "signals": list_length(profile.get("signals")),
+            "canonical_signals": sum(1 for signal in profile.get("signals") or []
+                                     if isinstance(signal, dict) and signal.get("canonical")),
         },
     }
 

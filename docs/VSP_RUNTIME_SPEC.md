@@ -23,15 +23,20 @@ The public runtime package contains ready-to-use profile files.
 Fields:
 
 - `schema`: profile schema ID. Current value is `vehicle_data_profile.v1`.
-- `vehicle`: manufacturer/model labels.
-- `applicability`: generation, model year, market, trim, and powertrain scope.
-- `buses`: physical buses used by the profile.
+- `vehicle`: `manufacturer` and `model` labels.
+- `applicability`: `generation`, `platform`, `year_start`, `year_end`,
+  `market`, `trim` and `powertrain` scope (any may be `null`).
+- `buses`: physical buses used by the profile: `id` (what the `bus` fields
+  name), `type` (`can`) and `bitrate` in bit/s.
 - `can_frames`: CAN frame layouts used by passive CAN signals and diagnostic
   response signals.
 - `diagnostic_queries`: active OBD/UDS/local-ID requests.
 - `signals`: user-facing channels. Runtime code should start here.
 
-Applications should ignore unknown top-level fields for forward compatibility.
+A `.vsp` file holds one profile object. Applications should ignore unknown
+fields at any level for forward compatibility: profiles also carry tool
+metadata, such as `signals[].raw` (the source's raw format) and
+`signals[].match` (how a diagnostic query was matched).
 
 ## Runtime Modes
 
@@ -43,7 +48,8 @@ CAN sniffing mode:
 1. Select signals where `acquisition.type == "can_frame"`, except those on a
    reassembled frame (see [Reassembled Frames](#reassembled-frames)).
 2. Listen on `acquisition.bus`.
-3. Match `acquisition.frame_id`.
+3. Match `acquisition.frame_id`, through the frame's `frame_id_mask` when it
+   has one (see [CAN ID Masks](#can-id-masks)).
 4. If `decode.mux` is present, decode and compare the mux value first.
 5. Decode the signal bits and compute `raw * factor + offset`.
 
@@ -59,6 +65,12 @@ OBD/query mode:
 Do not treat every `can_frames[]` entry as passive broadcast data. Diagnostic
 response layouts are also stored in `can_frames[]` so both modes can use the
 same bit decoder.
+
+A top-level signal's `decode` equals the `decode` of the entry with the same
+`name` in its frame's `can_frames[].signals[]` (`acquisition.frame_id`, or
+`response_frame_id` for a diagnostic signal). Names are labels, not keys: a
+profile can use one name on several frames, so find a signal by its
+acquisition and name.
 
 ## Acquisition Objects
 
@@ -129,6 +141,10 @@ Rules:
   must not overlap the magnitude field, and `signed` must be `false`.
 - Runtime value is `raw * factor + offset`, where `raw` is the magnitude,
   negated when `sign_bit` is set.
+- `minimum` and `maximum` are optional bounds of the runtime value (after
+  `factor` / `offset`, `polynomial`, the float reinterpretation or a `values`
+  override), in `unit`, as the source gives them: a display range, not a clamp.
+  Equal bounds (often `0` and `0`, a DBC `[0|0]`) give no range.
 - `unit` is the unit of the decoded runtime value, spelled as in
   [Units](#units).
 - `values` is optional: a value table for enumerated raw codes (gear, mode,
@@ -140,7 +156,9 @@ Rules:
   - `value` `null`: this raw code is a state with no numeric value; show the
     label only.
   Raw codes without an entry decode normally. `raw` values are unique and
-  inside the field's raw range.
+  inside the field's raw range: for a `bit_length` of n, `0 .. 2^n - 1`
+  unsigned, `-2^(n-1) .. 2^(n-1) - 1` signed, and `-(2^n - 1) .. 2^n - 1` with
+  `sign_bit` (the magnitude with its sign).
 - `mux` is optional. When present, the signal is valid only when the mux field
   equals `mux.value`. See [Mux Objects](#mux-objects).
 - `value_type` is optional: `integer` (the default when absent), `float32` or
@@ -151,7 +169,8 @@ Rules:
 - `polynomial` is optional: coefficients `[c0, c1, c2, ...]` (at least three)
   of a non-linear conversion, such as a thermistor curve. Runtime value is
   `c0 + c1 * raw + c2 * raw^2 + ...`, where `raw` is the integer after
-  `signed` / `sign_bit` interpretation. `factor` is `1` and `offset` is `0`.
+  `signed` / `sign_bit` interpretation. `factor` is `1` and `offset` is `0`,
+  and `values` and a float `value_type` are absent.
 - An application that does not implement `value_type` or `polynomial` must
   skip the signals that use them, not decode them as plain integers.
 
@@ -270,6 +289,22 @@ Each diagnostic query has a stable `id` referenced by diagnostic signals:
 }
 ```
 
+- `request_hex`: the request bytes (service and identifier), hex bytes
+  separated by spaces. `payload_hex`, when present, is the whole CAN payload
+  sent: the ISO-TP PCI, the request and the padding.
+- `expected_mux` and `mode01_pid` are optional: the mux value of the positive
+  response (`0x41 << 8 | pid` for Mode 01) and the Mode 01 PID number.
+- A diagnostic signal's `acquisition.request_kind` equals its query's `kind`.
+
+Kinds:
+
+- `obd_mode_01`: an SAE J1979 Mode 01 PID (positive response `41 PID`).
+- `uds_read_data_by_identifier`: UDS ReadDataByIdentifier, `22 DID` (positive
+  response `62 DID`).
+- `legacy_read_data_by_local_id`: KWP2000 ReadDataByLocalIdentifier, `21 LID`
+  (positive response `61 LID`).
+- `isotp_flow_control`: an ISO-TP flow-control frame (role `flow_control`).
+
 Roles:
 
 - `channel_query`: directly feeds one or more diagnostic signals.
@@ -289,6 +324,13 @@ entries.
 `signals[].canonical.id` is the stable semantic name applications should use
 for feature mapping. See [CANONICAL_SIGNAL_IDS.md](CANONICAL_SIGNAL_IDS.md)
 for the registry.
+
+The rest of the `canonical` object is optional: `label` (a display name),
+`quantity` (the kind of quantity, such as `speed`, `temperature`, `position`
+or `state`), `preferred_unit` (see [Units](#units)), `confidence` (how the
+mapping was made; see
+[CANONICAL_SIGNAL_IDS.md](CANONICAL_SIGNAL_IDS.md#confidence)) and `aliases`
+(other names of the channel).
 
 Examples:
 
@@ -337,6 +379,15 @@ Absolute pressure has no suffix; `kPa(g)` and `psi(g)` are gauge pressure
 same spellings, plus `bool` (a two-state flag), `state` (an enumerated state)
 and `count` (a whole number of things, such as a lap number), which name a
 kind of value rather than a unit.
+
+`decode.unit` is the unit of the runtime value; `canonical.preferred_unit`
+never changes it. `preferred_unit` is the unit an application may convert to
+when it knows the conversion (`mV` to `V`, `kPa` to `bar`). An empty
+`decode.unit` means the source gives none: the value is a plain number, count
+or code, not a value already in `preferred_unit`. A value of another quantity
+(a throttle angle in `deg` mapped to `throttle.position`, whose
+`preferred_unit` is `%`) cannot be converted without more information; show it
+in its own unit.
 
 ## Decode Basis
 

@@ -150,6 +150,15 @@ Validate a profile:
 python3 tools/validate_vsp.py profiles/<profile>.vsp
 ```
 
+The validator checks the types and values the spec defines (bit layout, byte
+order, signedness, ids and their `_hex` spellings, query kinds and request
+bytes, canonical confidence and units) and reports malformed input as errors.
+Its tests, which also validate every profile in `profiles/`:
+
+```bash
+python3 tools/test_vsp_tools.py
+```
+
 ## Apps
 
 - [apps/can_tools](apps/can_tools/README.md): a macOS command-line tool and

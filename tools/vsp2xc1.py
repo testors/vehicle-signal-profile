@@ -42,6 +42,7 @@ from __future__ import annotations
 import argparse
 import copy
 import json
+import math
 import sys
 import xml.etree.ElementTree as ET
 from dataclasses import asdict, dataclass, field
@@ -159,6 +160,18 @@ def mux_in_channel_numbering(mux: dict[str, Any], byte_order: int) -> tuple[int,
         else:
             return None
     return value, canp_start(start, length, byte_order), length
+
+
+# A channel without a range: what the Race Studio template itself carries.
+NO_RANGE = (-1e6, 1e6)
+
+
+def channel_range(channel: Channel) -> tuple[float, float]:
+    """ChMin / ChMax of a float channel: the decode's physical minimum and maximum. A range
+    that says nothing (minimum == maximum, DBC [0|0]; minimum > maximum) is NO_RANGE, not a
+    channel with no span. (Integer channels keep the template's NO_RANGE.)"""
+    lo, hi = channel.minimum, channel.maximum
+    return (lo, hi) if math.isfinite(lo) and math.isfinite(hi) and lo < hi else NO_RANGE
 
 
 def channel_from_signal(signal: dict[str, Any], frame: dict[str, Any] | None) -> tuple[Channel | None, str | None]:
@@ -572,8 +585,9 @@ def fill_channel(meta: ET.Element, channel: Channel, index: int, copy_number: in
     set_prop(channel_el, "NumDec", display_decimals(channel.factor) if not channel.polynomial else 1)
     set_prop(channel_el, "ToSendToFw", "1")
     if channel.raw_format == RAWFMT_FLOAT:
-        set_prop(channel_el, "ChMin", fmt_number(channel.minimum))
-        set_prop(channel_el, "ChMax", fmt_number(channel.maximum))
+        lo, hi = channel_range(channel)
+        set_prop(channel_el, "ChMin", fmt_number(lo))
+        set_prop(channel_el, "ChMax", fmt_number(hi))
     cflag = (CFLG_INTEL if channel.byte_order == 1 else 0) | (4 if channel.byte_order == 1 else 0)
     if channel.mux:
         cflag |= CFLG_MUX
