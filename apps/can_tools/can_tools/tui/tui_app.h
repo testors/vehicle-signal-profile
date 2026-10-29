@@ -50,7 +50,9 @@ typedef struct {
 int tui_key_from_name(const char *name);
 
 typedef struct {
-    const char *profile_path;    /* NULL: picker (live) / none (replay); "none" = no profile */
+    const char *profile_path;    /* NULL: picker (live) / session.json profile, else picker (replay);
+                                    "none" = no profile */
+    const char *replay_path;     /* replay: the capture, for its session.json profile */
     const char *profiles_dir;    /* --profiles, NULL = search */
     const char *exe_path;        /* argv[0], for the profile folder search */
     const char *captures_root;   /* session folders, default "captures" */

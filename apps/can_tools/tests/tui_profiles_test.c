@@ -69,6 +69,19 @@ int main(int argc, char **argv) {
     CHECK(tui_profiles_filter(&ix, "bench nissan", idx, 8) == 0, "every token must match");
     CHECK(tui_profiles_find(&ix, "test__bench_car__t1__can.vsp") == 1, "find by file name");
 
+    /* a recorded path that moved: same file name in the profile folder */
+    char res[1024], want[1100];
+    snprintf(want, sizeof(want), "%s/test__bench_car__t1__can.vsp", dir);
+    CHECK(tui_profiles_resolve(want, NULL, res, sizeof(res)) && strcmp(res, want) == 0, "existing path kept");
+    CHECK(tui_profiles_resolve("../old_checkout/profiles/test__bench_car__t1__can.vsp", dir, res, sizeof(res)) &&
+          strcmp(res, want) == 0, "moved path found by file name: %s", res);
+    CHECK(!tui_profiles_resolve("../old_checkout/profiles/test__bench_car__t1__can.vsp", NULL, res, sizeof(res)) &&
+          res[0] == '\0', "moved path, no profile folder");
+    CHECK(!tui_profiles_resolve("/nowhere/missing.vsp", dir, res, sizeof(res)), "unknown file name");
+    CHECK(!tui_profiles_resolve("/nowhere/", dir, res, sizeof(res)), "no file name");
+    char small[16];
+    CHECK(!tui_profiles_resolve("x/test__bench_car__t1__can.vsp", dir, small, sizeof(small)), "out too small");
+
     char y[32];
     tui_profiles_years(y, sizeof(y), 0, 0, true);
     CHECK(strcmp(y, "-") == 0, "ascii unknown years");

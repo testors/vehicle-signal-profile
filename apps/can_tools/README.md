@@ -233,7 +233,7 @@ btop처럼 터미널 하나에서 어댑터 연결, 프로필 선택, 실시간 
 ./build/can_tools tui --replay x.frames.tsv --snapshot-at 5 --size 120x40   # 화면을 텍스트로 출력 (터미널 불필요)
 ```
 
-옵션: `--profile VSP|none`(없으면 연결 뒤 프로필 선택 창), `--profiles DIR`(프로필 폴더; 기본은 `VSP_PROFILES_DIR`,
+옵션: `--profile VSP|none`(없으면 연결 뒤 프로필 선택 창; replay는 아래 "세션 폴더"처럼 session.json의 프로필부터), `--profiles DIR`(프로필 폴더; 기본은 `VSP_PROFILES_DIR`,
 `./profiles`, 저장소의 `profiles/`(빌드 때 절대 경로로 기록), 실행파일 폴더와 상위 폴더의 `profiles/` 순), `--no-tx`, `--no-rec`, `--captures DIR`(세션 폴더
 위치, 기본 `captures/`), `--mono`(색 없음, `NO_COLOR`도 같음), `--ascii`(UTF-8이 아닌 터미널), replay 전용 `--speed X`(0.25~16).
 `--device ""`는 거부한다.
@@ -246,7 +246,8 @@ btop처럼 터미널 하나에서 어댑터 연결, 프로필 선택, 실시간 
 연결하면 PASSIVE 초기화(`ATZ` … `ATCSM1` … `ATH1`, 필터 없음) 뒤 `STMA`(STN) 또는 `ATMA`로 모니터를 시작한다.
 
 **대시보드**: 위는 Signals(값, 단위, Hz, age, 최근 10초 스파크라인 또는 좁으면 min/max, CAN ID), 아래는 Raw CAN(ID, Hz, dlc,
-data; 1초 안에 바뀐 바이트는 밝게)과 Log. 80x24보다 작으면 탭으로 한 패널씩 보인다. 헤더는 어댑터, 버스 판정
+data; 1초 안에 바뀐 바이트는 밝게)과 Log. 80x24보다 작으면 탭으로 한 패널씩 보인다. 프로필이 없으면(또는 보여줄 시그널이
+없으면) Gauges·Signals 자리에 `p`로 차량 프로필을 고르라는 4줄 안내 상자가 나오고, 탭 화면에서는 탭 줄 오른쪽에 같은 안내가 붙는다. 헤더는 어댑터, 버스 판정
 (`detecting…` → `PT-CAN DIRECT` / `GATEWAY` / `SILENT (no frames)`), `silent` 또는 빨간 `TX ON`, 프로필, fr/s와 경과 시간,
 `● REC`를 보여준다. 신호가 주기의 3배(최소 300 ms) 넘게 안 오면 회색에 Hz `0`, 10초가 넘으면 값이 `—`가 된다.
 최근 10초 그래프도 같은 기준이다: 샘플 간격이 그보다 짧으면 이어 그리고(왼쪽 끝은 창 이전의 마지막 샘플로), 길면 넘는 구간을 비운다.
@@ -292,7 +293,13 @@ captures/YYYYMMDD_HHMMSS/
 라이브 대시보드, replay 어디서나 `R`; `r`은 녹화)은 `--captures` 폴더 아래에서 프레임이 하나 이상 있는 세션 폴더와
 `*.frames.tsv` 파일을 최신순으로 최대 512개 보여주고(헤더만 있는 녹화는 빠짐), ⏎로 고른 캡처를 바로 replay로 연다. 고른
 캡처가 그사이 지워졌거나 비었으면 목록을 그대로 두고 이유를 보여주며, TX 모드 중에는 TX를 끄고 넘어갈지 먼저 묻는다. 마지막 어댑터·프로필은
-`~/.can_tools/tui_last`에 저장한다.
+`~/.can_tools/tui_last`에 저장한다. session.json과 tui_last의 프로필 경로는 절대 경로로 쓴다.
+
+**replay의 프로필**: `--profile`을 주면 그 프로필(`none`이면 프로필 없이)을 쓴다. 주지 않았거나 목록(`R`)에서 고른 캡처는
+캡처 폴더(파일이면 그 파일이 있는 폴더)의 session.json에 적힌 프로필을 불러온다. 그 경로에 파일이 없으면(저장소를 옮겼거나
+다른 폴더에서 실행) 프로필 폴더에서 같은 파일 이름을 찾고, Log에 `session profile moved: <옛 경로> -> <새 경로>`를 남긴다.
+session.json이 없거나 프로필이 null이거나 파일을 찾지 못하면 프로필 선택 창을 연다(tui_last의 마지막 프로필에 맞춰).
+`esc`로 닫으면 프로필 없이 Raw CAN과 Log만 보이고, 언제든 `p`로 고를 수 있다.
 
 **안전 규칙 (TX 모드)**: TUI는 기본적으로 아무것도 버스에 보내지 않는다(ATCSM1 silent mode, ACK도 없음). `x`로 TX 모드를
 켜야만 프로필의 진단 시그널(OBD/UDS)을 질의하고, 다음을 모두 만족할 때만 켜진다: 라이브 연결(replay 아님), 버스 판정이

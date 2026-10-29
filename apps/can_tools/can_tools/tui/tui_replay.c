@@ -223,6 +223,160 @@ bool tui_replay_has_frames(const char *path, char *err, size_t err_len) {
 }
 
 /*******************************************************************************
+ * session.json profile
+ ******************************************************************************/
+
+#define SESSION_JSON_MAX (256 * 1024)
+
+static int hex4(const char *s) {
+    int v = 0;
+    for (int i = 0; i < 4; i++) {
+        char c = s[i];
+        int d = (c >= '0' && c <= '9') ? c - '0' : (c >= 'a' && c <= 'f') ? c - 'a' + 10
+              : (c >= 'A' && c <= 'F') ? c - 'A' + 10 : -1;
+        if (d < 0) return -1;
+        v = v * 16 + d;
+    }
+    return v;
+}
+
+/* UTF-8 bytes of cp into out at *n; false when they do not fit. */
+static bool put_utf8(char *out, size_t len, size_t *n, unsigned cp) {
+    char b[4];
+    size_t k;
+    if (cp < 0x80) { b[0] = (char)cp; k = 1; }
+    else if (cp < 0x800) { b[0] = (char)(0xC0 | (cp >> 6)); b[1] = (char)(0x80 | (cp & 0x3F)); k = 2; }
+    else if (cp < 0x10000) {
+        b[0] = (char)(0xE0 | (cp >> 12)); b[1] = (char)(0x80 | ((cp >> 6) & 0x3F));
+        b[2] = (char)(0x80 | (cp & 0x3F)); k = 3;
+    } else {
+        b[0] = (char)(0xF0 | (cp >> 18)); b[1] = (char)(0x80 | ((cp >> 12) & 0x3F));
+        b[2] = (char)(0x80 | ((cp >> 6) & 0x3F)); b[3] = (char)(0x80 | (cp & 0x3F)); k = 4;
+    }
+    if (!out || *n + k >= len) return false;
+    memcpy(out + *n, b, k);
+    *n += k;
+    return true;
+}
+
+/* The JSON string starting after its opening quote at *p. *p ends after the
+ * closing quote. 1: decoded into out; 0: well formed but out is NULL or too
+ * small; -1: malformed. */
+static int json_string(const char **p, char *out, size_t len) {
+    const char *s = *p;
+    size_t n = 0;
+    bool fits = out && len > 0;
+    while (*s && *s != '"') {
+        unsigned cp;
+        if (*s != '\\') {
+            if ((unsigned char)*s < 0x20) return -1;
+            if (fits && n + 1 < len) out[n++] = *s;
+            else fits = false;
+            s++;
+            continue;
+        }
+        s++;
+        switch (*s) {
+            case '"': case '\\': case '/': cp = (unsigned char)*s; break;
+            case 'b': cp = '\b'; break;
+            case 'f': cp = '\f'; break;
+            case 'n': cp = '\n'; break;
+            case 'r': cp = '\r'; break;
+            case 't': cp = '\t'; break;
+            case 'u': {
+                int v = hex4(s + 1);
+                if (v < 0) return -1;
+                s += 4;
+                cp = (unsigned)v;
+                if (cp >= 0xD800 && cp < 0xDC00 && s[1] == '\\' && s[2] == 'u') {
+                    int lo = hex4(s + 3);
+                    if (lo >= 0xDC00 && lo < 0xE000) {
+                        cp = 0x10000 + ((cp - 0xD800) << 10) + (unsigned)(lo - 0xDC00);
+                        s += 6;
+                    }
+                }
+                break;
+            }
+            default: return -1;
+        }
+        s++;
+        if (fits && !put_utf8(out, len, &n, cp)) fits = false;
+    }
+    if (*s != '"') return -1;
+    *p = s + 1;
+    if (out && len > 0) out[fits ? n : 0] = '\0';
+    return fits ? 1 : 0;
+}
+
+static const char *skip_ws(const char *s) {
+    while (*s == ' ' || *s == '\t' || *s == '\n' || *s == '\r') s++;
+    return s;
+}
+
+/* The string value of a top-level key in a JSON object; false when the key
+ * is missing, not a string (null) or does not fit. */
+static bool json_top_string(const char *json, const char *key, char *out, size_t len) {
+    const char *s = skip_ws(json);
+    if (*s != '{') return false;
+    int depth = 0;
+    while (*s) {
+        char c = *s;
+        if (c == '{' || c == '[') {
+            depth++;
+            s++;
+        } else if (c == '}' || c == ']') {
+            if (--depth == 0) return false;
+            s++;
+        } else if (c == '"') {
+            s++;
+            char name[64];
+            int r = json_string(&s, name, sizeof(name));
+            if (r < 0) return false;
+            const char *after = skip_ws(s);
+            if (depth != 1 || *after != ':') continue;   /* a value, or a nested key */
+            s = after + 1;
+            if (r == 0 || strcmp(name, key) != 0) continue;
+            s = skip_ws(s);
+            if (*s != '"') return false;
+            s++;
+            return json_string(&s, out, len) == 1 && out[0];
+        } else {
+            s++;
+        }
+    }
+    return false;
+}
+
+bool tui_replay_session_profile(const char *path, char *out, size_t len) {
+    if (out && len) out[0] = '\0';
+    if (!path || !path[0] || !out || len == 0) return false;
+    struct stat st;
+    if (stat(path, &st) != 0) return false;
+    char dir[1024];
+    if (S_ISDIR(st.st_mode)) {
+        snprintf(dir, sizeof(dir), "%s", path);
+    } else {
+        const char *slash = strrchr(path, '/');
+        if (slash) snprintf(dir, sizeof(dir), "%.*s", (int)(slash - path), path);
+        else snprintf(dir, sizeof(dir), ".");
+        if (!dir[0]) snprintf(dir, sizeof(dir), "/");
+    }
+    char file[1100];
+    if (!join_path(file, sizeof(file), dir, "session.json")) return false;
+    FILE *f = fopen(file, "r");
+    if (!f) return false;
+    char *buf = (char *)malloc(SESSION_JSON_MAX + 1);
+    size_t n = buf ? fread(buf, 1, SESSION_JSON_MAX, f) : 0;
+    fclose(f);
+    if (!buf) return false;
+    buf[n] = '\0';
+    bool ok = json_top_string(buf, "profile", out, len);
+    free(buf);
+    if (!ok) out[0] = '\0';
+    return ok;
+}
+
+/*******************************************************************************
  * Replay list
  ******************************************************************************/
 

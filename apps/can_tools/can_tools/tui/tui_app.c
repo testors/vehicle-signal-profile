@@ -7,6 +7,7 @@
 
 #include <ctype.h>
 #include <errno.h>
+#include <limits.h>
 #include <math.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -242,10 +243,18 @@ bool tui_last_write(const char *state_dir, const char *device, const char *profi
     return rename(tmp, path) == 0;
 }
 
+/* The profile path written to tui_last and session.json: absolute, so a run
+ * from another working folder still finds it. NULL when none is loaded. */
+static const char *stored_profile_path(const tui_app_t *app, char buf[PATH_MAX]) {
+    if (!app->profile_path[0]) return NULL;
+    return realpath(app->profile_path, buf) ? buf : app->profile_path;
+}
+
 static void save_last(tui_app_t *app) {
     if (!app->state_dir[0] || (app->opt.headless && !app->live)) return;
-    const char *prof = app->profile_path[0] ? app->profile_path : "none";
-    tui_last_write(app->state_dir, app->live ? app->device_name : NULL, prof);
+    char abs[PATH_MAX];
+    const char *prof = stored_profile_path(app, abs);
+    tui_last_write(app->state_dir, app->live ? app->device_name : NULL, prof ? prof : "none");
 }
 
 /*******************************************************************************
@@ -318,8 +327,9 @@ static void write_session_json(tui_app_t *app, bool ended) {
         fprintf(f, ",\n  \"bitrate\": %d,\n  \"mode\": \"listen-only\",\n  \"timestamps\": \"hardware_us\"",
                 app->host.bitrate);
     }
+    char abs[PATH_MAX];
     fprintf(f, ",\n  \"profile\": ");
-    json_str(f, app->profile_path[0] ? app->profile_path : NULL);
+    json_str(f, stored_profile_path(app, abs));
     fprintf(f, ",\n  \"recordings\": [");
     for (int i = 0; i < app->rec_nfiles; i++) {
         fprintf(f, "%s", i ? ", " : "");
@@ -367,6 +377,11 @@ static void profile_short_name(char *out, size_t len, const vsp_profile_t *p, co
     snprintf(out, len, "%s", base ? base + 1 : path);
     char *dot = strstr(out, ".vsp");
     if (dot) *dot = '\0';
+}
+
+static const char *base_name(const char *path) {
+    const char *b = strrchr(path, '/');
+    return b ? b + 1 : path;
 }
 
 static void tx_leave(tui_app_t *app, bool restart_monitor);
@@ -496,6 +511,28 @@ static void set_profile(tui_app_t *app, const char *path) {
     }
     save_last(app);
     write_session_json(app, false);
+}
+
+/* Replay: load the profile the capture's session.json names. A path that
+ * no longer exists (the checkout moved, another working folder) is looked
+ * up by file name in the profile folder. False when nothing loaded. */
+static bool load_session_profile(tui_app_t *app, const char *capture) {
+    char recorded[1024];
+    if (!tui_replay_session_profile(capture, recorded, sizeof(recorded))) return false;
+    char dir[1024], path[1024], err[600];
+    bool have_dir = tui_profiles_find_dir(app->profiles_dir[0] ? app->profiles_dir : NULL, app->exe_path,
+                                          dir, sizeof(dir));
+    if (!tui_profiles_resolve(recorded, have_dir ? dir : NULL, path, sizeof(path))) {
+        app_log(app, "[WARN] session profile not found: %s", recorded);
+        return false;
+    }
+    if (!load_profile(app, path, err, sizeof(err))) {
+        app_log(app, "[ERROR] session profile: %s", err);
+        return false;
+    }
+    if (strcmp(path, recorded) != 0) app_log(app, "session profile moved: %s -> %s", recorded, path);
+    else app_log(app, "profile from session.json: %s", base_name(path));
+    return true;
 }
 
 /*******************************************************************************
@@ -822,11 +859,6 @@ static const char *result_signal_name(disc_signal_t s) {
         default: break;
     }
     return "?";
-}
-
-static const char *base_name(const char *path) {
-    const char *b = strrchr(path, '/');
-    return b ? b + 1 : path;
 }
 
 static void build_result(tui_app_t *app, const disc_session_output_t *out) {
@@ -1378,6 +1410,7 @@ static tui_app_t *app_alloc(const tui_app_options_t *opt, frame_source_t *src, i
     app->opt.captures_root = NULL;
     app->opt.state_dir = NULL;
     app->opt.profile_path = NULL;
+    app->opt.replay_path = NULL;
     app->src = src;
     app->cols = cols;
     app->rows = rows;
@@ -1422,6 +1455,10 @@ tui_app_t *tui_app_create_replay(const tui_app_options_t *opt, frame_source_t *s
             tui_app_free(app);
             return NULL;
         }
+    } else if (!opt->profile_path && !load_session_profile(app, opt->replay_path)) {
+        char prof[1024];
+        tui_last_read(app->state_dir, NULL, 0, prof, sizeof(prof), NULL, 0);
+        picker_open(app, prof[0] && strcmp(prof, "none") != 0 ? prof : NULL);
     }
     initial_view(app);
     return app;

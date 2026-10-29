@@ -36,6 +36,10 @@ void tui_replay_free(tui_replay_data_t *data);
 /** True when PATH would replay at least one frame (the list's check: reads
  *  only the first lines of each file); false with the reason in err. */
 bool tui_replay_has_frames(const char *path, char *err, size_t err_len);
+/** The "profile" path the live TUI recorded in session.json: PATH's own
+ *  session.json when PATH is a folder, else the one next to the file. False
+ *  when there is none, it cannot be parsed, or the profile is null. */
+bool tui_replay_session_profile(const char *path, char *out, size_t len);
 
 #define TUI_REPLAY_LIST_MAX 512
 

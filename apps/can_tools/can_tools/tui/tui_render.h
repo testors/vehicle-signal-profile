@@ -25,6 +25,7 @@ typedef enum {
 } tui_panel_t;
 
 #define TUI_GAUGES_HEIGHT 5
+#define TUI_PROFILE_HINT_HEIGHT 4   /* "press p" box in place of Gauges / Signals */
 
 typedef struct {
     int x, y, w, h;
@@ -36,10 +37,14 @@ typedef struct {
     tui_rect_t tabs;                      /* narrow only */
     tui_rect_t panel[TUI_PANEL_COUNT];
     bool       visible[TUI_PANEL_COUNT];
+    tui_rect_t profile_hint;              /* no signals, split layout: not a panel (no focus) */
+    bool       show_profile_hint;
 } tui_layout_t;
 
 /** has_signals: a profile is loaded (Signals panel exists); has_gauges: the
- *  Gauges panel exists (5 rows above Signals). In narrow mode only `tab` is
+ *  Gauges panel exists (5 rows above Signals). Without signals the split
+ *  layout puts a TUI_PROFILE_HINT_HEIGHT box ("press p") above Raw CAN and
+ *  Log, and the tabs line carries a short hint. In narrow mode only `tab` is
  *  visible; a split that would leave Signals with fewer than 3 data rows
  *  (or all of them, when there are fewer) also falls back to tabs. */
 void tui_layout_compute(tui_layout_t *L, int cols, int rows, bool has_signals,

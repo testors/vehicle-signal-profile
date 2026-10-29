@@ -44,6 +44,12 @@ void tui_layout_compute(tui_layout_t *L, int cols, int rows, bool has_signals,
 
     int top = L->body.y;
     int rest_h = L->body.h;
+    if (!has_signals) {
+        L->profile_hint = (tui_rect_t){ L->body.x, top, L->body.w, TUI_PROFILE_HINT_HEIGHT };
+        L->show_profile_hint = true;
+        top += TUI_PROFILE_HINT_HEIGHT;
+        rest_h -= TUI_PROFILE_HINT_HEIGHT;
+    }
     if (has_gauges) {
         L->panel[TUI_PANEL_GAUGES] = (tui_rect_t){ L->body.x, top, L->body.w, TUI_GAUGES_HEIGHT };
         L->visible[TUI_PANEL_GAUGES] = true;
@@ -384,6 +390,22 @@ static void draw_frame(tui_grid_t *g, const tui_view_t *v) {
     put(g, cols - 1, rows - 1, tui_glyph(TUI_G_BR, ascii), TUI_ROLE_DEFAULT, 1);
 }
 
+/* Text in pieces with their own roles (a highlighted key inside a sentence). */
+typedef struct {
+    const char *text;
+    char        role;
+} text_seg_t;
+
+static int segs_width(const text_seg_t *segs, int n) {
+    int w = 0;
+    for (int i = 0; i < n; i++) w += tui_utf8_width(segs[i].text);
+    return w;
+}
+
+static void put_segs(tui_grid_t *g, int x, int y, int limit, const text_seg_t *segs, int n) {
+    for (int i = 0; i < n && x < limit; i++) x += put(g, x, y, segs[i].text, segs[i].role, limit - x);
+}
+
 static void draw_tabs(tui_grid_t *g, const tui_layout_t *L, const tui_view_t *v, bool has_signals) {
     static const char *names[TUI_PANEL_COUNT] = { "Gauges", "Signals", "Raw CAN", "Log" };
     int x = L->tabs.x + 1;
@@ -397,6 +419,13 @@ static void draw_tabs(tui_grid_t *g, const tui_layout_t *L, const tui_view_t *v,
         char buf[32];
         snprintf(buf, sizeof(buf), " %s ", names[i]);
         x += put(g, x, L->tabs.y, buf, (int)v->tab == i ? TUI_ROLE_SELECT : TUI_ROLE_DIM, limit - x);
+    }
+    if (!has_signals) {
+        /* no Gauges / Signals tabs: say how to get them, while it fits */
+        const text_seg_t hint[] = { { "p", TUI_ROLE_BRIGHT }, { " choose a vehicle profile", TUI_ROLE_DIM } };
+        int w = segs_width(hint, 2);
+        int hx = limit - 1 - w;
+        if (hx >= x + 2) put_segs(g, hx, L->tabs.y, limit, hint, 2);
     }
 }
 
@@ -980,6 +1009,27 @@ static void draw_one_gauge(tui_grid_t *g, const tui_model_t *m, const tui_view_t
     }
 }
 
+/* Split layout without signals: where Gauges and Signals would be. */
+static void draw_profile_hint(tui_grid_t *g, const tui_view_t *v, const tui_layout_t *L) {
+    tui_rect_t r = L->profile_hint;
+    box(g, r, "Gauges / Signals", NULL, TUI_ROLE_DEFAULT, v->ascii);
+    int x = r.x + 1, w = r.w - 2, limit = r.x + r.w - 1;
+    char lead[200];
+    if (v->profile && v->profile[0]) snprintf(lead, sizeof(lead), "No signals to show in %s: press ", v->profile);
+    else snprintf(lead, sizeof(lead), "No vehicle profile: press ");
+    const text_seg_t line1[] = {
+        { lead, TUI_ROLE_DEFAULT },
+        { "p", TUI_ROLE_BRIGHT },
+        { v->profile && v->profile[0] ? " to choose another" : " to choose one", TUI_ROLE_DEFAULT },
+    };
+    const text_seg_t line2[] = {
+        { "Gauges and decoded signals show here once a profile is loaded", TUI_ROLE_DIM },
+    };
+    int w1 = segs_width(line1, 3), w2 = segs_width(line2, 1);
+    put_segs(g, x + (w1 < w ? (w - w1) / 2 : 0), r.y + 1, limit, line1, 3);
+    put_segs(g, x + (w2 < w ? (w - w2) / 2 : 0), r.y + 2, limit, line2, 1);
+}
+
 static void draw_gauges(tui_grid_t *g, const tui_model_t *m, tui_view_t *v, const tui_layout_t *L) {
     tui_rect_t r = L->panel[TUI_PANEL_GAUGES];
     bool ascii = v->ascii;
@@ -1020,6 +1070,7 @@ void tui_render_dashboard(tui_grid_t *g, const tui_model_t *m, tui_view_t *v) {
     draw_frame(g, v);
     draw_header(g, m, v);
     if (L.narrow) draw_tabs(g, &L, v, has_signals);
+    if (L.show_profile_hint) draw_profile_hint(g, v, &L);
     if (L.visible[TUI_PANEL_GAUGES]) draw_gauges(g, m, v, &L);
     if (L.visible[TUI_PANEL_SIGNALS]) draw_signals(g, m, v, &L);
     if (L.visible[TUI_PANEL_RAW]) draw_raw(g, m, v, &L);

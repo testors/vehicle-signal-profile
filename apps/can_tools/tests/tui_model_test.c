@@ -627,6 +627,42 @@ static void test_replay(void) {
     CHECK(tui_replay_load("nope", &d, err, sizeof(err)) != 0, "missing path rejected");
 }
 
+static void write_text(const char *path, const char *text) {
+    FILE *f = fopen(path, "w");
+    if (f) {
+        fputs(text, f);
+        fclose(f);
+    }
+}
+
+static void test_session_profile(void) {
+    char out[256];
+    mkdir("sp", 0777);
+    write_tsv("sp/live.frames.tsv", 1000, 3, 0x0A5);
+    CHECK(!tui_replay_session_profile("sp", out, sizeof(out)) && out[0] == '\0', "no session.json");
+    /* decoys: the key inside a string value and inside a nested object */
+    write_text("sp/session.json",
+               "{\n  \"device\": \"vLinker \\\"profile\\\": x\",\n"
+               "  \"classification\": [{\"t_s\": 3.0, \"profile\": \"decoy.vsp\"}],\n"
+               "  \"profile\": \"../old/profiles/a\\\\b \\u00e9\\ud83d\\ude97.vsp\",\n"
+               "  \"recordings\": [\"live.frames.tsv\"]\n}\n");
+    CHECK(tui_replay_session_profile("sp", out, sizeof(out)), "folder: session.json profile");
+    CHECK_STR(out, "../old/profiles/a\\b \xc3\xa9\xf0\x9f\x9a\x97.vsp");
+    CHECK(tui_replay_session_profile("sp/live.frames.tsv", out, sizeof(out)) &&
+          strcmp(out, "../old/profiles/a\\b \xc3\xa9\xf0\x9f\x9a\x97.vsp") == 0, "file: the folder's session.json");
+    char tiny[8];
+    CHECK(!tui_replay_session_profile("sp", tiny, sizeof(tiny)) && tiny[0] == '\0', "too long for out");
+    write_text("sp/session.json", "{\"device\": \"x\", \"profile\": null, \"recordings\": []}");
+    CHECK(!tui_replay_session_profile("sp", out, sizeof(out)), "profile null");
+    write_text("sp/session.json", "{\"profile\": \"\"}");
+    CHECK(!tui_replay_session_profile("sp", out, sizeof(out)), "empty profile");
+    write_text("sp/session.json", "{\"profile\": \"unterminated");
+    CHECK(!tui_replay_session_profile("sp", out, sizeof(out)), "malformed");
+    write_text("sp/session.json", "[\"profile\", \"x.vsp\"]");
+    CHECK(!tui_replay_session_profile("sp", out, sizeof(out)), "not an object");
+    CHECK(!tui_replay_session_profile("nope", out, sizeof(out)), "missing capture");
+}
+
 static void test_replay_list(void) {
     mkdir("caps", 0777);
     mkdir("caps/sess_a", 0777);
@@ -918,6 +954,7 @@ int main(void) {
     test_log();
     test_grid();
     test_replay();
+    test_session_profile();
     test_replay_list();
     test_replay_list_frames();
     test_replay_list_cap();

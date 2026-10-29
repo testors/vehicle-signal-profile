@@ -70,6 +70,7 @@ static void tui_usage(void) {
             "  --bitrate RATE   PCAN bitrate: auto or 1M 800k 500k 250k 125k 100k 95k 83k\n"
             "                   50k 47k 33k 20k 10k 5k (default 500k)\n"
             "  --profile VSP    load this profile (none = raw CAN only); else the picker\n"
+            "                   (replay: first the profile in the capture's session.json)\n"
             "  --profiles DIR   profile folder (default: VSP_PROFILES_DIR, ./profiles,\n"
             "                   the repository's profiles/)\n"
             "  --no-tx          TX mode stays off      --no-rec  start without recording\n"
@@ -317,7 +318,9 @@ static int replay_in_terminal(const char *path, const tui_app_options_t *opt) {
         }
         int cols = 80, rows = 24;
         tui_term_size(&cols, &rows);
-        tui_app_t *app = tui_app_create_replay(opt, src, name, cols, rows, err, sizeof(err));
+        tui_app_options_t ropt = *opt;
+        ropt.replay_path = next;   /* its session.json names the profile */
+        tui_app_t *app = tui_app_create_replay(&ropt, src, name, cols, rows, err, sizeof(err));
         if (!app) {
             tui_term_close();
             fprintf(stderr, "[ERROR] tui: %s\n", err);
@@ -516,6 +519,7 @@ int cmd_tui_main(int argc, const char *argv[]) {
                 fprintf(stderr, "[ERROR] tui: out of memory\n");
                 return 1;
             }
+            opt.replay_path = o.replay;
             tui_app_t *app = tui_app_create_replay(&opt, src, name, cols, rows, err, sizeof(err));
             if (!app) {
                 fprintf(stderr, "[ERROR] tui: %s\n", err);

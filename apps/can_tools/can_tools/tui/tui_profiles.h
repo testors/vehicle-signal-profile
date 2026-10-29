@@ -60,6 +60,10 @@ void tui_profiles_scan_drafts(tui_profile_index_t *ix, const char *captures_root
 int  tui_profiles_filter(const tui_profile_index_t *ix, const char *filter, int *out, int max);
 /** Index of the entry with this path (or file name), -1 if none. */
 int  tui_profiles_find(const tui_profile_index_t *ix, const char *path);
+/** A profile path recorded earlier (session.json, tui_last) that may have
+ *  moved: the path itself when that file exists, else the file of the same
+ *  name in dir (the profile folder; NULL = none). False when neither exists. */
+bool tui_profiles_resolve(const char *recorded, const char *dir, char *out, size_t len);
 
 /** "2009–2014", "2019–", "—" (ASCII "-"). */
 void tui_profiles_years(char *out, size_t len, int start, int end, bool ascii);

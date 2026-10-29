@@ -24,6 +24,7 @@ TEMPS="--replay $FX/stream_temps.frames.tsv"
 STEER="--replay $FX/stream_steer.frames.tsv"
 PARTIAL="--profile $FX/partial_profile.vsp"
 PROFILES="--profiles $FX/profiles"
+NOPROF="--profile none"
 WORK=$(mktemp -d "${TMPDIR:-/tmp}/tui_snapshots.XXXXXX") || exit 1
 trap 'rm -rf "$WORK"' EXIT
 cd "$WORK" || exit 1
@@ -58,7 +59,8 @@ DISC_KEYS="0.5:d;0.6:enter;6:enter;15:enter;24:enter;32.2:s;32.3:s"
 run_case dashboard_120x40    $DIRECT $PROFILE --snapshot-at 5 --size 120x40 --color-map
 run_case dashboard_80x24     $DIRECT $PROFILE --snapshot-at 5 --size 80x24 --color-map
 run_case tabs_60x20          $DIRECT $PROFILE --snapshot-at 5,6,7 --size 60x20 --keys "5.5:tab;6.5:tab" --color-map
-run_case no_profile_120x40   $DIRECT --snapshot-at 5 --size 120x40 --color-map
+run_case no_profile_120x40   $DIRECT $NOPROF --snapshot-at 5 --size 120x40 --color-map
+run_case no_profile_tabs_60x20 $DIRECT $NOPROF --snapshot-at 5 --size 60x20 --color-map
 run_case gateway_120x40      $GATEWAY $PROFILE --snapshot-at 6 --size 120x40 --color-map
 run_case stale_120x40        $DIRECT $PROFILE --snapshot-at 4,14 --size 120x40 --color-map
 run_case controls_120x40     $DIRECT $PROFILE --snapshot-at 4.5 --size 120x40 --keys "1:];3:space;3.5:s s;4:/ w h e e l enter" --color-map
@@ -66,10 +68,26 @@ run_case ascii_80x24         $DIRECT $PROFILE --snapshot-at 5 --size 80x24 --asc
 run_case raw_ext_80x24       $DIRECT $PROFILE --snapshot-at 5 --size 80x24 --keys "4:tab;4.2:pgdn" --color-map
 run_case discover_mid_120x40 $SESSION $PROFILE --snapshot-at 3,10 --size 120x40 --keys "$DISC_KEYS" --color-map
 run_case discover_result_120x40 $SESSION $PROFILE --snapshot-at 33 --size 120x40 --keys "$DISC_KEYS" --color-map
-run_case discover_load_120x40 $SESSION --snapshot-at 33.5 --size 120x40 --keys "$DISC_KEYS;33.2:enter"
-run_case discover_json_100x30 $SESSION --snapshot-at 33.5 --size 100x30 --keys "$DISC_KEYS;33.2:v"
-run_case discover_abort_120x40 $SESSION --snapshot-at 8 --size 120x40 --keys "0.5:d;0.6:enter;6:enter;7.5:a"
-run_case picker_120x40       $DIRECT $PROFILES --snapshot-at 1.5,2.5 --size 120x40 --keys "1:p;2:b e n c h space o" --color-map
+run_case discover_load_120x40 $SESSION $NOPROF --snapshot-at 33.5 --size 120x40 --keys "$DISC_KEYS;33.2:enter"
+run_case discover_json_100x30 $SESSION $NOPROF --snapshot-at 33.5 --size 100x30 --keys "$DISC_KEYS;33.2:v"
+run_case discover_abort_120x40 $SESSION $NOPROF --snapshot-at 8 --size 120x40 --keys "0.5:d;0.6:enter;6:enter;7.5:a"
+run_case picker_120x40       $DIRECT $PROFILES $NOPROF --snapshot-at 1.5,2.5 --size 120x40 --keys "1:p;2:b e n c h space o" --color-map
+# replay without --profile: the profile in the capture's session.json, else the picker
+run_case replay_picker_100x30 $DIRECT $PROFILES --snapshot-at 1.5 --size 100x30
+mkdir -p sess_caps/20260104_120000 sess_profiles
+cp "$FX/stream_direct.frames.tsv" sess_caps/20260104_120000/live.frames.tsv
+cp "$FX/test_profile.vsp" sess_profiles/
+# recorded in another checkout: the path is gone, the file name is in --profiles
+cat > sess_caps/20260104_120000/session.json <<'JSON'
+{
+  "format": "can_tools_tui_session/v1",
+  "device": "vLinker \"profile\": x",
+  "classification": [{"t_s": 3.0, "profile": "decoy.vsp"}],
+  "profile": "../old_checkout/profiles/test_profile.vsp",
+  "recordings": ["live.frames.tsv"]
+}
+JSON
+run_case replay_session_profile_120x40 --replay sess_caps/20260104_120000 --profiles sess_profiles --snapshot-at 5 --size 120x40
 # replay list: a fixed captures folder, newest first
 mkdir -p "$WORK/replay_caps/20260101_120000" "$WORK/replay_caps/20260102_120000"
 cp "$FX/stream_direct.frames.tsv" "$WORK/replay_caps/20260101_120000/live.frames.tsv"

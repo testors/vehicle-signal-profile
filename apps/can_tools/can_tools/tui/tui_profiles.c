@@ -21,6 +21,11 @@ static bool is_dir(const char *path) {
     return stat(path, &st) == 0 && S_ISDIR(st.st_mode);
 }
 
+static bool is_file(const char *path) {
+    struct stat st;
+    return stat(path, &st) == 0 && S_ISREG(st.st_mode);
+}
+
 static bool try_dir(const char *path, char *out, size_t len) {
     if (!path || !path[0] || !is_dir(path)) return false;
     snprintf(out, len, "%s", path);
@@ -240,4 +245,22 @@ int tui_profiles_find(const tui_profile_index_t *ix, const char *path) {
         if (strcmp(ix->entries[i].path, path) == 0 || strcmp(ix->entries[i].file, base) == 0) return i;
     }
     return -1;
+}
+
+bool tui_profiles_resolve(const char *recorded, const char *dir, char *out, size_t len) {
+    if (out && len) out[0] = '\0';
+    if (!recorded || !recorded[0] || !out || len == 0) return false;
+    if (is_file(recorded)) {
+        snprintf(out, len, "%s", recorded);
+        return true;
+    }
+    if (!dir || !dir[0]) return false;
+    const char *base = strrchr(recorded, '/');
+    base = base ? base + 1 : recorded;
+    if (!base[0]) return false;
+    char cand[PATH_MAX + 256];
+    int n = snprintf(cand, sizeof(cand), "%s/%s", dir, base);
+    if (n < 0 || (size_t)n >= sizeof(cand) || (size_t)n >= len || !is_file(cand)) return false;
+    snprintf(out, len, "%s", cand);
+    return true;
 }
