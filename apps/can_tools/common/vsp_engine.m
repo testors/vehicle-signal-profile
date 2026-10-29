@@ -702,9 +702,12 @@ typedef struct {
     value_entry_t *values;
 } decode_spec_t;
 
-/** Positional decode.mux (signal_mux in vsp_probe). */
+/** decode.mux with a value (signal_mux in vsp_probe): positional, or {"value": n}
+ *  alone with the field of the frame's multiplexor signal. never: no such field
+ *  (the signal is never decoded). */
 typedef struct {
     bool     valid;
+    bool     never;
     uint64_t value;
     int      start_bit;
     int      bit_length;
@@ -811,21 +814,87 @@ static bool build_decode_spec(NSDictionary *signal, str_pool_t *pool, decode_spe
     return true;
 }
 
-static void build_mux_spec(NSDictionary *signal, mux_spec_t *m) {
+/* decode of the signal on the same CAN frame whose decode.mux is
+ * {"role": "multiplexor"} (VSP_RUNTIME_SPEC.md, "Mux Objects"), nil if none. */
+static NSDictionary *frame_multiplexor_decode(NSDictionary *signal, NSArray *signals) {
+    NSDictionary *acq = signal[@"acquisition"];
+    if (![acq isKindOfClass:[NSDictionary class]] || ![acq[@"type"] isEqual:@"can_frame"]) return nil;
+    NSNumber *frameId = num_or_nil(acq[@"frame_id"]);
+    if (!frameId || ![signals isKindOfClass:[NSArray class]]) return nil;
+    NSString *bus = [acq[@"bus"] isKindOfClass:[NSString class]] ? acq[@"bus"] : nil;
+    for (NSDictionary *other in signals) {
+        if (![other isKindOfClass:[NSDictionary class]]) continue;
+        NSDictionary *oacq = other[@"acquisition"];
+        if (![oacq isKindOfClass:[NSDictionary class]] || ![oacq[@"type"] isEqual:@"can_frame"]) continue;
+        NSNumber *oid = num_or_nil(oacq[@"frame_id"]);
+        if (!oid || oid.unsignedIntValue != frameId.unsignedIntValue) continue;
+        NSString *obus = [oacq[@"bus"] isKindOfClass:[NSString class]] ? oacq[@"bus"] : nil;
+        if (bus && obus && ![bus isEqualToString:obus]) continue;
+        NSDictionary *odecode = other[@"decode"];
+        if (![odecode isKindOfClass:[NSDictionary class]]) continue;
+        NSDictionary *omux = odecode[@"mux"];
+        if ([omux isKindOfClass:[NSDictionary class]] && [omux[@"role"] isEqual:@"multiplexor"]) return odecode;
+    }
+    return nil;
+}
+
+static void build_mux_spec(NSDictionary *signal, NSArray *signals, mux_spec_t *m) {
     memset(m, 0, sizeof(*m));
     NSDictionary *decode = signal[@"decode"];
     if (![decode isKindOfClass:[NSDictionary class]]) return;
     NSDictionary *mux = decode[@"mux"];
     if (![mux isKindOfClass:[NSDictionary class]]) return;
     NSNumber *value = num_or_nil(mux[@"value"]);
-    NSNumber *start = num_or_nil(mux[@"start_bit"]);
-    NSNumber *bits = num_or_nil(mux[@"bit_length"]);
-    if (!value || !start || !bits || bits.intValue <= 0 || bits.intValue > 63) return;
+    if (!value) return;   /* no mux, or the multiplexor itself */
     m->valid = true;
     m->value = value.unsignedLongLongValue;
+    NSDictionary *field = mux;
+    if (!mux[@"start_bit"] && !mux[@"bit_length"]) {
+        /* {"value": n} alone (a DBC conversion): the multiplexor's field */
+        field = frame_multiplexor_decode(signal, signals);
+        if (!field) {
+            m->never = true;
+            return;
+        }
+    }
+    NSNumber *start = num_or_nil(field[@"start_bit"]);
+    NSNumber *bits = num_or_nil(field[@"bit_length"]);
+    if (!start || !bits || start.intValue < 0 || bits.intValue <= 0 || bits.intValue > 63) {
+        m->never = true;
+        return;
+    }
     m->start_bit = start.intValue;
     m->bit_length = bits.intValue;
-    m->big_endian = [mux[@"byte_order"] isEqual:@"big_endian"];
+    m->big_endian = [field[@"byte_order"] isEqual:@"big_endian"];
+}
+
+/* Highest payload byte a bit field reaches (DBC numbering; start is the LSB
+ * for little endian, the MSB for big endian), -1 for an invalid field. */
+static int field_last_byte(int start, int length, bool bigEndian) {
+    if (start < 0 || length <= 0) return -1;
+    if (!bigEndian) return (start + length - 1) / 8;
+    int bit = start, last = start / 8;
+    for (int i = 0; i < length; i++) {
+        if (bit / 8 > last) last = bit / 8;
+        bit = (bit % 8 == 0) ? bit + 15 : bit - 1;
+    }
+    return last;
+}
+
+/* Bytes a frame needs before this signal may decode: its field, sign_bit and
+ * mux field (VSP_RUNTIME_SPEC.md: every bit a signal reads lies inside dlc). */
+static int signal_need_bytes(const decode_spec_t *d, const mux_spec_t *m) {
+    int last = -1;
+    if (d->valid) {
+        int f = field_last_byte(d->start_bit, d->bit_length, d->big_endian);
+        if (f > last) last = f;
+        if (d->has_sign_bit && d->sign_bit >= 0 && d->sign_bit / 8 > last) last = d->sign_bit / 8;
+    }
+    if (m->valid && !m->never) {
+        int f = field_last_byte(m->start_bit, m->bit_length, m->big_endian);
+        if (f > last) last = f;
+    }
+    return last + 1;
 }
 
 static void free_decode_spec(decode_spec_t *d) {
@@ -909,6 +978,7 @@ static bool decode_value(const decode_spec_t *d,
 
 static bool mux_matches(const mux_spec_t *m, const uint8_t *data, int len) {
     if (!m->valid) return true;
+    if (m->never) return false;
     uint64_t raw = m->big_endian ? extract_bits_big_dbc(data, len, m->start_bit, m->bit_length)
                                  : extract_bits_little(data, len, m->start_bit, m->bit_length);
     return raw == m->value;
@@ -961,6 +1031,10 @@ static int feed_can(vsp_decoder_t *dec, const can_frame_t *frame, double ts,
         if (sig->info.kind != VSP_SIGNAL_CAN_FRAME) continue;
         uint32_t mask = sig->info.frame_id_mask ? sig->info.frame_id_mask : UINT32_MAX;
         if ((sig->info.frame_id & mask) != (frame->can_id & mask)) continue;
+        if (frame->dlc < sig->info.need_bytes) {   /* missing bytes would read as 0 */
+            sig->state.short_frames++;
+            continue;
+        }
         if (!mux_matches(&sig->mux, frame->data, frame->dlc)) continue;
         mark_sample(sig, ts, frame->data, frame->dlc, frame->data, frame->dlc);
         note_updated(i, updated, max_updated, n);
@@ -990,6 +1064,7 @@ static int feed_diagnostic(vsp_decoder_t *dec, const can_frame_t *frame, double 
         if (sig->info.kind != VSP_SIGNAL_DIAGNOSTIC_QUERY) continue;
         if (queryKey && strcmp(sig->info.query_key, queryKey) != 0) continue;
         if (sig->info.rx_id != 0 && sig->info.rx_id != frame->can_id) continue;
+        if (frame->dlc < sig->info.need_bytes) continue;   /* e.g. another request's shorter reply */
         if (sig->mux.valid) {
             if (!mux_matches(&sig->mux, frame->data, frame->dlc)) continue;
         } else if (!initial || !payload_has_marker(sig, payload, payloadLen)) {
@@ -1030,7 +1105,7 @@ int vsp_decoder_feed_collect(vsp_decoder_t *dec, const can_frame_t *frame, doubl
  * Decoder
  ******************************************************************************/
 
-static bool fill_signal(vsp_decoder_t *dec, engine_signal_t *sig, VSPEngineItem *item) {
+static bool fill_signal(vsp_decoder_t *dec, engine_signal_t *sig, VSPEngineItem *item, NSArray *allSignals) {
     str_pool_t *pool = &dec->pool;
     vsp_signal_info_t *info = &sig->info;
 
@@ -1065,9 +1140,10 @@ static bool fill_signal(vsp_decoder_t *dec, engine_signal_t *sig, VSPEngineItem 
         }
     }
 
-    build_mux_spec(item.signal, &sig->mux);
+    build_mux_spec(item.signal, allSignals, &sig->mux);
     info->has_mux = sig->mux.valid;
     bool ok = build_decode_spec(item.signal, pool, &sig->decode);
+    info->need_bytes = signal_need_bytes(&sig->decode, &sig->mux);
     info->factor = 1.0;
     if ([decode isKindOfClass:[NSDictionary class]] &&
         [decode[@"factor"] respondsToSelector:@selector(doubleValue)]) {
@@ -1108,7 +1184,7 @@ vsp_decoder_t *vsp_decoder_create(const vsp_profile_t *profile, const vsp_select
 
         for (VSPEngineItem *item in items) {
             engine_signal_t *sig = &dec->signals[dec->count++];
-            if (!fill_signal(dec, sig, item)) {
+            if (!fill_signal(dec, sig, item, profile->json[@"signals"])) {
                 vsp_decoder_free(dec);
                 return NULL;
             }

@@ -137,7 +137,10 @@ typedef struct {
     const char       *unit;             /**< decode.unit, NULL if absent / not a string */
     const char       *acquisition_type; /**< "can_frame" / "diagnostic_query" */
     vsp_signal_kind_t kind;
-    bool              has_mux;          /**< positional decode.mux */
+    bool              has_mux;          /**< decode.mux with a value: positional, or {"value"} alone
+                                             resolved through the frame's multiplexor signal */
+    int               need_bytes;       /**< payload bytes the field, sign_bit and mux reach; a
+                                             shorter frame is not decoded (short_frames) */
     /* CAN */
     uint32_t          frame_id;
     uint32_t          frame_id_mask;    /**< 0 = full id */
@@ -161,6 +164,7 @@ typedef struct {
 
 typedef struct {
     int         samples;            /**< frames that matched */
+    int         short_frames;       /**< CAN frames with this ID too short for need_bytes (not decoded) */
     double      first_sample_ms;    /**< 0 = none yet */
     double      last_sample_ms;
     bool        has_value;          /**< last decode produced a number */

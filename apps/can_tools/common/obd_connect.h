@@ -11,7 +11,9 @@
  *
  *   OBD_INIT_PASSIVE  receive-only CAN monitor, nothing is sent on the bus:
  *                     ATZ (+0.5 s), ATE0, ATL0, STI, ATSP6 (required),
- *                     ATCSM1 (warns on failure), ATS1, ATCAF0, ATH1, filters.
+ *                     ATCSM1 (required: the reply must contain OK, else the
+ *                     init fails and no monitor may start), ATS1, ATCAF0,
+ *                     ATH1, filters.
  *   OBD_INIT_ACTIVE   OBD-II queries (transmits): elm327_build_init_cmds
  *                     (ATZ..ATSP0..ATDPN), STI, and on STN STDI +
  *                     stn2255_build_init_cmds.

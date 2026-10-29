@@ -374,7 +374,17 @@ static void finish_connect(live_t *L) {
     obd_init_config_t cfg = { .profile = OBD_INIT_PASSIVE, .filters = NULL, .filter_count = 0 };
     if (!obd_init_adapter(L->adapter, &cfg, &L->link)) {
         poll_capture(L);
-        cancel_connect(L, "adapter init failed (see the log in the session folder)", TUI_ROLE_ALERT);
+        /* the init's own [ERROR] line says why (e.g. ATCSM1 not answered OK) */
+        const char *why = "see the Log after the next connect";
+        for (int i = L->npending - 1; i >= 0; i--) {
+            if (strncmp(L->pending[i], "[ERROR] ", 8) == 0) {
+                why = L->pending[i] + 8;
+                break;
+            }
+        }
+        char msg[240];
+        snprintf(msg, sizeof(msg), "adapter init failed: %s", why);
+        cancel_connect(L, msg, TUI_ROLE_ALERT);
         return;
     }
     snprintf(L->monitor_cmd, sizeof(L->monitor_cmd), "%s", obd_monitor_cmd(&L->link));

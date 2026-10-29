@@ -23,7 +23,9 @@ a custom CAN driver cannot poll diagnostic queries. Each signal becomes one AiM 
   fastest AiM step that is not faster than the frame.
 
 Anything AiM cannot hold (a mux whose bits are not one field in the signal's order, frames
-needing different ID masks) is reported and the signal is left out. CustECUNote marks the
+needing different ID masks) is reported and the signal is left out. Value-table numbers
+(decode.values[].value) are reported too: an AiM code only labels raw * factor + offset, so
+an entry that sets its own number, or null, keeps its label but not that number. CustECUNote marks the
 file as vsp2xc1 output and lists the split sign channels, so a reader can take the names,
 scaled code values and RawFmt signedness as written. Race Studio "silent" (listen-only)
 defaults to on and the logger's 120 ohm terminator to off: a VSP profile is usually read
@@ -218,7 +220,35 @@ def channel_from_signal(signal: dict[str, Any], frame: dict[str, Any] | None) ->
         split_sign_bit=split_sign,
         canonical=str((signal.get("canonical") or {}).get("id") or ""),
         cycle_ms=(frame or {}).get("cycle_ms"),
-    ), None
+    ), value_table_loss(name, decode.get("values") or [], factor, offset)
+
+
+def value_table_loss(name: str, values: list[dict[str, Any]], factor: float, offset: float) -> str | None:
+    """Note for value-table numbers AiM cannot hold. An AiM code labels the channel's value
+    (raw * factor + offset); it has no number of its own. So a VSP entry whose "value"
+    overrides that number, or is null (label only, no number), keeps its label but reads
+    raw * factor + offset in Race Studio."""
+    changed, unnumbered = [], []
+    for entry in values:
+        if "value" not in entry:
+            continue
+        scaled = float(entry["raw"]) * factor + offset
+        number = entry["value"]
+        if number is None:
+            unnumbered.append(f"'{entry['label']}' reads {fmt_number(scaled)}")
+        elif isinstance(number, (int, float)) and not isinstance(number, bool) and abs(float(number) - scaled) > 1e-9:
+            changed.append(f"'{entry['label']}' reads {fmt_number(scaled)}, not {fmt_number(float(number))}")
+    if not changed and not unnumbered:
+        return None
+    parts = []
+    if changed:
+        parts.append(f"{len(changed)} value-table number{'s' if len(changed) != 1 else ''} not exported "
+                     f"({'; '.join(changed[:3])}{'; ...' if len(changed) > 3 else ''})")
+    if unnumbered:
+        parts.append(f"{len(unnumbered)} label-only code{'s' if len(unnumbered) != 1 else ''} get a number "
+                     f"({'; '.join(unnumbered[:3])}{'; ...' if len(unnumbered) > 3 else ''})")
+    return (f"{name}: {', '.join(parts)}: an AiM code only labels raw * factor + offset; "
+            f"the labels are kept")
 
 
 SIGN_CHANNEL_SUFFIX = "_Sign"

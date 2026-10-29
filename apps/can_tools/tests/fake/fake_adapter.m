@@ -211,6 +211,18 @@ static void emit_due(void) {
         return YES;
     }
     if (strcmp(cmd, "ATI") == 0) { snprintf(resp, (size_t)maxLen, "ELM327 v1.5"); return YES; }
+    if (strcmp(cmd, "ATCSM1") == 0) {
+        /* FAKE_CSM_REPLY: the reply ("timeout" = none) from the FAKE_CSM_FROM-th
+           ATCSM1 on (default 1): the PASSIVE init must refuse to go on */
+        static int csm_count = 0;
+        const char *reply = getenv("FAKE_CSM_REPLY");
+        const char *from = getenv("FAKE_CSM_FROM");
+        if (reply && ++csm_count >= (from ? atoi(from) : 1)) {
+            if (strcmp(reply, "timeout") == 0) return NO;
+            snprintf(resp, (size_t)maxLen, "%s", reply);
+            return YES;
+        }
+    }
     if (strncmp(cmd, "ATCRA", 5) == 0) snprintf(g_rx, sizeof(g_rx), "%s", cmd + 5);
 
     size_t n = strlen(cmd);

@@ -31,7 +31,9 @@ PEAK PCAN-USB로 버스 전체를 수신 전용(listen-only)으로 받을 수도
 기다리고, 8초 스캔해서 못 찾으면 한 번 더 스캔하며, BLE가 꺼져 있어도 페어링된 Classic 어댑터는 목록에 남는다.
 장치 이름은 대소문자 없이 포함 여부로 고르고, `discover`에서 생략하면 첫 번째 어댑터를 쓴다. 수신 전용 명령(monitor, detect, discover, probe의 CAN phase)은
 PASSIVE 초기화(`ATZ`, `ATE0`, `ATL0`, `STI`, `ATSP6`, `ATCSM1`, `ATS1`, `ATCAF0`, `ATH1`)를, 질의 명령(query, supported, raw)은
-ACTIVE 초기화(ELM327 초기화 명령 + STN 옵션)를 쓴다.
+ACTIVE 초기화(ELM327 초기화 명령 + STN 옵션)를 쓴다. PASSIVE 초기화는 `ATCSM1` 응답에 `OK`가 있어야 성공한다: 응답이 없거나
+`?`(미지원)면 ACK를 보내지 않는다고 확인할 수 없으므로 `[ERROR] silent mode not confirmed: ATCSM1 …`을 남기고 모니터를
+시작하지 않는다(TUI 연결 화면에는 `adapter init failed: …`로 이유가 나온다).
 
 ## 빌드
 
@@ -147,7 +149,7 @@ VSP의 `signals[].canonical.id`와 `signals[].acquisition`을 기준으로 CAN f
 
 프로필 프레임에 주기(`can_frames[].cycle_ms`)가 있으면 계획과 결과에 `frame_cycle_ms`·`frame_hz`가 붙고, 결과에는 관측/프레임 비율 `frame_rate_ratio`가 붙는다. 목표 Hz가 프레임보다 빠르고 프레임은 빠짐없이 들어왔으면 상태는 `under_target` 대신 `frame_limited`이고, 관측이 프레임 주기의 절반에도 못 미치면 `frame_rate_low`(프레임 유실, 게이트웨이 필터, 또는 이 차에서 주기가 다름)를 표시한다. mux 신호는 비교하지 않는다.
 
-진단 응답은 VSP 규칙대로 CAN 프레임 하나씩(ISO-TP PCI 포함, 재조립 없음) 해석한다. `decode.mux`가 있으면 mux로 프레임을 고르고(멀티프레임 응답의 CF 순번, 첫 프레임의 `62 DID` 등), 없으면 단일/첫 프레임 앞의 긍정응답 표식(`41 PID`, `62 DID`, `61 LID`)으로 고른다. 수동 CAN도 mux와 `can_frames[].frame_id_mask`를 적용한다. 29-bit CAN ID는 아직 지원하지 않는다.
+진단 응답은 VSP 규칙대로 CAN 프레임 하나씩(ISO-TP PCI 포함, 재조립 없음) 해석한다. `decode.mux`가 있으면 mux로 프레임을 고르고(멀티프레임 응답의 CF 순번, 첫 프레임의 `62 DID` 등), 없으면 단일/첫 프레임 앞의 긍정응답 표식(`41 PID`, `62 DID`, `61 LID`)으로 고른다. 수동 CAN도 mux와 `can_frames[].frame_id_mask`를 적용한다. DBC에서 변환한 `{"value": n}`만 있는 mux는 같은 프레임에서 `{"role": "multiplexor"}`인 시그널의 필드로 비교하고, 그런 시그널이 없으면 그 시그널은 디코드하지 않는다. 받은 프레임이 시그널이 읽는 바이트(필드, `sign_bit`, mux 필드)보다 짧으면 값을 갱신하지 않고 샘플로도 세지 않는다(없는 비트를 0으로 읽지 않음; CAN은 `short_frames`로 센다). 29-bit CAN ID는 아직 지원하지 않는다.
 
 `--mode auto`는 CAN phase와 OBD phase를 순차 실행한다. 단, auto는 버스에 상시 송신 프레임이 들리면(PT-CAN 직결 가능성) OBD phase를 건너뛰고 아무것도 송신하지 않는다. OBD 포트에서 질의하려면 `--mode obd`를 명시한다. 차량 버스에 직결한 상태에서는 `--mode can`만 쓴다. `--signals`에는 `rpm,gear,steering,throttle,brake` 같은 의미군, canonical id, 또는 VSP signal name을 지정할 수 있다. STN/OBDLink 계열은 raw periodic scheduler를 사용한다. vLinker 계열은 제조사 확인상 `ATMA`/`STM`/`STMA` monitor mode에서 버스를 silent로 유지하며 periodic message(PM)도 송신하지 않으므로, auto에서는 poll 방식으로 fallback한다.
 
@@ -307,7 +309,9 @@ GATEWAY 또는 SILENT, 이 연결에서 한 번도 DIRECT로 판정된 적 없�
 `--no-tx` 없음, 프로필에 진단 시그널이 1개 이상, 확인 창에서 `y`. DIRECT에서는 `x`가 로그 한 줄(`TX locked: DIRECT bus`)만 남긴다.
 켜지면 모니터를 멈추고 poll 설정(`ATCSM0` 등, `vsp_probe` poll 모드와 같은 코드) 뒤 고유 질의를 돌아가며 초당 10개 이하로
 보낸다. 끌 때(`x`, 종료, 끊김 정리)는 PASSIVE 초기화를 다시 실행해(ATZ로 헤더·주기 메시지 해제, ATCSM1 복구) 모니터를 다시
-시작하거나 연결을 끊는다. **PT-CAN 직결 탭에서는 TX 모드를 켜지 말 것** — OBD 포트에서만 쓴다.
+시작하거나 연결을 끊는다. 이 재초기화가 실패하면(ATCSM1이 `OK`가 아님) 어댑터가 아직 ACK를 보낼 수 있으므로 모니터를 다시
+켜지 않고, 헤더가 빨간 `NOT SILENT`가 되며 Log에 `[ERROR] TX off: silent mode (ATCSM1) not confirmed …`가 남는다. `c`로 연결
+화면에 돌아가 다시 연결하면 PASSIVE 초기화를 처음부터 다시 한다. **PT-CAN 직결 탭에서는 TX 모드를 켜지 말 것** — OBD 포트에서만 쓴다.
 
 ## discover (구 can_discover)
 
@@ -522,6 +526,7 @@ apps/can_tools/
 
 - macOS Bluetooth 권한 필요 (시스템 설정 > 개인정보 보호 및 보안)
 - PT-CAN 시그널 탐색은 PT-CAN 직결 및 D-CAN(OBD 포트) 경유 모두 지원 — 버스 모드 자동 감지
-- 어댑터는 패시브 모드에서 Silent Mode(`ATCSM1`)로 동작 — CAN ACK 미전송
+- 어댑터는 패시브 모드에서 Silent Mode(`ATCSM1`)로 동작 — CAN ACK 미전송. `ATCSM1`에 `OK`로 답하지 않는 어댑터(일부 저가
+  복제품)는 수신 전용 명령에 쓸 수 없다
 - `ctest`(build 폴더)는 하드웨어 없이 돈다: TUI 테스트는 replay와 가짜 어댑터 빌드만 쓴다
 - IGN ON 상태에서 실행해야 함

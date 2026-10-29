@@ -384,6 +384,83 @@ static void test_lsb(const vsp_decoder_t *dec) {
     vsp_profile_free(p);
 }
 
+/* A frame shorter than the bytes a signal reads is not decoded (no sample,
+ * value kept); {"value": n} alone takes the frame's multiplexor field. */
+static void test_dlc_and_dbc_mux(void) {
+    static const char *kMux =
+    "{\"schema\": \"vehicle_data_profile.v1\", \"vehicle\": {\"manufacturer\": \"T\", \"model\": \"M\"},"
+    " \"can_frames\": [{\"frame_id\": 256, \"dlc\": 8}, {\"frame_id\": 512, \"dlc\": 2}, {\"frame_id\": 768, \"dlc\": 8},"
+    "                  {\"frame_id\": 1024, \"dlc\": 8}],"
+    " \"signals\": ["
+    " {\"name\": \"SEL\", \"acquisition\": {\"type\": \"can_frame\", \"frame_id\": 256},"
+    "  \"decode\": {\"start_bit\": 7, \"bit_length\": 4, \"byte_order\": \"big_endian\", \"factor\": 1, \"mux\": {\"role\": \"multiplexor\"}}},"
+    " {\"name\": \"CH1\", \"acquisition\": {\"type\": \"can_frame\", \"frame_id\": 256},"
+    "  \"decode\": {\"start_bit\": 8, \"bit_length\": 8, \"factor\": 1, \"mux\": {\"value\": 1}}},"
+    " {\"name\": \"CH2\", \"acquisition\": {\"type\": \"can_frame\", \"frame_id\": 256},"
+    "  \"decode\": {\"start_bit\": 8, \"bit_length\": 8, \"factor\": 1, \"mux\": {\"value\": 2}}},"
+    " {\"name\": \"ORPHAN\", \"acquisition\": {\"type\": \"can_frame\", \"frame_id\": 1024},"
+    "  \"decode\": {\"start_bit\": 8, \"bit_length\": 8, \"factor\": 1, \"mux\": {\"value\": 0}}},"
+    " {\"name\": \"WORD\", \"acquisition\": {\"type\": \"can_frame\", \"frame_id\": 512},"
+    "  \"decode\": {\"start_bit\": 0, \"bit_length\": 16, \"byte_order\": \"little_endian\", \"factor\": 1}},"
+    " {\"name\": \"BE12\", \"acquisition\": {\"type\": \"can_frame\", \"frame_id\": 768},"
+    "  \"decode\": {\"start_bit\": 7, \"bit_length\": 12, \"byte_order\": \"big_endian\", \"factor\": 1}},"
+    " {\"name\": \"SIGNBIT\", \"acquisition\": {\"type\": \"can_frame\", \"frame_id\": 768},"
+    "  \"decode\": {\"start_bit\": 0, \"bit_length\": 8, \"sign_bit\": 47, \"factor\": 1}},"
+    " {\"name\": \"POS_MUX\", \"acquisition\": {\"type\": \"can_frame\", \"frame_id\": 768},"
+    "  \"decode\": {\"start_bit\": 0, \"bit_length\": 8, \"factor\": 1,"
+    "             \"mux\": {\"value\": 0, \"start_bit\": 56, \"bit_length\": 8, \"byte_order\": \"little_endian\"}}}"
+    "]}";
+    char err[256] = "";
+    vsp_profile_t *p = vsp_profile_load_json(kMux, strlen(kMux), err, sizeof(err));
+    CHECK(p != NULL, "mux profile: %s", err);
+    if (!p) return;
+    vsp_select_t all = { .signals = NULL, .all_signals = true, .acquisition = VSP_ACQ_ANY };
+    vsp_decoder_t *d = vsp_decoder_create(p, &all);
+    CHECK(d && vsp_decoder_signal_count(d) == 8, "mux decoder");
+    if (!d || vsp_decoder_signal_count(d) != 8) {
+        vsp_decoder_free(d);
+        vsp_profile_free(p);
+        return;
+    }
+    CHECK(vsp_decoder_signal_info(d, find_signal(d, "WORD"))->need_bytes == 2, "16 bits from bit 0: 2 bytes");
+    CHECK(vsp_decoder_signal_info(d, find_signal(d, "BE12"))->need_bytes == 2, "big endian 12 bits from 7: 2 bytes");
+    CHECK(vsp_decoder_signal_info(d, find_signal(d, "SIGNBIT"))->need_bytes == 6, "sign bit 47: 6 bytes");
+    CHECK(vsp_decoder_signal_info(d, find_signal(d, "POS_MUX"))->need_bytes == 8, "mux byte 7: 8 bytes");
+    CHECK(vsp_decoder_signal_info(d, find_signal(d, "CH1"))->need_bytes == 2, "mux nibble + byte 1: 2 bytes");
+    CHECK(vsp_decoder_signal_info(d, find_signal(d, "CH1"))->has_mux, "value-only mux counts as a mux");
+
+    /* DBC mux: the selector is the high nibble of byte 0 (big endian, from bit 7). */
+    const uint8_t sel1[8] = { 0x10, 42, 0, 0, 0, 0, 0, 0 };
+    const uint8_t sel2[8] = { 0x20, 77, 0, 0, 0, 0, 0, 0 };
+    CHECK(feed(d, 0x100, sel1, 8, 100.0) == 2, "selector 1: SEL and CH1");
+    CHECK(state_of(d, "CH1")->has_value && state_of(d, "CH1")->value == 42, "CH1 = 42");
+    CHECK(state_of(d, "CH2")->samples == 0, "CH2 not updated by selector 1");
+    CHECK(feed(d, 0x100, sel2, 8, 110.0) == 2, "selector 2: SEL and CH2");
+    CHECK(state_of(d, "CH2")->value == 77 && state_of(d, "CH1")->value == 42, "CH2 = 77, CH1 kept");
+    const uint8_t orphan[8] = { 0, 9, 0, 0, 0, 0, 0, 0 };
+    CHECK(feed(d, 0x400, orphan, 8, 120.0) == 0 && state_of(d, "ORPHAN")->samples == 0,
+          "value-only mux without a multiplexor: never decoded");
+
+    /* Short frames: no sample, the value stays, short_frames counts them. */
+    const uint8_t word[2] = { 42, 0 };
+    CHECK(feed(d, 0x200, word, 2, 200.0) == 1 && state_of(d, "WORD")->value == 42, "WORD = 42");
+    const uint8_t one[1] = { 0 };
+    CHECK(feed(d, 0x200, one, 1, 210.0) == 0, "DLC 1 for a 2-byte field: nothing updated");
+    const vsp_signal_state_t *w = state_of(d, "WORD");
+    CHECK(w->samples == 1 && w->value == 42 && w->last_sample_ms == 200.0 && w->short_frames == 1,
+          "WORD kept: samples %d value %g short %d", w->samples, w->value, w->short_frames);
+    const uint8_t five[5] = { 0x12, 0x30, 0, 0, 0 };
+    CHECK(feed(d, 0x300, five, 5, 220.0) == 1, "5 bytes: BE12 only (sign bit and mux are further)");
+    CHECK(state_of(d, "BE12")->value == 0x123, "BE12 = 0x123");
+    CHECK(state_of(d, "SIGNBIT")->samples == 0 && state_of(d, "SIGNBIT")->short_frames == 1, "SIGNBIT waits");
+    CHECK(state_of(d, "POS_MUX")->samples == 0 && state_of(d, "POS_MUX")->short_frames == 1, "POS_MUX waits");
+    const uint8_t sel_short[1] = { 0x10 };
+    CHECK(feed(d, 0x100, sel_short, 1, 230.0) == 1 && state_of(d, "CH1")->short_frames == 1 &&
+          state_of(d, "CH1")->value == 42, "selector only: SEL updates, CH1 kept");
+    vsp_decoder_free(d);
+    vsp_profile_free(p);
+}
+
 static void test_hex_and_errors(void) {
     char buf[64];
     CHECK(vsp_single_frame_payload_hex("01 0C", 0x55, buf, sizeof(buf)), "single frame");
@@ -428,6 +505,7 @@ int main(void) {
         vsp_decoder_free(dec);
     }
     vsp_profile_free(p);
+    test_dlc_and_dbc_mux();
     test_hex_and_errors();
 
     printf("%d/%d checks passed\n", g_checks - g_failures, g_checks);

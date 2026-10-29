@@ -64,6 +64,7 @@ typedef struct {
     const char *live_mode;       /* replaces "silent" (PCAN: "listen-only 500k"), NULL = "silent" */
     bool        tx_on;
     bool        disconnected;
+    const char *offline_label;   /* header text while disconnected / offline, NULL = "DISCONNECTED" */
     bool        replay;
     double      speed;
     bool        paused;

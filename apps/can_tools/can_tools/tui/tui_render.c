@@ -247,8 +247,9 @@ static void draw_header(tui_grid_t *g, const tui_model_t *m, const tui_view_t *v
         else if (v->paused) snprintf(s4_short, sizeof(s4_short), "PAUSED %s", pos);
         else snprintf(s4_short, sizeof(s4_short), "%s %s", sp, pos);
     } else if (v->disconnected) {
-        snprintf(s4_full, sizeof(s4_full), "DISCONNECTED");
-        snprintf(s4_short, sizeof(s4_short), "DISCONNECTED");
+        const char *label = v->offline_label ? v->offline_label : "DISCONNECTED";
+        snprintf(s4_full, sizeof(s4_full), "%s", label);
+        snprintf(s4_short, sizeof(s4_short), "%s", label);
         role4 = TUI_ROLE_ALERT;
     } else if (v->recording) {
         snprintf(s4_full, sizeof(s4_full), "%s REC", tui_glyph(TUI_G_REC_ON, ascii));

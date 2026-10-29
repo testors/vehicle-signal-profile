@@ -145,6 +145,12 @@ live tx_replay FAKE_STREAM=gateway FAKE_RESP=probe -- --device vLinker --profile
 # connect screen: r only shows a status (no list, no adapter command); s rescans and drops the pending target
 live connect_r FAKE_STREAM=direct -- --profile "$PROFILE" --snapshot-at 1.5 --keys "1:r" &
 live connect_s FAKE_STREAM=direct -- --device NOPE --profile "$PROFILE" --snapshot-at 1.5 --keys "1:s" &
+# silent mode not confirmed (ATCSM1 "?" or no reply): no monitor command, the reason on the connect screen
+live csm_refused FAKE_STREAM=direct "FAKE_CSM_REPLY=?" -- --device vLinker --profile "$PROFILE" --snapshot-at 2.5 &
+live csm_timeout FAKE_STREAM=direct FAKE_CSM_REPLY=timeout -- --device vLinker --profile "$PROFILE" --snapshot-at 2.5 &
+# TX off whose PASSIVE re-init is refused: the monitor stays off and the header says NOT SILENT
+live tx_not_silent FAKE_STREAM=gateway FAKE_RESP=probe FAKE_CSM_FROM=2 "FAKE_CSM_REPLY=?" -- --device vLinker \
+    --profile "$PROFILE" --no-rec --snapshot-at 4.2,6 --keys "4:x;4.4:y;5:x" &
 wait
 
 # ---- no terminal, no hook: nothing is created (run in a folder of their own) ----
@@ -165,7 +171,8 @@ cd "$ROOT"
 
 # ---- adapter command logs ----
 for n in direct_x gateway_tx silent_tx no_tx detecting sticky disconnect no_connect recording discover_live \
-         connect_screen connect_last list_wait list_gone_connect list_gone_live tx_replay connect_r connect_s; do
+         connect_screen connect_last list_wait list_gone_connect list_gone_live tx_replay connect_r connect_s \
+         csm_refused csm_timeout tx_not_silent; do
     check_cmds "$n"
 done
 [ "$MODE" = "update" ] && exit 0
@@ -213,6 +220,10 @@ expect connect_r screen.txt "recording starts after connecting"
 expect connect_r screen.txt "1 capture" absent
 expect connect_s screen.txt "looking for NOPE" absent
 expect connect_s screen.txt "R replay list  s rescan"
+expect csm_refused screen.txt 'adapter init failed: silent mode not confirmed: ATCSM1 answered "?"'
+expect csm_timeout screen.txt "adapter init failed: silent mode not confirmed: ATCSM1 timed out"
+expect tx_not_silent screen.txt "NOT SILENT"
+expect tx_not_silent screen.txt "[ERROR] TX off: silent mode (ATCSM1) not con"
 
 S=$(session_file disconnect)
 TOTAL=$((TOTAL + 1))

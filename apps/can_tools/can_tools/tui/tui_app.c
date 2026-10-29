@@ -152,7 +152,8 @@ struct tui_app {
     uint64_t          tx_sent;
     uint64_t          tx_errors;
 
-    bool              disconnected;
+    bool              disconnected;   /* or offline after a fault: no monitor, no TX, c reconnects */
+    char              offline_label[24]; /* header text while offline: "DISCONNECTED", "NOT SILENT" */
     bool              want_connect;
     bool              monitor_on;
 };
@@ -639,15 +640,24 @@ static void tx_enter(tui_app_t *app) {
     app_log(app, "[WARN] TX ON: polling %d OBD request%s (at most 10/s)", app->tx_nq, app->tx_nq == 1 ? "" : "s");
 }
 
+static void go_offline(tui_app_t *app, const char *label, const char *why);
+
+/* Leave TX mode: the PASSIVE re-init (ATZ ... ATCSM1 answered OK) must succeed
+ * before the monitor runs again. If it fails the adapter may still ACK (TX mode
+ * set ATCSM0), so the app goes offline instead: no monitor, NOT SILENT in the
+ * header, and c reconnects (a fresh PASSIVE init). */
 static void tx_leave(tui_app_t *app, bool restart_monitor) {
     if (!app->tx_on) return;
     app->tx_on = false;
     bool connected = app->host.is_connected && app->host.is_connected(app->host.ctx);
-    if (connected && app->host.passive_init) {
-        if (app->host.passive_init(app->host.ctx)) app_log(app, "TX off: adapter back in silent mode (ATCSM1)");
-        else app_log(app, "[ERROR] TX off: passive re-init failed");
+    if (!connected) return;   /* the tick reports the disconnect */
+    if (!app->host.passive_init || !app->host.passive_init(app->host.ctx)) {
+        go_offline(app, "NOT SILENT",
+                   "[ERROR] TX off: silent mode (ATCSM1) not confirmed, the monitor stays off: c reconnects");
+        return;
     }
-    if (restart_monitor && connected) {
+    app_log(app, "TX off: adapter back in silent mode (ATCSM1)");
+    if (restart_monitor) {
         frame_source_start(app->src, tui_app_on_frame, app);
         app->monitor_on = true;
         tui_classifier_start(&app->model.cls, app_now(app));
@@ -1560,17 +1570,23 @@ void tui_app_log(tui_app_t *app, const char *text) {
     tui_log_add(&app->model.log, app_now(app), text);
 }
 
-static void handle_disconnect(tui_app_t *app) {
+/* No monitor and no TX from here on; c returns to the connect screen. */
+static void go_offline(tui_app_t *app, const char *label, const char *why) {
     if (app->disconnected) return;
     app->disconnected = true;
+    snprintf(app->offline_label, sizeof(app->offline_label), "%s", label);
     app->monitor_on = false;
     app->tx_on = false;            /* nothing can be sent any more */
     app->model.cls.paused = true;
-    app_log(app, "[ERROR] adapter disconnected: c returns to the connect screen");
+    app_log(app, "%s", why);
     rec_stop(app);
     disc_abort(app, "disconnected");
     if (app->overlay == OVL_TX_CONFIRM) app->overlay = OVL_NONE;
     write_session_json(app, false);
+}
+
+static void handle_disconnect(tui_app_t *app) {
+    go_offline(app, "DISCONNECTED", "[ERROR] adapter disconnected: c returns to the connect screen");
 }
 
 void tui_app_tick(tui_app_t *app) {
@@ -1923,6 +1939,7 @@ void tui_app_render(tui_app_t *app, tui_grid_t *grid) {
     v->live_mode = app->live ? app->host.mode_text : NULL;
     v->tx_on = app->tx_on;
     v->disconnected = app->disconnected;
+    v->offline_label = app->offline_label[0] ? app->offline_label : NULL;
     v->replay = app->replay;
     if (app->replay) {
         v->speed = frame_source_replay_speed(app->src);

@@ -212,11 +212,18 @@ static bool init_passive(OBDAdapter *adapter, const obd_init_config_t *cfg, obd_
         return false;
     }
 
-    /* CAN Silent Monitoring — adapter will NOT send ACK on CAN bus */
+    /* CAN Silent Monitoring — adapter will NOT send ACK on CAN bus. The
+       monitor starts only once the adapter answered OK: a timeout or "?"
+       (unsupported) leaves the ACK behaviour unknown. */
     cli_log("Enabling silent mode (ATCSM1) — no ACK on CAN bus");
-    if (![adapter sendCommand:"ATCSM1" response:resp maxLen:sizeof(resp)]) {
-        fprintf(stderr, "[WARN] ATCSM1 failed (may not be supported)\n");
+    resp[0] = '\0';
+    bool replied = [adapter sendCommand:"ATCSM1" response:resp maxLen:sizeof(resp)];
+    if (!replied || !strstr(resp, "OK")) {
+        fprintf(stderr, "[ERROR] silent mode not confirmed: ATCSM1 %s%s%s; not starting the monitor\n",
+                replied ? "answered \"" : "timed out", replied ? resp : "", replied ? "\"" : "");
+        return false;
     }
+    cli_log("Silent mode on (ATCSM1: OK)");
 
     /* Spaces ON for readable output */
     [adapter sendCommand:"ATS1" response:resp maxLen:sizeof(resp)];
