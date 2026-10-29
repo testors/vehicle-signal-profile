@@ -814,31 +814,58 @@ static bool build_decode_spec(NSDictionary *signal, str_pool_t *pool, decode_spe
     return true;
 }
 
-/* decode of the signal on the same CAN frame whose decode.mux is
- * {"role": "multiplexor"} (VSP_RUNTIME_SPEC.md, "Mux Objects"), nil if none. */
-static NSDictionary *frame_multiplexor_decode(NSDictionary *signal, NSArray *signals) {
-    NSDictionary *acq = signal[@"acquisition"];
-    if (![acq isKindOfClass:[NSDictionary class]] || ![acq[@"type"] isEqual:@"can_frame"]) return nil;
-    NSNumber *frameId = num_or_nil(acq[@"frame_id"]);
-    if (!frameId || ![signals isKindOfClass:[NSArray class]]) return nil;
-    NSString *bus = [acq[@"bus"] isKindOfClass:[NSString class]] ? acq[@"bus"] : nil;
-    for (NSDictionary *other in signals) {
-        if (![other isKindOfClass:[NSDictionary class]]) continue;
-        NSDictionary *oacq = other[@"acquisition"];
-        if (![oacq isKindOfClass:[NSDictionary class]] || ![oacq[@"type"] isEqual:@"can_frame"]) continue;
-        NSNumber *oid = num_or_nil(oacq[@"frame_id"]);
-        if (!oid || oid.unsignedIntValue != frameId.unsignedIntValue) continue;
-        NSString *obus = [oacq[@"bus"] isKindOfClass:[NSString class]] ? oacq[@"bus"] : nil;
-        if (bus && obus && ![bus isEqualToString:obus]) continue;
-        NSDictionary *odecode = other[@"decode"];
-        if (![odecode isKindOfClass:[NSDictionary class]]) continue;
-        NSDictionary *omux = odecode[@"mux"];
-        if ([omux isKindOfClass:[NSDictionary class]] && [omux[@"role"] isEqual:@"multiplexor"]) return odecode;
+static NSString *string_or_nil(id value) {
+    return [value isKindOfClass:[NSString class]] ? value : nil;
+}
+
+/* Same bus (or one of them unnamed) and frame_id. */
+static bool same_frame(NSString *bus, uint32_t frameId, id otherBus, id otherFrameId) {
+    NSNumber *oid = num_or_nil(otherFrameId);
+    if (!oid || oid.unsignedIntValue != frameId) return false;
+    NSString *obus = string_or_nil(otherBus);
+    return !bus || !obus || [bus isEqualToString:obus];
+}
+
+/* The decode in items whose decode.mux is {"role": "multiplexor"}, nil if none. */
+static NSDictionary *multiplexor_in(NSArray *items) {
+    if (![items isKindOfClass:[NSArray class]]) return nil;
+    for (NSDictionary *item in items) {
+        if (![item isKindOfClass:[NSDictionary class]]) continue;
+        NSDictionary *decode = item[@"decode"];
+        if (![decode isKindOfClass:[NSDictionary class]]) continue;
+        NSDictionary *mux = decode[@"mux"];
+        if ([mux isKindOfClass:[NSDictionary class]] && [mux[@"role"] isEqual:@"multiplexor"]) return decode;
     }
     return nil;
 }
 
-static void build_mux_spec(NSDictionary *signal, NSArray *signals, mux_spec_t *m) {
+/* decode of the multiplexor of the signal's CAN frame (VSP_RUNTIME_SPEC.md,
+ * "Mux Objects"): first in the frame layout, can_frames[].signals[] of the same
+ * bus and frame_id (a selector need not be a user-facing channel), then among
+ * the top-level signals[] on that frame. nil if none. */
+static NSDictionary *frame_multiplexor_decode(NSDictionary *signal, NSDictionary *profile) {
+    NSDictionary *acq = signal[@"acquisition"];
+    if (![acq isKindOfClass:[NSDictionary class]] || ![acq[@"type"] isEqual:@"can_frame"]) return nil;
+    NSNumber *frameId = num_or_nil(acq[@"frame_id"]);
+    if (!frameId) return nil;
+    NSString *bus = string_or_nil(acq[@"bus"]);
+    for (NSDictionary *frame in array_or_empty(profile[@"can_frames"])) {
+        if (![frame isKindOfClass:[NSDictionary class]]) continue;
+        if (!same_frame(bus, frameId.unsignedIntValue, frame[@"bus"], frame[@"frame_id"])) continue;
+        NSDictionary *found = multiplexor_in(frame[@"signals"]);
+        if (found) return found;
+    }
+    NSMutableArray *mates = [NSMutableArray array];
+    for (NSDictionary *other in array_or_empty(profile[@"signals"])) {
+        if (![other isKindOfClass:[NSDictionary class]]) continue;
+        NSDictionary *oacq = other[@"acquisition"];
+        if (![oacq isKindOfClass:[NSDictionary class]] || ![oacq[@"type"] isEqual:@"can_frame"]) continue;
+        if (same_frame(bus, frameId.unsignedIntValue, oacq[@"bus"], oacq[@"frame_id"])) [mates addObject:other];
+    }
+    return multiplexor_in(mates);
+}
+
+static void build_mux_spec(NSDictionary *signal, NSDictionary *profile, mux_spec_t *m) {
     memset(m, 0, sizeof(*m));
     NSDictionary *decode = signal[@"decode"];
     if (![decode isKindOfClass:[NSDictionary class]]) return;
@@ -851,7 +878,7 @@ static void build_mux_spec(NSDictionary *signal, NSArray *signals, mux_spec_t *m
     NSDictionary *field = mux;
     if (!mux[@"start_bit"] && !mux[@"bit_length"]) {
         /* {"value": n} alone (a DBC conversion): the multiplexor's field */
-        field = frame_multiplexor_decode(signal, signals);
+        field = frame_multiplexor_decode(signal, profile);
         if (!field) {
             m->never = true;
             return;
@@ -1105,7 +1132,7 @@ int vsp_decoder_feed_collect(vsp_decoder_t *dec, const can_frame_t *frame, doubl
  * Decoder
  ******************************************************************************/
 
-static bool fill_signal(vsp_decoder_t *dec, engine_signal_t *sig, VSPEngineItem *item, NSArray *allSignals) {
+static bool fill_signal(vsp_decoder_t *dec, engine_signal_t *sig, VSPEngineItem *item, NSDictionary *profile) {
     str_pool_t *pool = &dec->pool;
     vsp_signal_info_t *info = &sig->info;
 
@@ -1140,7 +1167,7 @@ static bool fill_signal(vsp_decoder_t *dec, engine_signal_t *sig, VSPEngineItem 
         }
     }
 
-    build_mux_spec(item.signal, allSignals, &sig->mux);
+    build_mux_spec(item.signal, profile, &sig->mux);
     info->has_mux = sig->mux.valid;
     bool ok = build_decode_spec(item.signal, pool, &sig->decode);
     info->need_bytes = signal_need_bytes(&sig->decode, &sig->mux);
@@ -1184,7 +1211,7 @@ vsp_decoder_t *vsp_decoder_create(const vsp_profile_t *profile, const vsp_select
 
         for (VSPEngineItem *item in items) {
             engine_signal_t *sig = &dec->signals[dec->count++];
-            if (!fill_signal(dec, sig, item, profile->json[@"signals"])) {
+            if (!fill_signal(dec, sig, item, profile->json)) {
                 vsp_decoder_free(dec);
                 return NULL;
             }

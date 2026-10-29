@@ -193,7 +193,9 @@ Gear signals follow the numeric convention in
   `value`.
 - A profile converted from a DBC can instead carry `{"value": n}` alone. The
   mux field is then the signal of the same frame whose `decode.mux` is
-  `{"role": "multiplexor"}`.
+  `{"role": "multiplexor"}`: look in that frame's layout,
+  `can_frames[].signals[]` of the same `bus` and `frame_id`. The selector need
+  not be a top-level signal.
 
 ## Diagnostic Response Frames
 

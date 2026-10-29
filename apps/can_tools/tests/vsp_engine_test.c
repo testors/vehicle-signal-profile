@@ -390,7 +390,11 @@ static void test_dlc_and_dbc_mux(void) {
     static const char *kMux =
     "{\"schema\": \"vehicle_data_profile.v1\", \"vehicle\": {\"manufacturer\": \"T\", \"model\": \"M\"},"
     " \"can_frames\": [{\"frame_id\": 256, \"dlc\": 8}, {\"frame_id\": 512, \"dlc\": 2}, {\"frame_id\": 768, \"dlc\": 8},"
-    "                  {\"frame_id\": 1024, \"dlc\": 8}],"
+    "                  {\"frame_id\": 1024, \"dlc\": 8},"
+    "                  {\"bus\": \"can1\", \"frame_id\": 1280, \"dlc\": 8, \"signals\": [{\"name\": \"OTHER_SEL\","
+    "                   \"decode\": {\"start_bit\": 56, \"bit_length\": 8, \"factor\": 1, \"mux\": {\"role\": \"multiplexor\"}}}]},"
+    "                  {\"bus\": \"can0\", \"frame_id\": 1280, \"dlc\": 8, \"signals\": [{\"name\": \"FSEL\","
+    "                   \"decode\": {\"start_bit\": 0, \"bit_length\": 4, \"factor\": 1, \"mux\": {\"role\": \"multiplexor\"}}}]}],"
     " \"signals\": ["
     " {\"name\": \"SEL\", \"acquisition\": {\"type\": \"can_frame\", \"frame_id\": 256},"
     "  \"decode\": {\"start_bit\": 7, \"bit_length\": 4, \"byte_order\": \"big_endian\", \"factor\": 1, \"mux\": {\"role\": \"multiplexor\"}}},"
@@ -406,6 +410,8 @@ static void test_dlc_and_dbc_mux(void) {
     "  \"decode\": {\"start_bit\": 7, \"bit_length\": 12, \"byte_order\": \"big_endian\", \"factor\": 1}},"
     " {\"name\": \"SIGNBIT\", \"acquisition\": {\"type\": \"can_frame\", \"frame_id\": 768},"
     "  \"decode\": {\"start_bit\": 0, \"bit_length\": 8, \"sign_bit\": 47, \"factor\": 1}},"
+    " {\"name\": \"FCH\", \"acquisition\": {\"type\": \"can_frame\", \"bus\": \"can0\", \"frame_id\": 1280},"
+    "  \"decode\": {\"start_bit\": 8, \"bit_length\": 8, \"factor\": 1, \"mux\": {\"value\": 3}}},"
     " {\"name\": \"POS_MUX\", \"acquisition\": {\"type\": \"can_frame\", \"frame_id\": 768},"
     "  \"decode\": {\"start_bit\": 0, \"bit_length\": 8, \"factor\": 1,"
     "             \"mux\": {\"value\": 0, \"start_bit\": 56, \"bit_length\": 8, \"byte_order\": \"little_endian\"}}}"
@@ -416,8 +422,8 @@ static void test_dlc_and_dbc_mux(void) {
     if (!p) return;
     vsp_select_t all = { .signals = NULL, .all_signals = true, .acquisition = VSP_ACQ_ANY };
     vsp_decoder_t *d = vsp_decoder_create(p, &all);
-    CHECK(d && vsp_decoder_signal_count(d) == 8, "mux decoder");
-    if (!d || vsp_decoder_signal_count(d) != 8) {
+    CHECK(d && vsp_decoder_signal_count(d) == 9, "mux decoder");
+    if (!d || vsp_decoder_signal_count(d) != 9) {
         vsp_decoder_free(d);
         vsp_profile_free(p);
         return;
@@ -440,6 +446,14 @@ static void test_dlc_and_dbc_mux(void) {
     const uint8_t orphan[8] = { 0, 9, 0, 0, 0, 0, 0, 0 };
     CHECK(feed(d, 0x400, orphan, 8, 120.0) == 0 && state_of(d, "ORPHAN")->samples == 0,
           "value-only mux without a multiplexor: never decoded");
+
+    /* The selector only in the frame layout (can_frames[].signals[], not a
+       user-facing signal), on the signal's bus: not can1's frame of that id. */
+    CHECK(vsp_decoder_signal_info(d, find_signal(d, "FCH"))->need_bytes == 2, "FCH: can0's nibble + byte 1");
+    const uint8_t f3[8] = { 0x03, 55, 0, 0, 0, 0, 0, 0 };
+    const uint8_t f4[8] = { 0x04, 66, 0, 0, 0, 0, 0, 0 };
+    CHECK(feed(d, 0x500, f3, 8, 150.0) == 1 && state_of(d, "FCH")->value == 55, "frame-layout selector 3: FCH = 55");
+    CHECK(feed(d, 0x500, f4, 8, 160.0) == 0 && state_of(d, "FCH")->value == 55, "selector 4: FCH kept");
 
     /* Short frames: no sample, the value stays, short_frames counts them. */
     const uint8_t word[2] = { 42, 0 };
