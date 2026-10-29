@@ -386,7 +386,9 @@ int tui_profiles_guess(const tui_profile_index_t *ix, const tui_seen_frame_t *se
         for (int k = 0; k < e->nframes; k++) {
             uint64_t key = frame_key(e->frames[k].id, e->frames[k].ext);
             const frame_key_t *d = find_key(df, nd, key);
-            double w = log((double)profiles / (double)(d ? d->count : 1));
+            /* N + 1: a frame every profile lists (a folder of one profile, or
+               of profiles with the same frames) still weighs something */
+            double w = log((double)(profiles + 1) / (double)(d ? d->count : 1));
             const frame_key_t *o = find_key(obs, nseen, key);
             if (o && (e->frames[k].dlc < 0 || e->frames[k].dlc == o->dlc)) {
                 score += w;
@@ -401,6 +403,13 @@ int tui_profiles_guess(const tui_profile_index_t *ix, const tui_seen_frame_t *se
     free(df);
     free(obs);
 
+    /* The best is over every profile, qualifying or not: one that outscores
+       the rest with less than half of its frames seen (a multi-bus profile
+       watched from one bus, a gateway passing part of its traffic) may well
+       be the car, so the traffic is ambiguous and no list beats a list
+       without it. The simulation over the profile corpus agrees: taking the
+       best over the qualifying profiles only doubles the wrong lists when
+       half of the frames are visible. */
     int kept = 0;
     if (best > 0.0) {
         qsort(all, (size_t)na, sizeof(*all), cmp_guess);

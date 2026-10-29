@@ -126,6 +126,7 @@ struct tui_app {
     int               pick_n;
     tui_picker_row_t *pick_rows;
     char              pick_want[1024]; /* preselect this path once indexed */
+    bool              pick_moved;      /* the user moved the selection or filtered */
 
     /* vehicle guess (no profile loaded): profiles the traffic matches, each
        with a decoder for the live preview of RPM / steering / throttle / brake */
@@ -1300,8 +1301,23 @@ static void picker_open(tui_app_t *app, const char *preselect) {
     app->pick_filter[0] = '\0';
     app->pick_sel = 0;
     app->pick_scroll = 0;
+    app->pick_moved = false;
     snprintf(app->pick_want, sizeof(app->pick_want), "%s", preselect ? preselect : "");
     app->overlay = OVL_PICKER;
+    picker_refresh(app);
+}
+
+/* The suggestions changed while the picker is open: re-sort it. A selection
+ * the user moved stays on its profile; an untouched one follows the best
+ * suggestion, as picker_open would have picked it. */
+static void picker_resuggest(tui_app_t *app) {
+    if (app->overlay != OVL_PICKER || !app->pick_idx) return;
+    if (!app->pick_moved && !app->profile_path[0] && app->nguess > 0) {
+        snprintf(app->pick_want, sizeof(app->pick_want), "%s", app->pix.entries[app->guess[0].entry].path);
+    } else if (!app->pick_want[0] && app->pick_sel < app->pick_n) {
+        /* a draft row keeps its place: the profile rows above it stay as many */
+        snprintf(app->pick_want, sizeof(app->pick_want), "%s", app->pix.entries[app->pick_idx[app->pick_sel]].path);
+    }
     picker_refresh(app);
 }
 
@@ -1334,15 +1350,16 @@ static void picker_key(tui_app_t *app, int key) {
                 app->overlay = OVL_NONE;
             }
             return;
-        case TUI_KEY_UP:   app->pick_sel--; break;
-        case TUI_KEY_DOWN: app->pick_sel++; break;
-        case TUI_KEY_PGUP: app->pick_sel -= page; break;
-        case TUI_KEY_PGDN: app->pick_sel += page; break;
+        case TUI_KEY_UP:   app->pick_sel--; app->pick_moved = true; break;
+        case TUI_KEY_DOWN: app->pick_sel++; app->pick_moved = true; break;
+        case TUI_KEY_PGUP: app->pick_sel -= page; app->pick_moved = true; break;
+        case TUI_KEY_PGDN: app->pick_sel += page; app->pick_moved = true; break;
         case TUI_KEY_BACKSPACE:
         case 8:
             if (n > 0) app->pick_filter[n - 1] = '\0';
             app->pick_sel = 0;
             app->pick_want[0] = '\0';
+            app->pick_moved = true;
             break;
         default:
             if (key >= 32 && key < 127 && n + 1 < sizeof(app->pick_filter)) {
@@ -1350,6 +1367,7 @@ static void picker_key(tui_app_t *app, int key) {
                 app->pick_filter[n + 1] = '\0';
                 app->pick_sel = 0;
                 app->pick_want[0] = '\0';
+                app->pick_moved = true;
             }
             break;
     }
@@ -1453,7 +1471,10 @@ static void guess_cand_build(tui_app_t *app, int i, const tui_profile_entry_t *e
  * traffic are in and the index is complete); a new list loads its previews. */
 static void guess_tick(tui_app_t *app) {
     if (app->profile_path[0]) {
-        if (app->nguess) guess_clear(app);
+        if (app->nguess) {
+            guess_clear(app);
+            picker_resuggest(app);
+        }
         return;
     }
     pix_init(app);
@@ -1483,6 +1504,7 @@ static void guess_tick(tui_app_t *app) {
     for (int i = 0; i < TUI_GUESS_MAX; i++) guess_cand_free(app, i);
     app->nguess = n;
     for (int i = 0; i < n; i++) guess_cand_build(app, i, &app->pix.entries[g[i].entry]);
+    picker_resuggest(app);
     if (n == 0) {
         if (before) app_log(app, "profile suggestions: none match the traffic now");
         return;

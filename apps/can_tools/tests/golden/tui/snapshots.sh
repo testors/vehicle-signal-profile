@@ -71,6 +71,10 @@ run_case no_profile_tabs_60x20 $DIRECT $NOPROF $NOPROFDIR --snapshot-at 5 --size
 run_case suggest_120x40      $DIRECT $NOPROF --profiles guess_profiles --snapshot-at 5,6 --size 120x40 --keys "5.5:1" --color-map
 run_case suggest_picker_120x40 $DIRECT $NOPROF --profiles guess_profiles --snapshot-at 5 --size 120x40 --keys "4.5:p"
 run_case suggest_tabs_60x20  $DIRECT $NOPROF --profiles guess_profiles --snapshot-at 5 --size 60x20 --color-map
+# A picker opened before the first suggestion (3 s of traffic) re-sorts when it
+# comes: an untouched selection follows it, one the user moved stays put.
+run_case suggest_early_picker_100x30 $DIRECT $NOPROF --profiles guess_profiles --snapshot-at 2.5,5,6 --size 100x30 --keys "0.5:p;5.5:enter"
+run_case suggest_moved_picker_100x30 $DIRECT $NOPROF --profiles guess_profiles --snapshot-at 5,6 --size 100x30 --keys "0.5:p;1:down;5.5:enter"
 run_case gateway_120x40      $GATEWAY $PROFILE --snapshot-at 6 --size 120x40 --color-map
 run_case stale_120x40        $DIRECT $PROFILE --snapshot-at 4,14 --size 120x40 --color-map
 run_case controls_120x40     $DIRECT $PROFILE --snapshot-at 4.5 --size 120x40 --keys "1:];3:space;3.5:s s;4:/ w h e e l enter" --color-map

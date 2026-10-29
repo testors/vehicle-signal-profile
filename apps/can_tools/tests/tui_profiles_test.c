@@ -177,6 +177,45 @@ int main(int argc, char **argv) {
         if (system(cmd) != 0) CHECK(0, "guess cleanup");
     }
 
+    /* Vehicle guess over small hand-made indexes */
+    {
+        tui_profile_frame_t af[100], bf[3], cf[4];
+        for (int i = 0; i < 100; i++) af[i] = (tui_profile_frame_t){ 0x100 + (uint32_t)i, false, 8 };
+        for (int i = 0; i < 3; i++) bf[i] = (tui_profile_frame_t){ 0x500 + (uint32_t)i, false, 8 };
+        for (int i = 0; i < 4; i++) cf[i] = (tui_profile_frame_t){ 0x600 + (uint32_t)i, false, 8 };
+        tui_profile_entry_t e[3];
+        memset(e, 0, sizeof(e));
+        e[0].frames = af, e[0].nframes = 100;
+        e[1].frames = bf, e[1].nframes = 3;
+        e[2].frames = cf, e[2].nframes = 4;
+        tui_profile_index_t mix;
+        memset(&mix, 0, sizeof(mix));
+        tui_seen_frame_t seen[33];
+        for (int i = 0; i < 3; i++) seen[i] = (tui_seen_frame_t){ bf[i].id, false, 8 };
+        for (int i = 0; i < 30; i++) seen[3 + i] = (tui_seen_frame_t){ af[i].id, false, 8 };
+        tui_profile_guess_t g[TUI_GUESS_MAX];
+
+        /* one profile, every frame seen: each frame is listed by all (one)
+           profiles, and still counts */
+        mix.entries = &e[1], mix.total = mix.indexed = 1;
+        int n = tui_profiles_guess(&mix, seen, 3, g, TUI_GUESS_MAX);
+        CHECK(n == 1 && g[0].entry == 0 && g[0].hits == 3 && g[0].score > 0, "one-profile folder: suggested (n %d)", n);
+
+        /* two profiles with the same frames: both, tied */
+        tui_profile_entry_t twins[2] = { e[1], e[1] };
+        mix.entries = twins, mix.total = mix.indexed = 2;
+        n = tui_profiles_guess(&mix, seen, 3, g, TUI_GUESS_MAX);
+        CHECK(n == 2 && g[0].score == g[1].score && g[0].score > 0, "same frames: both suggested (n %d)", n);
+
+        /* B fully seen, A leads with 30 of its 100 frames: A may be the car seen
+           from one bus, so no list rather than B alone */
+        mix.entries = e, mix.total = mix.indexed = 3;
+        n = tui_profiles_guess(&mix, seen, 3, g, TUI_GUESS_MAX);
+        CHECK(n == 1 && g[0].entry == 1, "B alone on the bus: B (n %d)", n);
+        n = tui_profiles_guess(&mix, seen, 33, g, TUI_GUESS_MAX);
+        CHECK(n == 0, "an unconfirmed profile in the lead: no list (n %d)", n);
+    }
+
     printf("%d/%d checks passed\n", g_checks - g_failures, g_checks);
     return g_failures == 0 ? 0 : 1;
 }

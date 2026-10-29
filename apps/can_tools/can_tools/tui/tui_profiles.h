@@ -93,14 +93,16 @@ typedef struct {
 #define TUI_GUESS_MAX 5
 
 /** Profiles whose passive CAN frames match the frames seen on the bus. Score:
- *  every profile frame weighs log(N / profiles that list its id), so an id few
- *  profiles share says more; a frame seen (dlc matching when the profile gives
- *  one) adds its weight, one not seen costs 0.3 of it (a profile can list a
- *  frame of another bus, or an OBD-port gateway can hide it). The short list
- *  keeps the profiles scoring at least 60 % of the best with at least half of
- *  their frames (and min(3, frames)) seen, best first. Returns its length; 0
- *  while the index is incomplete, when nothing matches, or when more than max
- *  qualify (the traffic does not narrow it down). */
+ *  every profile frame weighs log((N + 1) / profiles that list its id), so an
+ *  id few profiles share says more; a frame seen (dlc matching when the
+ *  profile gives one) adds its weight, one not seen costs 0.3 of it (a profile
+ *  can list a frame of another bus, or an OBD-port gateway can hide it). The
+ *  short list keeps the profiles scoring at least 60 % of the best with at
+ *  least half of their frames (and min(3, frames)) seen, best first. The best
+ *  counts every profile: when one without half of its frames seen leads, the
+ *  traffic is ambiguous and there is no list. Returns its length; 0 while the
+ *  index is incomplete, when nothing matches, or when more than max qualify
+ *  (the traffic does not narrow it down). */
 int tui_profiles_guess(const tui_profile_index_t *ix, const tui_seen_frame_t *seen, int nseen,
                        tui_profile_guess_t *out, int max);
 
