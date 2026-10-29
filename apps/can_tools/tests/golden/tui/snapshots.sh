@@ -28,6 +28,11 @@ NOPROF="--profile none"
 WORK=$(mktemp -d "${TMPDIR:-/tmp}/tui_snapshots.XXXXXX") || exit 1
 trap 'rm -rf "$WORK"' EXIT
 cd "$WORK" || exit 1
+# profile folders: none at all (the plain hint), and the fixtures plus test_profile.vsp,
+# which the stream_direct traffic matches (8 of its 9 frames): the suggestions
+mkdir -p empty_profiles guess_profiles
+cp "$FX"/profiles/*.vsp "$FX/test_profile.vsp" guess_profiles/
+NOPROFDIR="--profiles empty_profiles"
 FAILED=0
 TOTAL=0
 
@@ -59,8 +64,13 @@ DISC_KEYS="0.5:d;0.6:enter;6:enter;15:enter;24:enter;32.2:s;32.3:s"
 run_case dashboard_120x40    $DIRECT $PROFILE --snapshot-at 5 --size 120x40 --color-map
 run_case dashboard_80x24     $DIRECT $PROFILE --snapshot-at 5 --size 80x24 --color-map
 run_case tabs_60x20          $DIRECT $PROFILE --snapshot-at 5,6,7 --size 60x20 --keys "5.5:tab;6.5:tab" --color-map
-run_case no_profile_120x40   $DIRECT $NOPROF --snapshot-at 5 --size 120x40 --color-map
-run_case no_profile_tabs_60x20 $DIRECT $NOPROF --snapshot-at 5 --size 60x20 --color-map
+run_case no_profile_120x40   $DIRECT $NOPROF $NOPROFDIR --snapshot-at 5 --size 120x40 --color-map
+run_case no_profile_tabs_60x20 $DIRECT $NOPROF $NOPROFDIR --snapshot-at 5 --size 60x20 --color-map
+# no profile: the traffic matches test_profile (live preview of its RPM / steering / throttle /
+# brake); 1 loads it. The picker puts the suggestion first; the tabs line names it.
+run_case suggest_120x40      $DIRECT $NOPROF --profiles guess_profiles --snapshot-at 5,6 --size 120x40 --keys "5.5:1" --color-map
+run_case suggest_picker_120x40 $DIRECT $NOPROF --profiles guess_profiles --snapshot-at 5 --size 120x40 --keys "4.5:p"
+run_case suggest_tabs_60x20  $DIRECT $NOPROF --profiles guess_profiles --snapshot-at 5 --size 60x20 --color-map
 run_case gateway_120x40      $GATEWAY $PROFILE --snapshot-at 6 --size 120x40 --color-map
 run_case stale_120x40        $DIRECT $PROFILE --snapshot-at 4,14 --size 120x40 --color-map
 run_case controls_120x40     $DIRECT $PROFILE --snapshot-at 4.5 --size 120x40 --keys "1:];3:space;3.5:s s;4:/ w h e e l enter" --color-map
@@ -68,9 +78,9 @@ run_case ascii_80x24         $DIRECT $PROFILE --snapshot-at 5 --size 80x24 --asc
 run_case raw_ext_80x24       $DIRECT $PROFILE --snapshot-at 5 --size 80x24 --keys "4:tab;4.2:pgdn" --color-map
 run_case discover_mid_120x40 $SESSION $PROFILE --snapshot-at 3,10 --size 120x40 --keys "$DISC_KEYS" --color-map
 run_case discover_result_120x40 $SESSION $PROFILE --snapshot-at 33 --size 120x40 --keys "$DISC_KEYS" --color-map
-run_case discover_load_120x40 $SESSION $NOPROF --snapshot-at 33.5 --size 120x40 --keys "$DISC_KEYS;33.2:enter"
-run_case discover_json_100x30 $SESSION $NOPROF --snapshot-at 33.5 --size 100x30 --keys "$DISC_KEYS;33.2:v"
-run_case discover_abort_120x40 $SESSION $NOPROF --snapshot-at 8 --size 120x40 --keys "0.5:d;0.6:enter;6:enter;7.5:a"
+run_case discover_load_120x40 $SESSION $NOPROF $NOPROFDIR --snapshot-at 33.5 --size 120x40 --keys "$DISC_KEYS;33.2:enter"
+run_case discover_json_100x30 $SESSION $NOPROF $NOPROFDIR --snapshot-at 33.5 --size 100x30 --keys "$DISC_KEYS;33.2:v"
+run_case discover_abort_120x40 $SESSION $NOPROF $NOPROFDIR --snapshot-at 8 --size 120x40 --keys "0.5:d;0.6:enter;6:enter;7.5:a"
 run_case picker_120x40       $DIRECT $PROFILES $NOPROF --snapshot-at 1.5,2.5 --size 120x40 --keys "1:p;2:b e n c h space o" --color-map
 # replay without --profile: the profile in the capture's session.json, else the picker
 run_case replay_picker_100x30 $DIRECT $PROFILES --snapshot-at 1.5 --size 100x30

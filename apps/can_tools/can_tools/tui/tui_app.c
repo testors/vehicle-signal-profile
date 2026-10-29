@@ -127,6 +127,21 @@ struct tui_app {
     tui_picker_row_t *pick_rows;
     char              pick_want[1024]; /* preselect this path once indexed */
 
+    /* vehicle guess (no profile loaded): profiles the traffic matches, each
+       with a decoder for the live preview of RPM / steering / throttle / brake */
+    tui_profile_guess_t guess[TUI_GUESS_MAX];
+    int               nguess;
+    int64_t           guess_ms;       /* last ranking (source time), 0 = none yet */
+    struct {
+        vsp_profile_t *profile;
+        vsp_decoder_t *decoder;
+        int            sig[TUI_GUESS_VALUES][4]; /* decoder indexes per value (first 4 of
+                                                    its group), -1 = none */
+        char           label[200];
+        char           value[TUI_GUESS_VALUES][32];
+    }                 cand[TUI_GUESS_MAX];
+    tui_guess_row_t   guess_rows[TUI_GUESS_MAX];
+
     /* replay list */
     tui_replay_list_t rlist;
     int               rlist_sel;
@@ -1178,6 +1193,7 @@ static const char *const kHelpLines[] = {
     "  s                Raw CAN sort: hz, id, last change",
     "  d                discover: guided search for rpm, steering, throttle, ...",
     "  p                profile picker",
+    "  1-5              load a suggested profile (no profile loaded)",
     "  r                recording on/off (live)",
     "  R                replay list (live, replay and the connect screen)",
     "  x                TX mode: poll the profile's OBD signals",
@@ -1224,6 +1240,19 @@ static void text_scroll_key(tui_app_t *app, int key, int page) {
 static void picker_refresh(tui_app_t *app) {
     if (!app->pick_idx) return;
     app->pick_n = tui_profiles_filter(&app->pix, app->pick_filter, app->pick_idx, app->pix.total);
+    if (!app->pick_filter[0] && app->nguess > 0) {
+        /* suggested profiles on top, in their order; the rest keep theirs */
+        int out = 0;
+        for (int r = 0; r < app->nguess; r++) {
+            for (int i = out; i < app->pick_n; i++) {
+                if (app->pick_idx[i] != app->guess[r].entry) continue;
+                int e = app->pick_idx[i];
+                memmove(&app->pick_idx[out + 1], &app->pick_idx[out], (size_t)(i - out) * sizeof(int));
+                app->pick_idx[out++] = e;
+                break;
+            }
+        }
+    }
     if (app->pick_want[0]) {
         for (int i = 0; i < app->pick_n; i++) {
             if (strcmp(app->pix.entries[app->pick_idx[i]].path, app->pick_want) == 0 ||
@@ -1240,18 +1269,33 @@ static void picker_refresh(tui_app_t *app) {
     if (app->pick_sel < 0) app->pick_sel = 0;
 }
 
-static void picker_open(tui_app_t *app, const char *preselect) {
-    if (!app->pix_ready) {
-        char dir[1024];
-        bool found = tui_profiles_find_dir(app->profiles_dir[0] ? app->profiles_dir : NULL,
-                                           app->exe_path, dir, sizeof(dir));
-        tui_profiles_open(&app->pix, found ? dir : NULL, app->opt.ascii);
-        app->pix_ready = true;
-        app->pick_idx = (int *)calloc((size_t)app->pix.total + 1, sizeof(int));
-        app->pick_rows = (tui_picker_row_t *)calloc((size_t)app->pix.total + 1, sizeof(tui_picker_row_t));
-        if (!found) app_log(app, "[WARN] no profile folder found (--profiles DIR or VSP_PROFILES_DIR)");
-        else app_log(app, "profile index: %d profile%s", app->pix.total, app->pix.total == 1 ? "" : "s");
+/* The profile index (the picker's, and the vehicle guess's): listed now,
+ * loaded in chunks by picker_step. */
+static void pix_init(tui_app_t *app) {
+    if (app->pix_ready) return;
+    char dir[1024];
+    bool found = tui_profiles_find_dir(app->profiles_dir[0] ? app->profiles_dir : NULL,
+                                       app->exe_path, dir, sizeof(dir));
+    tui_profiles_open(&app->pix, found ? dir : NULL, app->opt.ascii);
+    app->pix_ready = true;
+    app->pick_idx = (int *)calloc((size_t)app->pix.total + 1, sizeof(int));
+    app->pick_rows = (tui_picker_row_t *)calloc((size_t)app->pix.total + 1, sizeof(tui_picker_row_t));
+    if (!found) app_log(app, "[WARN] no profile folder found (--profiles DIR or VSP_PROFILES_DIR)");
+    else app_log(app, "profile index: %d profile%s", app->pix.total, app->pix.total == 1 ? "" : "s");
+}
+
+/* Rank of a profile entry in the suggestions, 1..n, 0 if not suggested. */
+static int guess_rank(const tui_app_t *app, int entry) {
+    for (int i = 0; i < app->nguess; i++) {
+        if (app->guess[i].entry == entry) return i + 1;
     }
+    return 0;
+}
+
+static void picker_open(tui_app_t *app, const char *preselect) {
+    pix_init(app);
+    /* no profile yet: the best suggestion is the likelier pick than the last one */
+    if (!app->profile_path[0] && app->nguess > 0) preselect = app->pix.entries[app->guess[0].entry].path;
     tui_profiles_scan_drafts(&app->pix, app->captures_root);
     app->pick_filter[0] = '\0';
     app->pick_sel = 0;
@@ -1321,6 +1365,7 @@ static void draw_picker(tui_app_t *app, tui_grid_t *g) {
             .make = e->make, .model = e->model, .gen = e->gen, .years = e->years, .file = e->file,
             .signals = e->signals, .can = e->can, .obd = e->obd,
             .current = app->profile_path[0] && strcmp(e->path, app->profile_path) == 0,
+            .suggest = guess_rank(app, app->pick_idx[i]),
         };
     }
     tui_picker_row_t drafts[5];
@@ -1343,6 +1388,167 @@ static void draw_picker(tui_app_t *app, tui_grid_t *g) {
         .obd_dim = app->model.cls.direct_seen || app->model.cls.bus == TUI_BUS_DIRECT,
     };
     tui_draw_picker(g, app->cols, app->rows, &pv, app->opt.ascii);
+}
+
+/*******************************************************************************
+ * Vehicle guess: profiles the traffic matches, while no profile is loaded
+ ******************************************************************************/
+
+#define GUESS_WARMUP_MS 3000   /* traffic before the first ranking */
+#define GUESS_EVERY_MS  2000
+#define GUESS_STALE_MS  2000   /* a preview value older than this shows a dash */
+
+static const char *const s_guess_groups[TUI_GUESS_VALUES] = { "rpm", "steering", "throttle", "brake" };
+
+static void guess_cand_free(tui_app_t *app, int i) {
+    vsp_decoder_free(app->cand[i].decoder);
+    vsp_profile_free(app->cand[i].profile);
+    app->cand[i].decoder = NULL;
+    app->cand[i].profile = NULL;
+}
+
+static void guess_clear(tui_app_t *app) {
+    for (int i = 0; i < TUI_GUESS_MAX; i++) guess_cand_free(app, i);
+    app->nguess = 0;
+}
+
+/* Load a suggested profile for the preview: up to four CAN signals of each
+ * group (rpm, steering, throttle, brake) decode the live frames; the first one
+ * with a fresh value shows (a pedal and a throttle plate, one of them maybe on
+ * a frame this bus does not carry). */
+static void guess_cand_build(tui_app_t *app, int i, const tui_profile_entry_t *e) {
+    guess_cand_free(app, i);
+    snprintf(app->cand[i].label, sizeof(app->cand[i].label), "%s%s%s%s%s", e->make,
+             e->make[0] && e->model[0] ? " " : "", e->model, e->gen[0] ? " " : "", e->gen);
+    if (!app->cand[i].label[0]) snprintf(app->cand[i].label, sizeof(app->cand[i].label), "%s", e->file);
+    for (int k = 0; k < TUI_GUESS_VALUES; k++) {
+        for (int j = 0; j < 4; j++) app->cand[i].sig[k][j] = -1;
+    }
+    char err[256];
+    vsp_profile_t *p = vsp_profile_load(e->path, err, sizeof(err));
+    if (!p) return;
+    vsp_select_t sel = { .signals = NULL, .all_signals = true, .acquisition = VSP_ACQ_CAN };
+    vsp_decoder_t *d = vsp_decoder_create(p, &sel);
+    if (!d) {
+        vsp_profile_free(p);
+        return;
+    }
+    for (int s = 0; s < vsp_decoder_signal_count(d); s++) {
+        const vsp_signal_info_t *info = vsp_decoder_signal_info(d, s);
+        for (int k = 0; k < TUI_GUESS_VALUES; k++) {
+            if (!info->group || strcmp(info->group, s_guess_groups[k]) != 0) continue;
+            for (int j = 0; j < 4; j++) {
+                if (app->cand[i].sig[k][j] < 0) {
+                    app->cand[i].sig[k][j] = s;
+                    break;
+                }
+            }
+        }
+    }
+    app->cand[i].profile = p;
+    app->cand[i].decoder = d;
+}
+
+/* Rank the profiles against the frames seen so far (every 2 s once 3 s of
+ * traffic are in and the index is complete); a new list loads its previews. */
+static void guess_tick(tui_app_t *app) {
+    if (app->profile_path[0]) {
+        if (app->nguess) guess_clear(app);
+        return;
+    }
+    pix_init(app);
+    if (!tui_profiles_done(&app->pix)) return;
+    int64_t now = app_now(app);
+    if (now - app->model.origin_ms < GUESS_WARMUP_MS) return;
+    if (app->guess_ms && now >= app->guess_ms && now - app->guess_ms < GUESS_EVERY_MS) return;
+    app->guess_ms = now;
+
+    const tui_raw_table_t *t = &app->model.raw;
+    tui_seen_frame_t *seen = (tui_seen_frame_t *)malloc((size_t)(t->count + 1) * sizeof(*seen));
+    if (!seen) return;
+    int nseen = 0;
+    for (int i = 0; i < t->capacity && nseen < t->count; i++) {
+        const tui_raw_entry_t *e = &t->slots[i];
+        if (e->used) seen[nseen++] = (tui_seen_frame_t){ e->id, e->ext, e->dlc };
+    }
+    tui_profile_guess_t g[TUI_GUESS_MAX];
+    int n = tui_profiles_guess(&app->pix, seen, nseen, g, TUI_GUESS_MAX);
+    free(seen);
+
+    bool same = n == app->nguess;
+    for (int i = 0; i < n && same; i++) same = g[i].entry == app->guess[i].entry;
+    memcpy(app->guess, g, (size_t)n * sizeof(g[0]));   /* fresh scores either way */
+    if (same) return;
+    int before = app->nguess;
+    for (int i = 0; i < TUI_GUESS_MAX; i++) guess_cand_free(app, i);
+    app->nguess = n;
+    for (int i = 0; i < n; i++) guess_cand_build(app, i, &app->pix.entries[g[i].entry]);
+    if (n == 0) {
+        if (before) app_log(app, "profile suggestions: none match the traffic now");
+        return;
+    }
+    char line[400];
+    int len = snprintf(line, sizeof(line), "profile suggestions from the traffic:");
+    for (int i = 0; i < n && len < (int)sizeof(line); i++) {
+        len += snprintf(line + len, sizeof(line) - (size_t)len, "%s %d %s (%d/%d)", i ? "," : "", i + 1,
+                        app->cand[i].label, g[i].hits, g[i].frames);
+    }
+    app_log(app, "%s", line);
+}
+
+/* "792 rpm", the value-table label, or a dash when none of the group's
+ * signals has a fresh value. */
+static void guess_format(char *out, size_t len, const vsp_decoder_t *d, const int sig[4], int k, int64_t now,
+                         bool ascii) {
+    const vsp_signal_state_t *st = NULL;
+    const vsp_signal_info_t *info = NULL;
+    for (int j = 0; j < 4 && sig[j] >= 0 && !st; j++) {
+        const vsp_signal_state_t *s = vsp_decoder_signal_state(d, sig[j]);
+        if (s && s->samples > 0 && now - (int64_t)s->last_sample_ms <= GUESS_STALE_MS && (s->label || s->has_value)) {
+            st = s;
+            info = vsp_decoder_signal_info(d, sig[j]);
+        }
+    }
+    if (!st) {
+        snprintf(out, len, "%s", tui_glyph(TUI_G_DASH, ascii));
+        return;
+    }
+    if (st->label) {
+        snprintf(out, len, "%s", st->label);
+        return;
+    }
+    const char *unit = info && info->unit ? info->unit : "";
+    if (strcasecmp(unit, "rpm") == 0) unit = "";   /* the column already says rpm */
+    bool degrees = !ascii && strcmp(unit, "deg") == 0;
+    int decimals = (k == 1 || k == 3) ? 1 : 0;      /* steering and brake keep a decimal */
+    double v = st->value;
+    if (fabs(v) < (decimals ? 0.05 : 0.5)) v = 0.0; /* no "-0.0" */
+    if (degrees) snprintf(out, len, "%.*f\xC2\xB0", decimals, v);   /* UTF-8 degree sign */
+    else snprintf(out, len, "%.*f%s%s", decimals, v, unit[0] ? " " : "", unit);
+}
+
+/* The suggestions for the view (NULL when a profile is loaded). */
+static int guess_view_rows(tui_app_t *app, int64_t now) {
+    if (app->profile_path[0] || app->nguess == 0) return 0;
+    for (int i = 0; i < app->nguess; i++) {
+        tui_guess_row_t *row = &app->guess_rows[i];
+        row->label = app->cand[i].label;
+        row->file = app->pix.entries[app->guess[i].entry].file;
+        row->hits = app->guess[i].hits;
+        row->frames = app->guess[i].frames;
+        for (int k = 0; k < TUI_GUESS_VALUES; k++) {
+            row->values[k] = NULL;
+            if (!app->cand[i].decoder || app->cand[i].sig[k][0] < 0) continue;
+            guess_format(app->cand[i].value[k], sizeof(app->cand[i].value[k]), app->cand[i].decoder,
+                         app->cand[i].sig[k], k, now, app->opt.ascii);
+            row->values[k] = app->cand[i].value[k];
+        }
+    }
+    return app->nguess;
+}
+
+static int guess_count(const tui_app_t *app) {
+    return app->profile_path[0] ? 0 : app->nguess;
 }
 
 /*******************************************************************************
@@ -1529,6 +1735,7 @@ tui_app_t *tui_app_create_live(const tui_app_options_t *opt, frame_source_t *src
 
 void tui_app_free(tui_app_t *app) {
     if (!app) return;
+    guess_clear(app);
     tui_recorder_close(&app->rec);
     disc_session_free(app->disc);
     tui_gauges_free(&app->gauges);
@@ -1555,6 +1762,9 @@ void tui_app_on_frame(const can_frame_t *frame, void *ctx) {
         tui_signal_sample(&app->hint_sig, ts, true, false, (double)frame->data[app->hint_byte], NULL);
     }
     feed_decoded(app, frame, ts, NULL, false);
+    for (int i = 0; i < app->nguess; i++) {   /* suggestion previews */
+        if (app->cand[i].decoder) vsp_decoder_feed_can(app->cand[i].decoder, frame, (double)ts);
+    }
 }
 
 bool tui_app_start(tui_app_t *app) {
@@ -1625,6 +1835,7 @@ void tui_app_tick(tui_app_t *app) {
 
     tui_gauges_update(&app->gauges, &app->model, now);
     picker_step(app);
+    guess_tick(app);
     tui_recorder_tick(&app->rec, now);
     tx_poll(app);
 }
@@ -1635,7 +1846,7 @@ void tui_app_tick(tui_app_t *app) {
 
 static void current_layout(const tui_app_t *app, tui_layout_t *L) {
     tui_layout_compute(L, app->cols, app->rows, app->model.signal_count > 0,
-                       app->model.signal_count, has_gauges(app), app->view.tab);
+                       app->model.signal_count, has_gauges(app), guess_count(app), app->view.tab);
 }
 
 /* Tabs mode cycles Gauges too; in the split layout the gauges take no focus. */
@@ -1724,6 +1935,11 @@ static void dashboard_key(tui_app_t *app, int key) {
             break;
         case 'p':
             picker_open(app, app->profile_path[0] ? app->profile_path : NULL);
+            break;
+        case '1': case '2': case '3': case '4': case '5':
+            if (key - '0' <= guess_count(app)) {   /* a suggested profile */
+                set_profile(app, app->pix.entries[app->guess[key - '1'].entry].path);
+            }
             break;
         case 'r':
             if (app->replay) app_log(app, "recording unavailable in replay");
@@ -1958,6 +2174,8 @@ void tui_app_render(tui_app_t *app, tui_grid_t *grid) {
     v->tx_footer = tx_footer(app);
     v->monitor_paused = app->tx_on;
     v->gauges = has_gauges(app) ? &app->gauges : NULL;
+    v->nguesses = guess_view_rows(app, now);
+    v->guesses = v->nguesses > 0 ? app->guess_rows : NULL;
     v->colors = app->opt.colors;
     if (v->tab == TUI_PANEL_GAUGES && !v->gauges) v->tab = TUI_PANEL_SIGNALS;
     if (v->tab == TUI_PANEL_SIGNALS && app->model.signal_count == 0) v->tab = TUI_PANEL_RAW;

@@ -17,7 +17,7 @@
  ******************************************************************************/
 
 void tui_layout_compute(tui_layout_t *L, int cols, int rows, bool has_signals,
-                        int signal_count, bool has_gauges, tui_panel_t tab) {
+                        int signal_count, bool has_gauges, int nguesses, tui_panel_t tab) {
     memset(L, 0, sizeof(*L));
     L->body = (tui_rect_t){ 1, 1, cols - 2, rows - 4 };
     L->narrow = cols < 80 || rows < 24;
@@ -45,10 +45,13 @@ void tui_layout_compute(tui_layout_t *L, int cols, int rows, bool has_signals,
     int top = L->body.y;
     int rest_h = L->body.h;
     if (!has_signals) {
-        L->profile_hint = (tui_rect_t){ L->body.x, top, L->body.w, TUI_PROFILE_HINT_HEIGHT };
+        /* suggestions: a header, one row each, a footer; keep 8 rows for Raw CAN / Log */
+        int h = nguesses > 0 ? nguesses + 4 : TUI_PROFILE_HINT_HEIGHT;
+        if (rest_h - h < 8) h = TUI_PROFILE_HINT_HEIGHT;
+        L->profile_hint = (tui_rect_t){ L->body.x, top, L->body.w, h };
         L->show_profile_hint = true;
-        top += TUI_PROFILE_HINT_HEIGHT;
-        rest_h -= TUI_PROFILE_HINT_HEIGHT;
+        top += h;
+        rest_h -= h;
     }
     if (has_gauges) {
         L->panel[TUI_PANEL_GAUGES] = (tui_rect_t){ L->body.x, top, L->body.w, TUI_GAUGES_HEIGHT };
@@ -422,11 +425,21 @@ static void draw_tabs(tui_grid_t *g, const tui_layout_t *L, const tui_view_t *v,
         x += put(g, x, L->tabs.y, buf, (int)v->tab == i ? TUI_ROLE_SELECT : TUI_ROLE_DIM, limit - x);
     }
     if (!has_signals) {
-        /* no Gauges / Signals tabs: say how to get them, while it fits */
+        /* no Gauges / Signals tabs: say how to get them (the best suggestion
+           first), while it fits */
+        char best[200];
+        snprintf(best, sizeof(best), " %s", v->nguesses > 0 && v->guesses[0].label ? v->guesses[0].label : "");
+        const text_seg_t suggest[] = { { "1", TUI_ROLE_BRIGHT }, { best, TUI_ROLE_DIM },
+                                       { "  p", TUI_ROLE_BRIGHT }, { " all", TUI_ROLE_DIM } };
         const text_seg_t hint[] = { { "p", TUI_ROLE_BRIGHT }, { " choose a vehicle profile", TUI_ROLE_DIM } };
-        int w = segs_width(hint, 2);
-        int hx = limit - 1 - w;
-        if (hx >= x + 2) put_segs(g, hx, L->tabs.y, limit, hint, 2);
+        const text_seg_t *segs = hint;
+        int n = 2;
+        if (v->nguesses > 0 && limit - 1 - segs_width(suggest, 4) >= x + 2) {
+            segs = suggest;
+            n = 4;
+        }
+        int hx = limit - 1 - segs_width(segs, n);
+        if (hx >= x + 2) put_segs(g, hx, L->tabs.y, limit, segs, n);
     }
 }
 
@@ -1010,9 +1023,59 @@ static void draw_one_gauge(tui_grid_t *g, const tui_model_t *m, const tui_view_t
     }
 }
 
-/* Split layout without signals: where Gauges and Signals would be. */
+/* One suggested profile: key, name, frames seen, its live reading of RPM,
+ * steering, throttle and brake (all four fit from 80 columns), then the file
+ * while there is room. */
+static void draw_guess_row(tui_grid_t *g, int x, int y, int limit, int key, const tui_guess_row_t *row,
+                           bool ascii) {
+    static const char *names[TUI_GUESS_VALUES] = { "rpm", "steer", "thr", "brake" };
+    static const int widths[TUI_GUESS_VALUES] = { 9, 14, 9, 15 };   /* name, space, value */
+    char num[8], seen[24];
+    snprintf(num, sizeof(num), "%d", key);
+    put(g, x + 1, y, num, TUI_ROLE_BRIGHT, limit - x - 1);
+    int w = limit - x;
+    bool show_seen = w >= 90;   /* narrower: the name matters more than frames seen */
+    int label_w = w >= 110 ? 26 : w >= 90 ? 22 : 20;
+    tui_draw_fit(g, x + 4, y, row->label ? row->label : "", TUI_ROLE_DEFAULT, label_w, ascii);
+    int cx = x + 4 + label_w + 1;
+    if (show_seen) {
+        snprintf(seen, sizeof(seen), "%d/%d", row->hits, row->frames);
+        tui_draw_right(g, cx, y, 5, seen, TUI_ROLE_DIM, ascii);
+        cx += 7;
+    }
+    for (int i = 0; i < TUI_GUESS_VALUES; i++) {
+        if (cx + widths[i] > limit) return;
+        int nw = (int)strlen(names[i]);
+        put(g, cx, y, names[i], TUI_ROLE_DIM, limit - cx);
+        /* NULL: the profile has no such signal; a dash: no fresh value */
+        const char *val = row->values[i] ? row->values[i] : "n/a";
+        bool live = row->values[i] && strcmp(val, tui_glyph(TUI_G_DASH, ascii)) != 0;
+        tui_draw_fit(g, cx + nw + 1, y, val, live ? TUI_ROLE_BRIGHT : TUI_ROLE_DIM, widths[i] - nw - 1, ascii);
+        cx += widths[i] + 1;
+    }
+    if (row->file && limit - cx >= 12) tui_draw_fit(g, cx, y, row->file, TUI_ROLE_DIM, limit - cx, ascii);
+}
+
+/* Split layout without signals: where Gauges and Signals would be. With
+ * suggestions (and room for them) the box lists the profiles the traffic
+ * matches, each with its live reading, and keys 1..n load one. */
 static void draw_profile_hint(tui_grid_t *g, const tui_view_t *v, const tui_layout_t *L) {
     tui_rect_t r = L->profile_hint;
+    if (v->nguesses > 0 && r.h == v->nguesses + 4) {
+        box(g, r, "Gauges / Signals", "suggested from the CAN traffic", TUI_ROLE_DEFAULT, v->ascii);
+        int x = r.x + 1, limit = r.x + r.w - 1;
+        const char *head = limit - x >= 90
+            ? "No vehicle profile. The CAN traffic matches these profiles (frames seen, live reading):"
+            : "No vehicle profile. The CAN traffic matches (live reading):";
+        tui_draw_fit(g, x + 1, r.y + 1, head, TUI_ROLE_DEFAULT, limit - x - 1, v->ascii);
+        for (int i = 0; i < v->nguesses; i++) draw_guess_row(g, x, r.y + 2 + i, limit, i + 1, &v->guesses[i], v->ascii);
+        char keys[16];
+        snprintf(keys, sizeof(keys), v->nguesses > 1 ? "1-%d" : "1", v->nguesses);
+        const text_seg_t foot[] = { { keys, TUI_ROLE_BRIGHT }, { " load one   ", TUI_ROLE_DIM },
+                                    { "p", TUI_ROLE_BRIGHT }, { " choose from all profiles", TUI_ROLE_DIM } };
+        put_segs(g, x + 1, r.y + r.h - 2, limit, foot, 4);
+        return;
+    }
     box(g, r, "Gauges / Signals", NULL, TUI_ROLE_DEFAULT, v->ascii);
     int x = r.x + 1, w = r.w - 2, limit = r.x + r.w - 1;
     char lead[200];
@@ -1066,7 +1129,8 @@ void tui_render_dashboard(tui_grid_t *g, const tui_model_t *m, tui_view_t *v) {
     }
     bool has_signals = m->signal_count > 0;
     tui_layout_t L;
-    tui_layout_compute(&L, v->cols, v->rows, has_signals, m->signal_count, v->gauges != NULL, v->tab);
+    tui_layout_compute(&L, v->cols, v->rows, has_signals, m->signal_count, v->gauges != NULL, v->nguesses,
+                       v->tab);
 
     draw_frame(g, v);
     draw_header(g, m, v);

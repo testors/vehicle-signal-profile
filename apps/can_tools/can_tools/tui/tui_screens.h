@@ -125,6 +125,7 @@ typedef struct {
     int         can;
     int         obd;
     bool        current;    /* the loaded profile */
+    int         suggest;    /* rank among the profiles the traffic matches (1..5), 0 = none */
 } tui_picker_row_t;
 
 typedef struct {

@@ -316,7 +316,9 @@ static void picker_row(tui_grid_t *g, int x, int y, int limit, const tui_picker_
                        bool obd_dim, bool ascii) {
     char base = selected ? TUI_ROLE_SELECT : TUI_ROLE_DEFAULT;
     if (selected) tui_grid_fill(g, x, y, limit - x, " ", TUI_ROLE_SELECT);
-    const char *mark = selected ? tui_glyph(TUI_G_ARROW, ascii) : (row->current ? tui_glyph(TUI_G_REC_ON, ascii) : " ");
+    char rank[4] = " ";
+    if (row->suggest > 0 && row->suggest < 10) snprintf(rank, sizeof(rank), "%d", row->suggest);
+    const char *mark = selected ? tui_glyph(TUI_G_ARROW, ascii) : (row->current ? tui_glyph(TUI_G_REC_ON, ascii) : rank);
     tui_draw_text(g, x, y, mark, base, 1);
     char num[16];
     tui_draw_fit(g, x + 2, y, row->make ? row->make : "", base, 9, ascii);

@@ -119,6 +119,64 @@ int main(int argc, char **argv) {
     CHECK(!ix.have_dir && ix.total == 0 && tui_profiles_done(&ix), "no folder");
     tui_profiles_free(&ix);
 
+    /* Vehicle guess: the three fixture profiles plus test_profile.vsp (9 passive
+       frames; its diagnostic ids 0x7DF / 0x7E8 are not broadcast frames). */
+    char gtmpl[] = "/tmp/tui_profiles_guess.XXXXXX";
+    char *gdir = mkdtemp(gtmpl);
+    CHECK(gdir != NULL, "guess temp dir");
+    if (gdir) {
+        const char *names[] = { "other__roadster__r2__2009_2014.vsp", "test__bench_car__t1__can.vsp",
+                                "test__bench_car__t1__obd.vsp" };
+        char from[1200], to[1300];
+        for (int i = 0; i < 3; i++) {
+            snprintf(from, sizeof(from), "%s/%s", dir, names[i]);
+            snprintf(to, sizeof(to), "%s/%s", gdir, names[i]);
+            copy_file(from, to);
+        }
+        snprintf(from, sizeof(from), "%s/test_profile.vsp", argv[1]);
+        snprintf(to, sizeof(to), "%s/test_profile.vsp", gdir);
+        copy_file(from, to);
+
+        tui_profiles_open(&ix, gdir, false);
+        tui_profile_guess_t g[TUI_GUESS_MAX];
+        tui_seen_frame_t one = { 0x0F3, false, 8 };
+        CHECK(tui_profiles_guess(&ix, &one, 1, g, TUI_GUESS_MAX) == 0, "no guess before the index is complete");
+        tui_profiles_step(&ix, 64, 0);
+        int tp = tui_profiles_find(&ix, "test_profile.vsp");
+        CHECK(tp >= 0 && ix.entries[tp].nframes == 9, "test_profile: 9 passive frames (%d)",
+              tp >= 0 ? ix.entries[tp].nframes : -1);
+
+        /* the stream_direct traffic: 8 of test_profile's 9 frames, plus others */
+        tui_seen_frame_t seen[] = {
+            { 0x0F3, false, 8 }, { 0x0A5, false, 8 }, { 0x1A0, false, 8 }, { 0x0D9, false, 6 },
+            { 0x1E0, false, 8 }, { 0x3B0, false, 8 }, { 0x2C4, false, 8 }, { 0x3B2, false, 8 },
+            { 0x316, false, 8 }, { 0x4F0, false, 2 }, { 0x18DAF110, true, 4 },
+        };
+        int ns = (int)(sizeof(seen) / sizeof(seen[0]));
+        int n = tui_profiles_guess(&ix, seen, ns, g, TUI_GUESS_MAX);
+        CHECK(n == 1 && g[0].entry == tp && g[0].hits == 8 && g[0].frames == 9,
+              "stream_direct: test_profile alone (n %d, hits %d/%d)", n, n ? g[0].hits : 0, n ? g[0].frames : 0);
+        seen[3].dlc = 8;   /* 0x0D9 is 6 bytes in the profile */
+        n = tui_profiles_guess(&ix, seen, ns, g, TUI_GUESS_MAX);
+        CHECK(n == 1 && g[0].hits == 7, "a dlc that differs is not a hit (hits %d)", n ? g[0].hits : 0);
+
+        /* only 0x0F3: the two bench car profiles tie, test_profile misses 8 frames */
+        n = tui_profiles_guess(&ix, &one, 1, g, TUI_GUESS_MAX);
+        bool bench = n == 2;
+        for (int i = 0; i < n && bench; i++) bench = strstr(ix.entries[g[i].entry].file, "test__bench_car") != NULL;
+        CHECK(bench && g[0].score == g[1].score, "0x0F3 alone: both bench car profiles (n %d)", n);
+        CHECK(tui_profiles_guess(&ix, &one, 1, g, 1) == 0, "more candidates than max: no list");
+        tui_seen_frame_t ext = { 0x0F3, true, 8 };
+        CHECK(tui_profiles_guess(&ix, &ext, 1, g, TUI_GUESS_MAX) == 0, "an extended id is another frame");
+        tui_seen_frame_t other = { 0x123, false, 8 };
+        CHECK(tui_profiles_guess(&ix, &other, 1, g, TUI_GUESS_MAX) == 0, "nothing matches");
+        tui_profiles_free(&ix);
+
+        char cmd[1200];
+        snprintf(cmd, sizeof(cmd), "rm -r '%s'", gdir);
+        if (system(cmd) != 0) CHECK(0, "guess cleanup");
+    }
+
     printf("%d/%d checks passed\n", g_checks - g_failures, g_checks);
     return g_failures == 0 ? 0 : 1;
 }

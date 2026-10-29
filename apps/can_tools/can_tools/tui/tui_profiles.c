@@ -8,6 +8,7 @@
 #include <ctype.h>
 #include <dirent.h>
 #include <limits.h>
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -92,6 +93,8 @@ void tui_profiles_open(tui_profile_index_t *ix, const char *dir, bool ascii) {
 }
 
 void tui_profiles_free(tui_profile_index_t *ix) {
+    for (int i = 0; i < ix->total; i++) free(ix->entries[i].frames);
+    for (int i = 0; i < 5; i++) free(ix->drafts[i].frames);
     free(ix->entries);
     memset(ix, 0, sizeof(*ix));
 }
@@ -110,6 +113,40 @@ static void lower_into(char *out, size_t len, const char *s) {
     out[n] = '\0';
 }
 
+/* The passive CAN frames: can_frames[] on a CAN bus (or one the profile does
+ * not type), not reassembled streams, not the ids of diagnostic requests and
+ * responses (those answer queries, they are not broadcast). */
+static void index_frames(tui_profile_entry_t *p, const vsp_profile_t *prof, const vsp_profile_info_t *info) {
+    free(p->frames);
+    p->frames = NULL;
+    p->nframes = 0;
+    if (info->frame_count <= 0) return;
+    p->frames = (tui_profile_frame_t *)calloc((size_t)info->frame_count, sizeof(*p->frames));
+    if (!p->frames) return;
+    for (int i = 0; i < info->frame_count; i++) {
+        vsp_frame_info_t f;
+        if (!vsp_profile_frame(prof, i, &f) || f.reassembled || f.frame_id_mask) continue;
+        bool can_bus = true;
+        for (int b = 0; f.bus && b < info->bus_count; b++) {
+            vsp_bus_info_t bus;
+            if (vsp_profile_bus(prof, b, &bus) && bus.id && strcmp(bus.id, f.bus) == 0) {
+                can_bus = !bus.type || strcmp(bus.type, "can") == 0;
+            }
+        }
+        bool diag = false;
+        for (int q = 0; q < info->query_count && !diag; q++) {
+            vsp_query_info_t qi;
+            if (!vsp_profile_query(prof, q, &qi)) continue;
+            diag = (qi.has_tx_id && qi.tx_id == f.frame_id) || (qi.rx_id && qi.rx_id == f.frame_id);
+        }
+        if (!can_bus || diag) continue;
+        bool dup = false;
+        for (int k = 0; k < p->nframes && !dup; k++) dup = p->frames[k].id == f.frame_id && p->frames[k].ext == f.extended;
+        if (dup) continue;
+        p->frames[p->nframes++] = (tui_profile_frame_t){ f.frame_id, f.extended, f.dlc > 0 ? f.dlc : -1 };
+    }
+}
+
 static void index_entry(tui_profile_entry_t *p, bool ascii) {
     p->indexed = true;
     char err[256];
@@ -126,6 +163,7 @@ static void index_entry(tui_profile_entry_t *p, bool ascii) {
     snprintf(p->gen, sizeof(p->gen), "%s", info.generation ? info.generation : "");
     tui_profiles_years(p->years, sizeof(p->years), info.year_start, info.year_end, ascii);
     p->signals = info.signal_count;
+    index_frames(p, prof, &info);
     vsp_select_t sel = { .signals = NULL, .all_signals = true, .acquisition = VSP_ACQ_ANY };
     vsp_decoder_t *dec = vsp_decoder_create(prof, &sel);
     if (dec) {
@@ -181,6 +219,11 @@ static int cmp_draft(const void *a, const void *b) {
 }
 
 void tui_profiles_scan_drafts(tui_profile_index_t *ix, const char *captures_root) {
+    for (int i = 0; i < 5; i++) {   /* frame lists of the last scan */
+        free(ix->drafts[i].frames);
+        ix->drafts[i].frames = NULL;
+        ix->drafts[i].nframes = 0;
+    }
     ix->ndrafts = 0;
     if (!captures_root || !captures_root[0]) return;
     DIR *d = opendir(captures_root);
@@ -263,4 +306,116 @@ bool tui_profiles_resolve(const char *recorded, const char *dir, char *out, size
     if (n < 0 || (size_t)n >= sizeof(cand) || (size_t)n >= len || !is_file(cand)) return false;
     snprintf(out, len, "%s", cand);
     return true;
+}
+
+/*******************************************************************************
+ * Vehicle guess from the frames on the bus
+ ******************************************************************************/
+
+typedef struct {
+    uint64_t key;   /* ext << 32 | id */
+    int      dlc;
+    int      count; /* profiles listing it (df), or unused */
+} frame_key_t;
+
+static uint64_t frame_key(uint32_t id, bool ext) {
+    return ((uint64_t)(ext ? 1 : 0) << 32) | id;
+}
+
+static int cmp_frame_key(const void *a, const void *b) {
+    uint64_t x = ((const frame_key_t *)a)->key, y = ((const frame_key_t *)b)->key;
+    return (x > y) - (x < y);
+}
+
+static const frame_key_t *find_key(const frame_key_t *keys, int n, uint64_t key) {
+    frame_key_t probe = { key, 0, 0 };
+    return (const frame_key_t *)bsearch(&probe, keys, (size_t)n, sizeof(*keys), cmp_frame_key);
+}
+
+static int cmp_guess(const void *a, const void *b) {
+    const tui_profile_guess_t *x = (const tui_profile_guess_t *)a, *y = (const tui_profile_guess_t *)b;
+    if (x->score != y->score) return x->score > y->score ? -1 : 1;
+    return x->entry - y->entry;
+}
+
+#define GUESS_MISS_COST  0.3
+#define GUESS_KEEP_RATIO 0.6
+
+int tui_profiles_guess(const tui_profile_index_t *ix, const tui_seen_frame_t *seen, int nseen,
+                       tui_profile_guess_t *out, int max) {
+    if (!ix || !tui_profiles_done(ix) || !seen || nseen <= 0 || !out || max <= 0) return 0;
+
+    /* document frequency of every frame id over the profiles that list frames */
+    int total = 0, profiles = 0;
+    for (int i = 0; i < ix->total; i++) {
+        total += ix->entries[i].nframes;
+        profiles += ix->entries[i].nframes > 0;
+    }
+    if (total == 0) return 0;
+    frame_key_t *df = (frame_key_t *)malloc((size_t)total * sizeof(*df));
+    frame_key_t *obs = (frame_key_t *)malloc((size_t)nseen * sizeof(*obs));
+    tui_profile_guess_t *all = (tui_profile_guess_t *)malloc((size_t)ix->total * sizeof(*all));
+    if (!df || !obs || !all) {
+        free(df);
+        free(obs);
+        free(all);
+        return 0;
+    }
+    int n = 0;
+    for (int i = 0; i < ix->total; i++) {
+        for (int k = 0; k < ix->entries[i].nframes; k++) {
+            df[n++] = (frame_key_t){ frame_key(ix->entries[i].frames[k].id, ix->entries[i].frames[k].ext), 0, 1 };
+        }
+    }
+    qsort(df, (size_t)n, sizeof(*df), cmp_frame_key);
+    int nd = 0;
+    for (int i = 0; i < n; i++) {
+        if (nd > 0 && df[nd - 1].key == df[i].key) df[nd - 1].count++;
+        else df[nd++] = df[i];
+    }
+    for (int i = 0; i < nseen; i++) obs[i] = (frame_key_t){ frame_key(seen[i].id, seen[i].ext), seen[i].dlc, 0 };
+    qsort(obs, (size_t)nseen, sizeof(*obs), cmp_frame_key);
+
+    int na = 0;
+    double best = 0.0;
+    for (int i = 0; i < ix->total; i++) {
+        const tui_profile_entry_t *e = &ix->entries[i];
+        if (e->nframes == 0) continue;
+        double score = 0.0;
+        int hits = 0;
+        for (int k = 0; k < e->nframes; k++) {
+            uint64_t key = frame_key(e->frames[k].id, e->frames[k].ext);
+            const frame_key_t *d = find_key(df, nd, key);
+            double w = log((double)profiles / (double)(d ? d->count : 1));
+            const frame_key_t *o = find_key(obs, nseen, key);
+            if (o && (e->frames[k].dlc < 0 || e->frames[k].dlc == o->dlc)) {
+                score += w;
+                hits++;
+            } else {
+                score -= GUESS_MISS_COST * w;
+            }
+        }
+        all[na++] = (tui_profile_guess_t){ i, score, hits, e->nframes };
+        if (score > best) best = score;
+    }
+    free(df);
+    free(obs);
+
+    int kept = 0;
+    if (best > 0.0) {
+        qsort(all, (size_t)na, sizeof(*all), cmp_guess);
+        for (int i = 0; i < na; i++) {
+            const tui_profile_guess_t *g = &all[i];
+            int need = g->frames < 3 ? g->frames : 3;
+            if (g->score <= 0.0 || g->score < GUESS_KEEP_RATIO * best) break;
+            if (g->hits < need || 2 * g->hits < g->frames) continue;
+            if (kept == max) {   /* more than max qualify: not narrowed down */
+                kept = 0;
+                break;
+            }
+            out[kept++] = *g;
+        }
+    }
+    free(all);
+    return kept;
 }

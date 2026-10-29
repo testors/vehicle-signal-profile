@@ -116,7 +116,7 @@ live sticky FAKE_STREAM=direct FAKE_SLOW_AFTER_MS=3500 FAKE_RESP=probe -- --devi
 live disconnect FAKE_STREAM=direct FAKE_DISCONNECT_AFTER_MS=3000 -- --device vLinker --profile "$PROFILE" \
     --snapshot-at 4.5,6 --keys "1.5:d;1.6:enter;5:c" &
 live no_connect FAKE_STREAM=direct "FAKE_NAME=OBDLink_MX+,vLinker_FAKE" -- --profiles "$FX/profiles" --snapshot-at 2 &
-live recording FAKE_STREAM=direct -- --device vLinker --profile none --no-rec \
+live recording FAKE_STREAM=direct -- --device vLinker --profile none --profiles "$FX/profiles" --no-rec \
     --snapshot-at 4 --keys "1.5:r;2.5:r;3:r" &
 live discover_live FAKE_STREAM=direct -- --device vLinker --profile "$PROFILE" \
     --snapshot-at 8.5 --keys "1.5:d;1.6:enter;7:enter;8:a" &

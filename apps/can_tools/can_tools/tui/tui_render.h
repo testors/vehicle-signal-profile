@@ -26,6 +26,15 @@ typedef enum {
 
 #define TUI_GAUGES_HEIGHT 5
 #define TUI_PROFILE_HINT_HEIGHT 4   /* "press p" box in place of Gauges / Signals */
+#define TUI_GUESS_VALUES 4          /* rpm, steering, throttle, brake */
+
+/** A profile suggested from the traffic, with its reading of the live frames. */
+typedef struct {
+    const char *label;                     /* "Porsche 911 GT3 992" */
+    const char *file;
+    int         hits, frames;              /* its passive frames seen / listed */
+    const char *values[TUI_GUESS_VALUES];  /* "792 rpm", "—" (no fresh value), NULL (no such signal) */
+} tui_guess_row_t;
 
 typedef struct {
     int x, y, w, h;
@@ -44,11 +53,12 @@ typedef struct {
 /** has_signals: a profile is loaded (Signals panel exists); has_gauges: the
  *  Gauges panel exists (5 rows above Signals). Without signals the split
  *  layout puts a TUI_PROFILE_HINT_HEIGHT box ("press p") above Raw CAN and
- *  Log, and the tabs line carries a short hint. In narrow mode only `tab` is
+ *  Log, taller by one row per suggested profile plus one (nguesses), and the
+ *  tabs line carries a short hint. In narrow mode only `tab` is
  *  visible; a split that would leave Signals with fewer than 3 data rows
  *  (or all of them, when there are fewer) also falls back to tabs. */
 void tui_layout_compute(tui_layout_t *L, int cols, int rows, bool has_signals,
-                        int signal_count, bool has_gauges, tui_panel_t tab);
+                        int signal_count, bool has_gauges, int nguesses, tui_panel_t tab);
 /** Rows of content a panel shows (inside borders, below its column header). */
 int  tui_layout_content_rows(const tui_layout_t *L, tui_panel_t p);
 
@@ -90,6 +100,8 @@ typedef struct {
 
     /* gauges and colors */
     const tui_gauges_t *gauges;  /* NULL = no Gauges panel */
+    const tui_guess_row_t *guesses; /* no profile: suggested profiles (keys 1..n) */
+    int         nguesses;
     int         colors;          /* 256, 8 (basic), 0 (none: bar tracks "·") */
 } tui_view_t;
 
