@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <sys/stat.h>
 #include <time.h>
 
@@ -19,6 +20,8 @@
 #import "obd_poll.h"
 #import "frame_source_live.h"
 #include "frame_source.h"
+#include "frame_source_pcan.h"
+#include "pcan.h"
 #include "tui_grid.h"
 #include "tui_live.h"
 #include "tui_replay.h"
@@ -30,6 +33,7 @@
 #define MAX_DEVICES      64
 #define PENDING_LINES    64
 #define TX_TIMEOUT_S     1.0
+#define PCAN_POLL_S      1.0     /* hot-plug: re-read the PCAN channel conditions */
 
 typedef enum {
     ST_CONNECT = 0,
@@ -76,13 +80,28 @@ typedef struct {
     int             connect_index;
     char            connect_name[128];
 
+    /* PCAN-USB (rows before the Bluetooth ones on the connect screen) */
+    const pcan_api_t   *pcan_api;          /* NULL: library missing, no PCAN rows */
+    char                pcan_err[768];
+    pcan_channel_info_t pcan[PCAN_MAX_CHANNELS];
+    int                 npcan;
+    double              pcan_polled;
+    bool                target_pcan;       /* target is a PCAN channel */
+    int                 target_pcan_index; /* 0 = the first available one */
+    bool                target_busy_noted;
+    bool                pcan_mode;         /* connecting to / connected over PCAN */
+    int                 pcan_index;
+    bool                autobaud_on;
+    pcan_autobaud_t     autobaud;
+    char                mode_text[48];     /* "listen-only 500k" */
+
     /* dashboard */
     frame_source_t *src;
     tui_app_t      *app;
     char            session_dir[600];
     char            stn_text[64];
     char            transport_text[16];
-    char            monitor_cmd[16];
+    char            monitor_cmd[32];
 
     /* captured stderr before the app exists */
     char            pending[PENDING_LINES][200];
@@ -125,6 +144,12 @@ static bool host_passive_init(void *ctx) {
     live_t *L = (live_t *)ctx;
     obd_init_config_t cfg = { .profile = OBD_INIT_PASSIVE, .filters = NULL, .filter_count = 0 };
     return obd_init_adapter(L->adapter, &cfg, &L->link);
+}
+
+/* PCAN host: connected while the channel answers; no TX callbacks exist. */
+static bool host_pcan_is_connected(void *ctx) {
+    live_t *L = (live_t *)ctx;
+    return L->src && frame_source_is_open(L->src);
 }
 
 /*******************************************************************************
@@ -196,8 +221,8 @@ static void merge_devices(live_t *L) {
             found = L->ndev++;
             snprintf(L->devs[found].name, sizeof(L->devs[found].name), "%s", name);
             L->devs[found].transport = tr;
-            /* keep the "last:" line selected while the list grows */
-            if (L->last_dev[0] && L->selected == L->ndev - 1) L->selected = L->ndev;
+            /* keep the "last:" line selected while the list grows (PCAN rows come first) */
+            if (L->last_dev[0] && L->selected == L->npcan + L->ndev - 1) L->selected = L->npcan + L->ndev;
         }
         if (found >= 0) L->devs[found].rssi = rssi;
     }
@@ -215,6 +240,67 @@ static int find_target(live_t *L) {
         }
     }
     return -1;
+}
+
+/*******************************************************************************
+ * PCAN-USB rows (hot-plug poll) and the PCAN target
+ ******************************************************************************/
+
+/* N of a "pcanN ..." row or last-device name, else 0. */
+static int pcan_label_index(const char *name) {
+    if (!name || strncasecmp(name, "pcan", 4) != 0) return 0;
+    char tok[16];
+    size_t n = strcspn(name, " ");
+    if (n >= sizeof(tok)) return 0;
+    memcpy(tok, name, n);
+    tok[n] = '\0';
+    int idx = pcan_parse_device(tok);
+    return idx > 0 ? idx : 0;
+}
+
+/* Re-read the channel conditions (about once a second, or now). The
+ * selection stays on the same Bluetooth row or "last:" line. */
+static void pcan_poll(live_t *L, bool now) {
+    if (!L->pcan_api) return;
+    if (!now && wall_s() - L->pcan_polled < PCAN_POLL_S) return;
+    L->pcan_polled = wall_s();
+    int old = L->npcan;
+    bool had_item = old + L->ndev + (L->last_dev[0] ? 1 : 0) > 0;
+    L->npcan = pcan_enumerate(L->pcan_api, L->pcan, PCAN_MAX_CHANNELS);
+    if (had_item && L->selected >= old) L->selected += L->npcan - old;
+    int max_sel = L->npcan + L->ndev - 1 + (L->last_dev[0] ? 1 : 0);
+    if (L->selected > max_sel) L->selected = max_sel;
+    if (L->selected < 0) L->selected = 0;
+}
+
+/* Channel to open for the PCAN target; 0 while none is available. */
+static int find_pcan_target(live_t *L) {
+    int busy = 0;
+    for (int i = 0; i < L->npcan; i++) {
+        const pcan_channel_info_t *c = &L->pcan[i];
+        if (L->target_pcan_index && c->index != L->target_pcan_index) continue;
+        if (c->condition == PCAN_CHANNEL_AVAILABLE) return c->index;
+        if (!busy) busy = c->index;
+    }
+    if (busy && !L->target_busy_noted) {
+        set_status(L, TUI_ROLE_WARN, "pcan%d is in use by another application (waiting)", busy);
+        L->target_busy_noted = true;
+    }
+    return 0;
+}
+
+/* Aim the connect at a PCAN channel (0 = first available). */
+static void set_pcan_target(live_t *L, const char *name, int index) {
+    if (!L->pcan_api) {
+        set_status(L, TUI_ROLE_ALERT, "%s", L->pcan_err);
+        L->target[0] = '\0';
+        return;
+    }
+    snprintf(L->target, sizeof(L->target), "%s", name);
+    L->target_exact = false;
+    L->target_pcan = true;
+    L->target_pcan_index = index;
+    L->target_busy_noted = false;
 }
 
 static void render_now(live_t *L);
@@ -246,7 +332,13 @@ static void begin_connect(live_t *L, int index) {
 }
 
 static void cancel_connect(live_t *L, const char *why, char role) {
-    [L->adapter disconnect];
+    if (L->pcan_mode) {
+        if (L->autobaud_on) pcan_autobaud_cancel(&L->autobaud);   /* closes an open attempt */
+        L->autobaud_on = false;
+        L->pcan_mode = false;
+    } else {
+        [L->adapter disconnect];
+    }
     set_status(L, role, "%s", why);
     L->state = ST_CONNECT;
     restart_scan(L, false);
@@ -362,6 +454,132 @@ static void finish_connect(live_t *L) {
     tui_app_start(L->app);
 }
 
+/* Open the PCAN channel (pcan_open: listen-only set, init, read back) and
+ * start the dashboard over its frame source. The host has no TX callbacks. */
+static void finish_connect_pcan(live_t *L, int bitrate) {
+    char err[768];
+    pcan_channel_t ch;
+    if (pcan_open(L->pcan_api, L->pcan_index, bitrate, &ch, err, sizeof(err)) != PCAN_OPEN_OK) {
+        fprintf(stderr, "[ERROR] %s\n", err);
+        poll_capture(L);
+        cancel_connect(L, err, TUI_ROLE_ALERT);
+        return;
+    }
+    obd_link_init(&L->link);
+    snprintf(L->link.device_name, sizeof(L->link.device_name), "%s", ch.label);
+    snprintf(L->mode_text, sizeof(L->mode_text), "listen-only %s", pcan_bitrate_name(bitrate));
+    snprintf(L->monitor_cmd, sizeof(L->monitor_cmd), "pcan listen-only");
+    L->stn_text[0] = '\0';
+    char firmware[64];
+    snprintf(firmware, sizeof(firmware), "%s", ch.firmware);
+
+    if (!make_session_dir(L)) {
+        pcan_close(&ch);
+        cancel_connect(L, "cannot create the session folder", TUI_ROLE_ALERT);
+        return;
+    }
+    if (L->o->capture) {
+        poll_capture(L);
+        char log_path[700];
+        snprintf(log_path, sizeof(log_path), "%s/tui.log", L->session_dir);
+        tui_capture_switch(L->o->capture, log_path);
+    }
+    L->src = frame_source_pcan_create(&ch);
+    if (!L->src) {
+        pcan_close(&ch);
+        cancel_connect(L, "out of memory", TUI_ROLE_ALERT);
+        return;
+    }
+    tui_host_t host = {
+        .ctx = L,
+        .device_name = L->link.device_name,
+        .device_prefix = L->o->device,
+        .transport = L->transport_text,
+        .stn = NULL,
+        .monitor_cmd = L->monitor_cmd,
+        .is_connected = host_pcan_is_connected,
+        .tx_setup = NULL,        /* nothing can be sent over PCAN */
+        .tx_query = NULL,
+        .passive_init = NULL,
+        .listen_only = true,
+        .mode_text = L->mode_text,
+        .interface_name = "pcan",
+        .library_version = pcan_api_version(),
+        .bitrate = bitrate,
+    };
+    tui_app_options_t opt = {
+        .profile_path = L->o->profile,
+        .profiles_dir = L->o->profiles_dir,
+        .exe_path = L->o->exe_path,
+        .captures_root = L->o->captures_root,
+        .state_dir = L->o->state_dir,
+        .no_tx = L->o->no_tx,
+        .no_rec = L->o->no_rec,
+        .ascii = L->o->ascii,
+        .headless = false,
+        .colors = L->o->colors,
+    };
+    static char lines[PENDING_LINES + 5][200];
+    const char *preface[PENDING_LINES + 5];
+    int np = 0;
+    snprintf(lines[np], sizeof(lines[np]), "connected %s (%s), PCBUSB \"%s\"", L->link.device_name,
+             L->transport_text, pcan_api_version());
+    preface[np] = lines[np];
+    np++;
+    for (int i = 0; i < L->npending; i++, np++) {
+        snprintf(lines[np], sizeof(lines[np]), "%s", L->pending[i]);
+        preface[np] = lines[np];
+    }
+    snprintf(lines[np], sizeof(lines[np]), "PCAN %s verified: no ACK, no error frames, nothing is sent; TX mode off",
+             L->mode_text);
+    preface[np] = lines[np];
+    np++;
+    snprintf(lines[np], sizeof(lines[np]), "timestamps: hardware %s (CAN controller clock)%s%s",
+             L->o->ascii ? "us" : "µs", firmware[0] ? "; firmware " : "", firmware);
+    preface[np] = lines[np];
+    np++;
+    snprintf(lines[np], sizeof(lines[np]), "session folder: %s", L->session_dir);
+    preface[np] = lines[np];
+    np++;
+    L->npending = 0;
+
+    L->app = tui_app_create_live(&opt, L->src, &host, L->session_dir, preface, np, L->cols, L->rows,
+                                 err, sizeof(err));
+    if (!L->app) {
+        frame_source_free(L->src);   /* CAN_Uninitialize */
+        L->src = NULL;
+        cancel_connect(L, err[0] ? err : "cannot start the dashboard", TUI_ROLE_ALERT);
+        return;
+    }
+    tui_last_write(L->o->state_dir, L->link.device_name, NULL);
+    L->state = ST_DASHBOARD;
+    tui_app_start(L->app);
+}
+
+static void begin_connect_pcan(live_t *L, int index) {
+    L->target[0] = '\0';
+    L->target_pcan = false;
+    L->rlist_open = false;
+    [L->adapter stopScan];
+    L->pcan_mode = true;
+    L->pcan_index = index;
+    snprintf(L->transport_text, sizeof(L->transport_text), "USB");
+    snprintf(L->connect_name, sizeof(L->connect_name), "pcan%d", index);
+    L->state = ST_CONNECTING;
+    const char *ell = L->o->ascii ? "..." : "…";
+    if (L->o->bitrate.autodetect) {
+        set_status(L, TUI_ROLE_BRIGHT, "pcan%d: detecting the bitrate, listen-only%s", index, ell);
+        pcan_autobaud_begin(&L->autobaud, L->pcan_api, index, 0);
+        L->autobaud_on = true;
+        render_now(L);
+        return;   /* step_connecting runs it in short slices */
+    }
+    set_status(L, TUI_ROLE_BRIGHT, "opening pcan%d listen-only %s%s", index, pcan_bitrate_name(L->o->bitrate.bitrate),
+               ell);
+    render_now(L);
+    finish_connect_pcan(L, L->o->bitrate.bitrate);
+}
+
 static void close_dashboard(live_t *L) {
     if (!L->app) return;
     tui_app_shutdown(L->app);   /* TX off -> PASSIVE re-init (rule 0.6), discover abort, rec close */
@@ -369,8 +587,9 @@ static void close_dashboard(live_t *L) {
     poll_capture(L);
     tui_app_free(L->app);
     L->app = NULL;
-    frame_source_free(L->src);
+    frame_source_free(L->src);   /* PCAN: CAN_Uninitialize */
     L->src = NULL;
+    L->pcan_mode = false;
     if (L->adapter.isConnected) [L->adapter disconnect];
     if (L->o->capture) tui_capture_switch_temp(L->o->capture);
 }
@@ -446,7 +665,7 @@ static void connect_key(live_t *L, int key) {
         if (key == TUI_KEY_ESC) cancel_connect(L, "connect cancelled", TUI_ROLE_DIM);
         return;
     }
-    int max_sel = L->ndev - 1 + (L->last_dev[0] ? 1 : 0);
+    int max_sel = L->npcan + L->ndev - 1 + (L->last_dev[0] ? 1 : 0);
     switch (key) {
         case TUI_KEY_UP:
             if (L->selected > 0) L->selected--;
@@ -457,12 +676,24 @@ static void connect_key(live_t *L, int key) {
         case TUI_KEY_ENTER:
         case '\r':
             /* explicit Enter: the only way the connect screen connects (rule 0.4) */
-            if (L->selected < L->ndev) {
-                snprintf(L->target, sizeof(L->target), "%s", L->devs[L->selected].name);
+            if (L->selected < L->npcan) {
+                char name[64];
+                const pcan_channel_info_t *c = &L->pcan[L->selected];
+                pcan_channel_label(c->index, c->hw_name, name, sizeof(name));
+                set_pcan_target(L, name, c->index);
+            } else if (L->selected < L->npcan + L->ndev) {
+                snprintf(L->target, sizeof(L->target), "%s", L->devs[L->selected - L->npcan].name);
                 L->target_exact = true;
+                L->target_pcan = false;
             } else if (L->last_dev[0]) {
-                snprintf(L->target, sizeof(L->target), "%s", L->last_dev);
-                L->target_exact = true;
+                int pi = pcan_label_index(L->last_dev);
+                if (pi > 0) {
+                    set_pcan_target(L, L->last_dev, pi);
+                } else {
+                    snprintf(L->target, sizeof(L->target), "%s", L->last_dev);
+                    L->target_exact = true;
+                    L->target_pcan = false;
+                }
             }
             if (L->target[0]) set_status(L, TUI_ROLE_BRIGHT, "waiting for %s%s", L->target, L->o->ascii ? "..." : "…");
             break;
@@ -482,6 +713,7 @@ static void connect_key(live_t *L, int key) {
             L->target[0] = '\0';
             L->status[0] = '\0';
             restart_scan(L, true);
+            pcan_poll(L, true);
             break;
         case 'o':
             L->prompting = true;
@@ -498,14 +730,49 @@ static void connect_key(live_t *L, int key) {
 static void step_connect(live_t *L) {
     [L->adapter runLoopFor:0.01];
     merge_devices(L);
+    pcan_poll(L, false);
     if (wall_s() - L->scan_started >= SCAN_RESTART_S) restart_scan(L, false);
     if (L->target[0] && !L->rlist_open) {   /* a pending target waits until the replay list closes */
-        int idx = find_target(L);
-        if (idx >= 0) begin_connect(L, idx);
+        if (L->target_pcan) {
+            int ch = find_pcan_target(L);
+            if (ch > 0) begin_connect_pcan(L, ch);
+        } else {
+            int idx = find_target(L);
+            if (idx >= 0) begin_connect(L, idx);
+        }
     }
 }
 
+/* PCAN connect: the bitrate detection runs in 20 ms slices (keys stay live). */
+static void step_connecting_pcan(live_t *L) {
+    if (!L->autobaud_on) return;
+    if (!pcan_autobaud_step(&L->autobaud, 0.02)) return;
+    L->autobaud_on = false;
+    char report[512];
+    pcan_autobaud_report(&L->autobaud, report, sizeof(report));
+    if (!L->autobaud.bitrate) {
+        fprintf(stderr, "[ERROR] pcan%d: bitrate detection failed: %s (tried: %s)\n", L->pcan_index,
+                L->autobaud.error, report[0] ? report : "nothing");
+        poll_capture(L);
+        char why[300];
+        snprintf(why, sizeof(why), "pcan%d: no bitrate detected (%s)", L->pcan_index, L->autobaud.error);
+        cancel_connect(L, why, TUI_ROLE_ALERT);
+        return;
+    }
+    fprintf(stderr, "[INFO] pcan%d: bitrate %s detected (tried: %s)\n", L->pcan_index,
+            pcan_bitrate_name(L->autobaud.bitrate), report);
+    poll_capture(L);
+    set_status(L, TUI_ROLE_BRIGHT, "opening pcan%d listen-only %s%s", L->pcan_index,
+               pcan_bitrate_name(L->autobaud.bitrate), L->o->ascii ? "..." : "…");
+    render_now(L);
+    finish_connect_pcan(L, L->autobaud.bitrate);
+}
+
 static void step_connecting(live_t *L) {
+    if (L->pcan_mode) {
+        step_connecting_pcan(L);
+        return;
+    }
     [L->adapter runLoopFor:0.01];
     if (L->adapter.serviceDiscoveryDone && L->adapter.isConnected) {
         finish_connect(L);
@@ -546,13 +813,21 @@ static void draw(live_t *L) {
         return;
     }
     bool ascii = L->o->ascii;
-    tui_connect_row_t rows[MAX_DEVICES];
-    for (int i = 0; i < L->ndev; i++) {
-        rows[i].name = L->devs[i].name;
+    tui_connect_row_t rows[PCAN_MAX_CHANNELS + MAX_DEVICES];
+    char pcan_names[PCAN_MAX_CHANNELS][64];
+    int nrows = 0;
+    for (int i = 0; i < L->npcan; i++, nrows++) {
+        pcan_channel_label(L->pcan[i].index, L->pcan[i].hw_name, pcan_names[i], sizeof(pcan_names[i]));
+        rows[nrows].name = pcan_names[i];
+        rows[nrows].transport = "USB";
+        snprintf(rows[nrows].detail, sizeof(rows[nrows].detail), "%s", pcan_condition_text(L->pcan[i].condition));
+    }
+    for (int i = 0; i < L->ndev; i++, nrows++) {
+        rows[nrows].name = L->devs[i].name;
         bool ble = L->devs[i].transport == OBD_ADAPTER_TRANSPORT_BLE;
-        rows[i].transport = ble ? "BLE" : "Classic";
-        if (ble) snprintf(rows[i].detail, sizeof(rows[i].detail), "%d dBm", L->devs[i].rssi);
-        else snprintf(rows[i].detail, sizeof(rows[i].detail), "paired");
+        rows[nrows].transport = ble ? "BLE" : "Classic";
+        if (ble) snprintf(rows[nrows].detail, sizeof(rows[nrows].detail), "%d dBm", L->devs[i].rssi);
+        else snprintf(rows[nrows].detail, sizeof(rows[nrows].detail), "paired");
     }
     bool ble_ready = [L->adapter isBleReady];
     bool settling = !ble_ready && wall_s() - L->start_wall < 3.0;
@@ -573,7 +848,7 @@ static void draw(live_t *L) {
             ? (ascii ? "Bluetooth off - paired Classic adapters only" : "Bluetooth off — paired Classic adapters only")
             : NULL,
         .rows = rows,
-        .nrows = L->ndev,
+        .nrows = nrows,
         .selected = L->selected,
         .last_text = L->last_text[0] ? L->last_text : NULL,
         .status = st,
@@ -632,13 +907,22 @@ int tui_live_run(const tui_live_options_t *o, char *replay_out, size_t replay_le
     L->adapter.logCommandErrors = YES;
     L->start_wall = wall_s();
     load_last(L);
-    if (o->device && o->device[0]) {
+    L->pcan_api = pcan_api_load(L->pcan_err, sizeof(L->pcan_err));   /* NULL: no PCAN rows */
+    int pcan_dev = o->device ? pcan_parse_device(o->device) : PCAN_DEVICE_NONE;
+    if (pcan_dev == PCAN_DEVICE_BAD) {
+        set_status(L, TUI_ROLE_ALERT, "%s: PCAN channels are pcan1..pcan8", o->device);
+    } else if (pcan_dev >= 0) {
+        /* explicit --device pcan / pcanN: that PCAN channel (first available for "pcan") */
+        set_pcan_target(L, o->device, pcan_dev);
+        if (L->target[0]) set_status(L, TUI_ROLE_BRIGHT, "looking for %s%s", o->device, o->ascii ? "..." : "…");
+    } else if (o->device && o->device[0]) {
         /* explicit --device: connect to the first adapter whose name contains it */
         snprintf(L->target, sizeof(L->target), "%s", o->device);
         L->target_exact = false;
         set_status(L, TUI_ROLE_BRIGHT, "looking for %s%s", o->device, o->ascii ? "..." : "…");
     }
     restart_scan(L, true);
+    pcan_poll(L, true);
 
     while (!L->quit) {
         @autoreleasepool {
@@ -688,6 +972,7 @@ int tui_live_run(const tui_live_options_t *o, char *replay_out, size_t replay_le
     }
 
     close_dashboard(L);
+    if (L->autobaud_on) pcan_autobaud_cancel(&L->autobaud);   /* quit during detection: close the attempt */
     [L->adapter stopScan];
     if (L->adapter.isConnected) [L->adapter disconnect];
     [L->adapter release];

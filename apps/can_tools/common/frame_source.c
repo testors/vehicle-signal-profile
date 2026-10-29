@@ -115,6 +115,14 @@ bool frame_source_is_running(const frame_source_t *src) {
     return src && src->running;
 }
 
+bool frame_source_has_hw_timestamps(const frame_source_t *src) {
+    return src && src->ops->hw_timestamps && src->ops->hw_timestamps(src->impl);
+}
+
+void *frame_source_impl_of(const frame_source_t *src, const frame_source_ops_t *ops) {
+    return (src && ops && src->ops == ops) ? src->impl : NULL;
+}
+
 void frame_source_free(frame_source_t *src) {
     if (!src) return;
     frame_source_stop(src);

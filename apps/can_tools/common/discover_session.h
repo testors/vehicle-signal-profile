@@ -86,6 +86,7 @@ typedef struct {
     const char *monitor_cmd;        /**< manifest "monitor_cmd", e.g. "STMA" */
     disc_session_log_fn log;        /**< NULL = stderr */
     void *log_ctx;
+    bool hw_timestamps;             /**< source stamps in hardware: dumps get the timestamp_us column */
 } disc_session_config_t;
 
 typedef struct disc_session disc_session_t;

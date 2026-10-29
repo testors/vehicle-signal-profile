@@ -77,6 +77,8 @@ typedef struct {
     void    (*stop)(void *impl);
     /** Free impl (optional). */
     void    (*destroy)(void *impl);
+    /** Frames carry controller timestamps (hw_timestamp, µs) (optional; NULL = no). */
+    bool    (*hw_timestamps)(void *impl);
 } frame_source_ops_t;
 
 typedef struct frame_source frame_source_t;
@@ -93,6 +95,10 @@ int64_t frame_source_now_ms(const frame_source_t *src);
 void    frame_source_stop(frame_source_t *src);
 /** True between a successful start and stop. */
 bool    frame_source_is_running(const frame_source_t *src);
+/** The source stamps frames in hardware (PCAN): writers add the timestamp_us column. */
+bool    frame_source_has_hw_timestamps(const frame_source_t *src);
+/** impl of src when it was created with ops, else NULL (typed accessors). */
+void   *frame_source_impl_of(const frame_source_t *src, const frame_source_ops_t *ops);
 /** Stops the source if running, then destroys it. NULL is ignored. */
 void    frame_source_free(frame_source_t *src);
 

@@ -7,6 +7,8 @@
 
 #include <stdbool.h>
 
+#include "pcan.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -23,6 +25,12 @@ int cli_monitor(const char *device, int seconds,                     /* cmd_moni
                 const char *filter_argv[], int filter_argc);
 int cli_detect(const char *device, bool allow_probe);                /* cmd_detect.m */
 int cli_discover(const char *device, const char *dump_dir_override); /* cmd_discover.m */
+/* PCAN-USB (device "pcan" / "pcan1".."pcan8"): listen-only versions */
+int cli_monitor_pcan(const char *device, int seconds,                /* cmd_monitor.m */
+                     const char *filter_argv[], int filter_argc, const pcan_bitrate_t *bitrate);
+int cli_detect_pcan(const char *device, const pcan_bitrate_t *bitrate);          /* cmd_detect.m */
+int cli_discover_pcan(const char *device, const char *dump_dir_override,         /* cmd_discover.m */
+                      const pcan_bitrate_t *bitrate);
 int cmd_discover_main(int argc, const char *argv[]);                 /* can_discover's arguments */
 int cmd_probe_main(int argc, const char *argv[]);                    /* cmd_probe.m: vsp_probe's arguments */
 int cmd_replay_main(int argc, char *argv[]);                         /* cmd_replay.c: discover_replay's arguments */

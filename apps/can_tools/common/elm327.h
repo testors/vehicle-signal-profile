@@ -17,14 +17,37 @@
 
 /**
  * @brief Raw CAN frame
+ *
+ * timestamp_us and hw_timestamp stay zero for every host-stamped source
+ * (ELM327 text, replays of 5-column captures, fakes). A hardware-stamped
+ * source (PCAN) sets hw_timestamp and the microseconds within timestamp_ms.
  */
 typedef struct {
     uint32_t can_id;            /**< CAN arbitration ID (11-bit or 29-bit) */
     uint8_t  data[8];           /**< Data bytes */
     uint8_t  dlc;               /**< Data length code (0-8) */
+    uint16_t timestamp_us;      /**< Microseconds within timestamp_ms (0-999), hw_timestamp only */
     int64_t  timestamp_ms;      /**< Timestamp in milliseconds */
     bool     is_extended;       /**< Extended (29-bit) ID flag */
+    bool     hw_timestamp;      /**< Stamped by the CAN controller (µs resolution) */
 } can_frame_t;
+
+/* The new fields sit in former padding: capture buffer sizing assumes 32 bytes. */
+_Static_assert(sizeof(can_frame_t) == 32, "can_frame_t must stay 32 bytes");
+
+/** Frame time in epoch microseconds (timestamp_us counts only with hw_timestamp). */
+static inline int64_t can_frame_time_us(const can_frame_t *f) {
+    return f->timestamp_ms * 1000 + (f->hw_timestamp ? (int64_t)f->timestamp_us : 0);
+}
+
+/** Set the frame time from epoch microseconds (ms = floor(us / 1000)) and mark
+ *  it hardware-stamped. */
+static inline void can_frame_set_hw_time_us(can_frame_t *f, int64_t us) {
+    int64_t ms = us >= 0 ? us / 1000 : -((-us + 999) / 1000);
+    f->timestamp_ms = ms;
+    f->timestamp_us = (uint16_t)(us - ms * 1000);
+    f->hw_timestamp = true;
+}
 
 #ifdef __cplusplus
 extern "C" {

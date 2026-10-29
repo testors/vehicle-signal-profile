@@ -1,6 +1,7 @@
 # CAN Tools
 
 BLE/Classic BT OBD 어댑터를 통한 CAN 버스 도구 모음. macOS에서 동작하며, ELM327/STN2255 호환 어댑터(OBDLink MX+, vLinker MC+ 등)를 지원한다.
+PEAK PCAN-USB로 버스 전체를 수신 전용(listen-only)으로 받을 수도 있다(아래 "PCAN-USB" 절).
 
 ## 도구
 
@@ -8,7 +9,7 @@ BLE/Classic BT OBD 어댑터를 통한 CAN 버스 도구 모음. macOS에서 동
 
 | 명령 | 설명 | CAN 송신 |
 |------|------|----------|
-| **scan** | BLE/Classic OBD 어댑터 스캔 (JSON) | 없음 |
+| **scan** | BLE/Classic OBD 어댑터 스캔 (JSON), PCBUSB가 있으면 PCAN-USB 채널도 | 없음 |
 | **monitor** | CAN 패시브 모니터 (silent mode, ACK 없음) | 없음 |
 | **detect** | 버스 종류 감지 (3초 수신) | 없음 (`--probe`면 `0100` 송신) |
 | **discover** | PT-CAN 시그널 자동 탐색 (대화형) | 없음 |
@@ -53,6 +54,75 @@ mkdir -p build && cd build && cmake .. && make
 빌드 후 `build/libcan_discover_core.a`가 함께 생성된다. 다른 앱에서 탐색 엔진만 쓰고 싶으면
 `common/can_discover.h`를 포함해 `disc_analyze_with_raw()`,
 `disc_render_draft_dbc()`, `disc_render_draft_vsp()`를 직접 호출하면 된다.
+
+## PCAN-USB (PEAK, 수신 전용)
+
+Bluetooth 어댑터는 프레임이 텍스트로 와서 호스트가 도착 시각을 찍는다(측정: 평소 ~20 ms 지연, 50–130 ms 묶음,
+ms 해상도). PEAK PCAN-USB는 USB로 버스 전체를 받고, CAN 컨트롤러가 찍은 µs 타임스탬프를 준다. 이 도구에서
+PCAN은 **수신 전용**이다: ACK도 에러 프레임도 어떤 프레임도 보내지 않는다.
+
+**설치.** macOS용 PEAK 드라이버는 없고, UV Software의 PCBUSB 라이브러리(PCAN-Basic 호환, 무료 바이너리)를 쓴다:
+<https://github.com/mac-can/PCBUSB-Library>. 배포본의 `install.sh`가 `/usr/local/lib/libPCBUSB.dylib`(+버전 파일)과
+`/usr/local/include/PCBUSB.h`를 설치한다(`/usr/local`에 쓰기 권한이 없으면 `sudo`가 필요할 수 있다). 빌드에는 필요 없다:
+`can_tools`는 실행 중에 `dlopen`으로 `/usr/local/lib/libPCBUSB.dylib`, `/opt/homebrew/lib/libPCBUSB.dylib` 두 절대 경로만
+찾고(현재 폴더나 `DYLD_*` 경로는 보지 않는다), 없으면 PCAN 명령만 설치 링크와 함께 실패하고 나머지는 그대로 동작한다.
+**최소 버전 0.13.** 라이브러리를 읽으면 채널을 건드리기 전에 `PCAN_CHANNEL_VERSION`을 읽어 0.13 이상의 0.x만 쓴다
+(검증한 버전이 0.13이다). 더 오래되었거나 major가 다르거나 버전을 읽을 수 없으면 찾은 문자열과 함께 거부하고 아무 채널도
+초기화하지 않는다. 쓰는 버전은 연결 로그, monitor/detect JSON(`library_version`), TUI의 `session.json`에 남는다.
+PCBUSB 0.13 기준 지원 장치: PCAN-USB(IPEH-002021/002022), PCAN-USB FD(IPEH-004022), PCAN-USB Pro FD(CAN1만).
+Universal 바이너리라 Apple silicon에서도 동작한다.
+
+**장치 이름.** `<device>` 자리에 `pcan`(첫 번째 사용 가능한 채널) 또는 `pcan1`..`pcan8`(대소문자 무시)을 쓴다.
+`--bitrate RATE|auto`: `1M 800k 500k 250k 125k 100k 95k 83k 50k 47k 33k 20k 10k 5k`, 기본 500k. `auto`는
+500k, 250k, 1M, 125k, 100k, 83k, 50k, 33k를 차례로 listen-only로 열어 각각 최대 0.5초 듣고, 2개 이상 ID에서 데이터
+프레임 20개가 처음 들린 속도를 고른다(시도한 속도와 결과를 로그에 남긴다).
+
+```bash
+./build/can_tools scan                                   # BT 어댑터 + PCAN 채널 (transport "usb")
+./build/can_tools monitor pcan 10 --out mon.json         # 버스 전체, 10초; ID를 주면 소프트웨어 필터
+./build/can_tools monitor pcan1 10 --bitrate auto 0A5 1A0
+./build/can_tools detect pcan                            # 3초 수신, 버스 분류 (ATRV 없음, --probe 불가)
+./build/can_tools discover pcan                          # 가이드 탐색, phase 덤프는 6열 TSV
+./build/can_tools probe <profile.vsp> --device pcan --mode can --seconds 10
+./build/can_tools tui --device pcan --bitrate 500k       # 연결 화면에도 PCAN 채널이 "USB"로 보인다
+```
+
+monitor JSON에는 `"interface":"pcan"`, `"bitrate"`, `"mode":"listen-only"`, 프레임마다 `"timestamp_us"`(epoch µs)가
+붙는다. TUI 헤더는 `pcan1 PCAN-USB · … · listen-only 500k`, 로그는 하드웨어 µs 타임스탬프임을 알린다. 연결 화면은
+약 1초마다 채널 상태를 다시 읽어 꽂고 뽑는 것을 반영하고, `last:` 줄도 PCAN 채널을 기억한다. 사용 중 USB를 뽑으면
+대시보드가 DISCONNECTED가 된다.
+
+**listen-only 보장과 구현.**
+- 라이브러리 함수 표(`common/pcan.h`의 `pcan_api_t`)에는 수신용 함수만 있다: `CAN_Initialize`, `CAN_Uninitialize`,
+  `CAN_GetStatus`, `CAN_Read`, `CAN_GetValue`, `CAN_SetValue`, `CAN_GetErrorText`. `CAN_Write`/`CAN_WriteFD`는 선언도
+  `dlsym`도 하지 않고, `CAN_Reset`도 쓰지 않는다(테스트가 바이너리 문자열까지 확인).
+- 채널을 여는 곳은 `pcan_open()` 하나다: 초기화 전 채널에 `PCAN_LISTEN_ONLY = ON` → 아직 초기화 전에 다시 읽어 ON인지
+  확인(읽기 실패나 ON이 아니면 초기화하지 않고 실패) → `CAN_Initialize` → `PCAN_LISTEN_ONLY`를 또 읽어 ON이 아니면 즉시
+  `CAN_Uninitialize`하고 실패. 설정이 실패해도 초기화하지 않는다.
+  `CAN_SetValue`는 이 한 곳에서 `PCAN_LISTEN_ONLY = ON`으로만 불린다. bitrate auto도 시도마다 이 순서를 그대로 밟고,
+  listen-only를 확인하지 못하면 다른 속도로 재시도하지 않고 멈춘다.
+- 송신하는 명령은 PCAN을 거부한다(어댑터 객체를 만들거나 라이브러리를 읽기 전에, 종료 코드 1):
+  `query`, `supported`, `raw`, `p992`, `detect --probe`, `probe --mode obd`, `probe --mode auto`(질의로 넘어갈 수 있으므로)
+  → `PCAN is listen-only: <명령> would transmit`. PCAN에는 `probe --mode can`을 쓴다. TUI의 TX 모드(`x`)는 모니터를 멈추지
+  않고 바로 `TX unavailable: PCAN is listen-only`로 거부되며, PCAN 연결에는 송신 콜백 자체가 없다.
+- PCAN 명령(monitor, detect, discover, probe)은 Bluetooth 객체를 만들지 않는다.
+
+**처음 쓸 때: 차에 꽂기 전에 벤치에서 확인.** PCAN-USB(can_tools로 listen-only)와 다른 CAN 노드 하나만 벤치 버스에
+연결하고, 양 끝에 120 Ω 종단을 제대로 단 다음 그 노드가 프레임을 보내게 한다. 아무도 ACK하지 않으므로 송신 노드는 ACK
+오류를 낸다(STN/ELM 어댑터라면 `CAN ERROR`). 만약 PCAN이 ACK한다면 송신이 성공해서, ELM/STN은 OBD 요청에 `CAN ERROR`
+대신 `NO DATA`로 답한다. 이때 can_tools는 재전송되는 같은 프레임을 계속 받아야 한다. 송신 쪽이 ACK 오류를 내고
+can_tools가 프레임을 받으면 listen-only가 실제로 동작하는 것이다.
+
+**타임스탬프와 6열 TSV.** 컨트롤러 시각(µs)은 첫 수신 묶음의 `min(호스트 수신 시각 − 컨트롤러 시각)`을 기준점으로
+벽시계에 옮기고, 기준점은 그 뒤로 고정한다(단조 변환이라 ID별 주기가 정확히 유지된다). 호스트 시계와의 차이(drift)는
+채널을 닫을 때 로그에 남는다. 하드웨어 타임스탬프 프레임은 `*.frames.tsv`(TUI 녹화, discover phase 덤프)에 6번째 열
+`timestamp_us`(epoch µs)가 붙고 헤더에도 그 이름이 붙는다. 1열 `timestamp_ms`는 `floor(timestamp_us / 1000)`이라 5열만 읽는
+도구도 같은 캡처로 본다. 리더는 5열·6열을 모두 받고, 6열이 1열과 같은 ms에 있지 않으면 그 행을 거부한다. 기존 5열 캡처는
+그대로 읽힌다. RTR·상태·에러 프레임은 전달하지 않고 개수만 세며, 수신 큐 overrun과 읽기 오류도 세어 로그에 남긴다.
+
+**제한.** classic CAN만 받는다(`CAN_Initialize`/`CAN_Read`): CAN FD 프레임은 받지 않는다. PCAN-USB Pro FD는 CAN1만 된다.
+macOS 전용. PCBUSB 문서상 사용 중 뽑은 장치는 다시 꽂아도 같은 프로세스에서는 응답하지 않을 수 있다: 그때는 can_tools를
+다시 시작한다. 실제 장치로는 아직 검증하지 않았다(테스트는 가짜 라이브러리 `tests/fake/fake_pcan.c`로 돈다).
 
 ## probe (구 vsp_probe)
 
@@ -383,6 +453,7 @@ apps/can_tools/
 ├── can_tools/           # 단일 실행파일 can_tools (명령별 파일)
 │   ├── main.m           # 명령 분기, 도움말, argv[0] 별칭(can_reader 등)
 │   ├── cli_common.m/h   # 명령 공용 상태, 연결 래퍼
+│   ├── cli_pcan.c/h     # PCAN 장치 열기(라이브러리, 채널, bitrate), 송신 명령 거부 메시지
 │   ├── cmd_scan.m       # scan
 │   ├── cmd_detect.m     # detect
 │   ├── cmd_monitor.m    # monitor
@@ -409,15 +480,19 @@ apps/can_tools/
 │   ├── obd_poll.m/h     # poll 방식 OBD 질의 (probe poll 모드, TUI TX 모드; 송신)
 │   ├── frame_source.c/h # CAN frame 소스 인터페이스, replay 소스, 캡처 버퍼
 │   ├── frame_source_live.m/h # 어댑터 monitor를 frame 소스로 감싼 live 소스
-│   ├── frame_tsv.c/h    # 캡처 dump(*.frames.tsv) 읽기
+│   ├── pcan.c/h         # PCAN-USB(PCBUSB, dlopen): 수신 전용 함수 표, listen-only 열기, bitrate auto, 시각 변환
+│   ├── frame_source_pcan.c/h # 열린 PCAN 채널의 frame 소스 (하드웨어 µs 타임스탬프)
+│   ├── frame_tsv.c/h    # 캡처 dump(*.frames.tsv) 읽기·쓰기 (5열, 하드웨어 타임스탬프는 6열)
 │   ├── discover_session.m/h # 탐색 세션(phase 캡처→분석→파일 저장) + 대화형 CLI
 │   ├── vsp_engine.m/h   # VSP 프로파일 로드, 시그널 선택, frame 디코드 (C API)
 │   ├── cli_util.c/h     # CLI 로그, JSON 문자열 출력
 │   └── can_discover.c/h # PT-CAN 시그널 자동 탐색 엔진
 ├── tools/               # prior 생성기(빌드 때 실행, build/generated/can_discover_priors.h), ref2dbc
 ├── tests/               # 탐색 엔진 회귀, VSP 디코더, replay, 탐색 세션, 어댑터 수명, TUI 테스트 (하드웨어 불필요)
-│   ├── fake/            # 가짜 어댑터 (can_tools_fake)
+│   ├── fake/            # 가짜 어댑터, 가짜 PCBUSB (can_tools_fake)
 │   ├── tui_fake/        # 가짜 어댑터로 TUI 라이브 경로의 AT 명령 기록 검증
+│   ├── pcan_fake/       # 가짜 PCBUSB로 송신 명령 거부, listen-only 호출 순서, PCAN TUI 검증
+│   ├── pcan_test.c      # PCAN 열기 순서, bitrate auto, 시각 변환, 6열 TSV (단위 테스트)
 │   ├── golden/tui/      # TUI 화면 스냅샷 골든 (snapshots.sh update로 갱신)
 │   └── fixtures/tui/    # 합성 스트림, 테스트 프로필, discover 세션 (gen_fixtures.py로 생성)
 ├── CMakeLists.txt

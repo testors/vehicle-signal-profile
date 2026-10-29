@@ -26,6 +26,7 @@
 
 #include "commands.h"
 #include "frame_source.h"
+#include "pcan.h"
 #include "tui_app.h"
 #include "tui_capture.h"
 #include "tui_grid.h"
@@ -37,6 +38,7 @@
 typedef struct {
     const char *device;
     bool        device_given;
+    const char *bitrate;     /* --bitrate (PCAN), NULL = 500k */
     const char *profile;
     const char *profiles_dir;
     const char *replay;
@@ -53,6 +55,7 @@ static void tui_usage(void) {
     fprintf(stderr,
             "Usage: can_tools tui [--device NAME] [--profile VSP|none] [--profiles DIR]\n"
             "                     [--no-tx] [--no-rec] [--captures DIR] [--mono] [--ascii]\n"
+            "                     [--bitrate RATE|auto]\n"
             "       can_tools tui --replay PATH [--profile VSP|none] [--speed X]\n"
             "       can_tools tui --replay PATH [--profile VSP|none] --snapshot-at T[,T...]\n"
             "                     [--size COLSxROWS] [--keys \"T:key key;T:key\"] [--color-map]\n"
@@ -61,7 +64,11 @@ static void tui_usage(void) {
             "  scan; Enter connects). The adapter is set up receive-only (ATCSM1 silent\n"
             "  mode); nothing is sent on the bus unless you switch on TX mode (x), which\n"
             "  works only on a GATEWAY or SILENT bus and asks first.\n"
-            "  --device NAME    connect to the first adapter whose name contains NAME\n"
+            "  --device NAME    connect to the first adapter whose name contains NAME;\n"
+            "                   pcan / pcan1..pcan8: a PEAK PCAN-USB (PCBUSB library),\n"
+            "                   opened listen-only (TX mode never available on it)\n"
+            "  --bitrate RATE   PCAN bitrate: auto or 1M 800k 500k 250k 125k 100k 95k 83k\n"
+            "                   50k 47k 33k 20k 10k 5k (default 500k)\n"
             "  --profile VSP    load this profile (none = raw CAN only); else the picker\n"
             "  --profiles DIR   profile folder (default: VSP_PROFILES_DIR, ./profiles,\n"
             "                   the repository's profiles/)\n"
@@ -87,6 +94,7 @@ static bool parse_cli(int argc, const char *argv[], tui_cli_t *o) {
         const char *a = argv[i];
         bool has_next = i + 1 < argc;
         if (strcmp(a, "--device") == 0 && has_next) { o->device = argv[++i]; o->device_given = true; }
+        else if (strcmp(a, "--bitrate") == 0 && has_next) o->bitrate = argv[++i];
         else if (strcmp(a, "--profile") == 0 && has_next) o->profile = argv[++i];
         else if (strcmp(a, "--profiles") == 0 && has_next) o->profiles_dir = argv[++i];
         else if (strcmp(a, "--replay") == 0 && has_next) o->replay = argv[++i];
@@ -356,6 +364,15 @@ int cmd_tui_main(int argc, const char *argv[]) {
             fprintf(stderr, "[ERROR] tui: --device and --replay exclude each other\n");
             return 2;
         }
+        pcan_bitrate_t bitrate;
+        if (!pcan_parse_bitrate(o.bitrate, &bitrate)) {
+            fprintf(stderr, "[ERROR] tui: bad --bitrate %s (auto or %s)\n", o.bitrate, pcan_bitrate_list());
+            return 2;
+        }
+        if (o.replay && o.bitrate) {
+            fprintf(stderr, "[ERROR] tui: --bitrate is for a live PCAN device, not --replay\n");
+            return 2;
+        }
         if (o.speed < FRAME_SOURCE_REPLAY_MIN_SPEED || o.speed > FRAME_SOURCE_REPLAY_MAX_SPEED) {
             fprintf(stderr, "[ERROR] tui: --speed must be 0.25..16\n");
             return 2;
@@ -444,6 +461,7 @@ int cmd_tui_main(int argc, const char *argv[]) {
             tui_capture_begin(&g_capture);
             tui_live_options_t lo = {
                 .device = o.device_given ? o.device : NULL,
+                .bitrate = bitrate,
                 .profile = o.profile,
                 .profiles_dir = o.profiles_dir,
                 .captures_root = opt.captures_root,

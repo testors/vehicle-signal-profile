@@ -116,6 +116,7 @@ struct disc_session {
     char result_path[DISC_PATH_MAX];
     char manifest_path[DISC_PATH_MAX];
     bool dump_enabled;
+    bool hw_timestamps;         /**< dumps carry the timestamp_us column */
     bool have_bus_mode;
     disc_bus_mode_t bus_mode;
 
@@ -251,13 +252,17 @@ static void disc_make_phase_dump_path(char *buf, size_t len,
     disc_join_path(buf, len, dump_dir, leaf);
 }
 
-static bool disc_write_phase_dump(const char *path, const disc_raw_phase_t *raw_phase) {
+static bool disc_write_phase_dump(const char *path, const disc_raw_phase_t *raw_phase, bool hw_timestamps) {
     if (!path || !raw_phase) return false;
 
     FILE *f = fopen(path, "w");
     if (!f) return false;
 
-    frame_tsv_write_header(f);
+    /* a replay of a 6-column capture keeps its timestamp_us column too */
+    for (int i = 0; i < raw_phase->frame_count && !hw_timestamps; i++) {
+        hw_timestamps = raw_phase->frames[i].hw_timestamp;
+    }
+    frame_tsv_write_header_ex(f, hw_timestamps);
     for (int i = 0; i < raw_phase->frame_count; i++) {
         frame_tsv_write_row(f, &raw_phase->frames[i]);
     }
@@ -455,6 +460,7 @@ disc_session_t *disc_session_create(const disc_session_config_t *cfg) {
         s->monitor_cmd = dup_or_null(cfg->monitor_cmd);
         s->log = cfg->log;
         s->log_ctx = cfg->log_ctx;
+        s->hw_timestamps = cfg->hw_timestamps;
     }
     s->bus_mode = DISC_BUS_DIRECT;
     s->active_phase = -1;
@@ -628,7 +634,7 @@ bool disc_session_save_phase_dump(disc_session_t *s, int phase_idx) {
 
     char phase_path[DISC_PATH_MAX];
     disc_make_phase_dump_path(phase_path, sizeof(phase_path), s->dump_dir, phase_idx);
-    if (disc_write_phase_dump(phase_path, &s->raw_phases[phase_idx])) {
+    if (disc_write_phase_dump(phase_path, &s->raw_phases[phase_idx], s->hw_timestamps)) {
         disc_make_phase_dump_filename(s->phase_meta[phase_idx].dump_file,
                                       sizeof(s->phase_meta[phase_idx].dump_file),
                                       phase_idx);
@@ -812,6 +818,7 @@ int disc_cli_run(const disc_cli_config_t *cfg) {
         .monitor_cmd = cfg->monitor_cmd,
         .log = NULL,
         .log_ctx = NULL,
+        .hw_timestamps = frame_source_has_hw_timestamps(src),
     };
     disc_session_t *session = disc_session_create(&session_cfg);
     if (!session) {

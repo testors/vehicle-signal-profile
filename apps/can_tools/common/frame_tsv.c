@@ -21,7 +21,11 @@ static int hex_nibble(char c) {
 }
 
 void frame_tsv_write_header(FILE *f) {
-    fprintf(f, "timestamp_ms\tcan_id\tis_extended\tdlc\tdata_hex\n");
+    frame_tsv_write_header_ex(f, false);
+}
+
+void frame_tsv_write_header_ex(FILE *f, bool with_us) {
+    fprintf(f, "timestamp_ms\tcan_id\tis_extended\tdlc\tdata_hex%s\n", with_us ? "\ttimestamp_us" : "");
 }
 
 void frame_tsv_write_row(FILE *f, const can_frame_t *frame) {
@@ -33,6 +37,7 @@ void frame_tsv_write_row(FILE *f, const can_frame_t *frame) {
     for (int b = 0; b < frame->dlc; b++) {
         fprintf(f, "%02X", frame->data[b]);
     }
+    if (frame->hw_timestamp) fprintf(f, "\t%lld", (long long)can_frame_time_us(frame));
     fputc('\n', f);
 }
 
@@ -55,17 +60,17 @@ void frame_list_free(frame_list_t *list) {
 }
 
 bool frame_tsv_parse_row(char *line, can_frame_t *out) {
-    char *fields[5];
+    char *fields[6];
     int field_count = 0;
     char *p = line;
     fields[field_count++] = p;
     for (; *p; p++) {
         if (*p != '\t') continue;
-        if (field_count >= 5) return false;
+        if (field_count >= 6) return false;
         *p = '\0';
         fields[field_count++] = p + 1;
     }
-    if (field_count != 5) return false;
+    if (field_count != 5 && field_count != 6) return false;
 
     memset(out, 0, sizeof(*out));
 
@@ -103,6 +108,20 @@ bool frame_tsv_parse_row(char *line, can_frame_t *out) {
         int lo = hex_nibble(hex[2 * b + 1]);
         if (hi < 0 || lo < 0) return false;
         out->data[b] = (uint8_t)((hi << 4) | lo);
+    }
+
+    /* timestamp_us (optional): decimal, in the millisecond of column 1 */
+    if (field_count == 6) {
+        const char *us_str = fields[5];
+        const char *digits = us_str[0] == '-' ? us_str + 1 : us_str;
+        if (!isdigit((unsigned char)digits[0])) return false;
+        errno = 0;
+        long long us = strtoll(us_str, &end, 10);
+        if (errno != 0 || *end != '\0') return false;
+        can_frame_t check = *out;
+        can_frame_set_hw_time_us(&check, (int64_t)us);
+        if (check.timestamp_ms != out->timestamp_ms) return false;
+        *out = check;
     }
     return true;
 }

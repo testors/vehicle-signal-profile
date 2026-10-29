@@ -32,6 +32,9 @@ extern volatile sig_atomic_t g_running;
 extern volatile sig_atomic_t g_interrupt;
 extern stn2255_info_t g_stn_info;
 extern bool g_stn_detected;
+/** PCAN source of the running command (monitor, detect, discover), or NULL.
+ *  While it is started, SIGINT ends the capture like a running BT monitor. */
+extern frame_source_t *volatile g_cli_pcan_source;
 
 void signal_handler(int sig);
 /** OBDAdapter monitor callback: CLI mode stores the frame, interactive mode prints it. */

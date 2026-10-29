@@ -61,7 +61,10 @@ struct tui_app {
     char              device_prefix[128];
     char              transport[16];
     char              stn[64];
-    char              monitor_cmd[16];
+    char              monitor_cmd[32];
+    char              mode_text[48];
+    char              interface_name[16];
+    char              library_version[128];
     char              session_dir[512];
     char              started_at[32];
 
@@ -307,6 +310,14 @@ static void write_session_json(tui_app_t *app, bool ended) {
     json_str(f, app->stn[0] ? app->stn : NULL);
     fprintf(f, ",\n  \"monitor_cmd\": ");
     json_str(f, app->monitor_cmd);
+    if (app->interface_name[0]) {
+        fprintf(f, ",\n  \"interface\": ");
+        json_str(f, app->interface_name);
+        fprintf(f, ",\n  \"library_version\": ");
+        json_str(f, app->library_version);
+        fprintf(f, ",\n  \"bitrate\": %d,\n  \"mode\": \"listen-only\",\n  \"timestamps\": \"hardware_us\"",
+                app->host.bitrate);
+    }
     fprintf(f, ",\n  \"profile\": ");
     json_str(f, app->profile_path[0] ? app->profile_path : NULL);
     fprintf(f, ",\n  \"recordings\": [");
@@ -520,6 +531,8 @@ static void rec_stop(tui_app_t *app) {
  ******************************************************************************/
 
 const char *tui_app_tx_lock_reason(const tui_app_t *app) {
+    /* first: a listen-only interface never transmits, whatever the bus looks like */
+    if (app->live && app->host.listen_only) return "TX unavailable: PCAN is listen-only";
     if (app->model.cls.direct_seen || app->model.cls.bus == TUI_BUS_DIRECT) return "TX locked: DIRECT bus";
     if (app->replay || !app->live) return "TX unavailable in replay";
     if (app->opt.no_tx) return "TX disabled (--no-tx)";
@@ -563,6 +576,10 @@ static void tx_enter(tui_app_t *app) {
     const char *reason = tui_app_tx_lock_reason(app);
     if (reason) {
         app_log(app, "%s", reason);
+        return;
+    }
+    if (app->host.listen_only || !app->host.tx_setup || !app->host.tx_query) {
+        app_log(app, "TX unavailable: the interface cannot transmit");   /* never stop the monitor for it */
         return;
     }
     if (!build_tx_queries(app)) {
@@ -678,6 +695,7 @@ static bool disc_ensure_session(tui_app_t *app) {
         .monitor_cmd = app->live ? app->monitor_cmd : NULL,
         .log = disc_log_cb,
         .log_ctx = app,
+        .hw_timestamps = frame_source_has_hw_timestamps(app->src),
     };
     app->disc = disc_session_create(&cfg);
     if (!app->disc) {
@@ -1425,16 +1443,23 @@ tui_app_t *tui_app_create_live(const tui_app_options_t *opt, frame_source_t *src
     snprintf(app->transport, sizeof(app->transport), "%s", host->transport ? host->transport : "");
     snprintf(app->stn, sizeof(app->stn), "%s", host->stn ? host->stn : "");
     snprintf(app->monitor_cmd, sizeof(app->monitor_cmd), "%s", host->monitor_cmd ? host->monitor_cmd : "ATMA");
+    snprintf(app->mode_text, sizeof(app->mode_text), "%s", host->mode_text ? host->mode_text : "");
+    snprintf(app->interface_name, sizeof(app->interface_name), "%s", host->interface_name ? host->interface_name : "");
+    snprintf(app->library_version, sizeof(app->library_version), "%s", host->library_version ? host->library_version : "");
     app->host.device_name = app->device_name;
     app->host.device_prefix = app->device_prefix;
     app->host.transport = app->transport;
     app->host.stn = app->stn[0] ? app->stn : NULL;
     app->host.monitor_cmd = app->monitor_cmd;
+    app->host.mode_text = app->mode_text[0] ? app->mode_text : NULL;
+    app->host.interface_name = app->interface_name[0] ? app->interface_name : NULL;
+    app->host.library_version = app->library_version;
     snprintf(app->source_name, sizeof(app->source_name), "%s", app->device_name);
     snprintf(app->session_dir, sizeof(app->session_dir), "%s", session_dir ? session_dir : "");
     wall_stamp(app->started_at, sizeof(app->started_at));
     tui_model_init(&app->model, frame_source_now_ms(src));
     tui_recorder_init(&app->rec, app->session_dir);
+    app->rec.us_column = frame_source_has_hw_timestamps(src);   /* PCAN: 6-column recording */
     for (int i = 0; i < npreface; i++) tui_app_log(app, preface[i]);
 
     if (opt->profile_path && opt->profile_path[0] && strcmp(opt->profile_path, "none") != 0) {
@@ -1766,6 +1791,7 @@ void tui_app_shutdown(tui_app_t *app) {
 
 static const char *tx_footer(const tui_app_t *app) {
     if (!app->live) return NULL;
+    if (app->host.listen_only) return "TX [listen-only]";
     if (app->tx_on) return "TX off";
     if (app->opt.no_tx) return "TX [disabled]";
     if (app->disconnected) return "TX [disconnected]";
@@ -1777,6 +1803,7 @@ static const char *tx_footer(const tui_app_t *app) {
 
 static const char *tx_hint(const tui_app_t *app) {
     if (!app->live || app->opt.no_tx) return "TX disabled";
+    if (app->host.listen_only) return "TX unavailable (listen-only)";
     if (app->tx_on) return app->opt.ascii ? "polling..." : "polling…";
     if (app->model.cls.direct_seen || app->model.cls.bus == TUI_BUS_DIRECT) return "TX locked (DIRECT)";
     if (app->model.cls.bus == TUI_BUS_DETECTING) return "TX locked (detecting)";
@@ -1856,6 +1883,7 @@ void tui_app_render(tui_app_t *app, tui_grid_t *grid) {
     v->now_ms = now;
     v->device = app->live ? app->device_name : app->source_name;
     v->live = app->live && !app->disconnected;
+    v->live_mode = app->live ? app->host.mode_text : NULL;
     v->tx_on = app->tx_on;
     v->disconnected = app->disconnected;
     v->replay = app->replay;

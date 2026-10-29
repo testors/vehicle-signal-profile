@@ -9,6 +9,10 @@
  * common/vsp_engine and the adapter connection in common/obd_connect; this
  * command adds the OBD schedulers, rate statistics, the --plan output and the
  * result JSON. Moved from vsp_probe/main.m (can_tools probe / vsp_probe alias).
+ *
+ * --device pcan / pcan1..pcan8 (PEAK PCAN-USB, listen-only) runs only the CAN
+ * phase from the PCAN frame source: --mode obd and --mode auto (which may
+ * fall back to queries) are refused before the profile is even loaded.
  */
 
 #import <Foundation/Foundation.h>
@@ -30,6 +34,8 @@
 #import "obd_connect.h"
 #import "obd_poll.h"
 #include "commands.h"
+#include "cli_pcan.h"
+#include "frame_source_pcan.h"
 
 typedef NS_ENUM(NSInteger, VSPProbeMode) {
     VSPProbeModeAuto = 0,
@@ -48,6 +54,7 @@ typedef struct {
     const char *device;
     const char *signals;
     const char *out_path;
+    const char *bitrate;     /* --bitrate (PCAN only) */
     VSPProbeMode mode;
     VSPProbeOBDStrategy obd_strategy;
     bool plan_only;
@@ -87,9 +94,12 @@ static void usage(void) {
     fprintf(stderr,
             "Usage: vsp_probe <profile.vsp> [--device NAME] [--hz N] [--seconds N]\n"
             "                 [--mode auto|can|obd] [--obd poll|periodic|auto]\n"
-            "                 [--signals LIST] [--timeout-ms N] [--plan] [--out FILE]\n\n"
+            "                 [--signals LIST] [--timeout-ms N] [--plan] [--out FILE]\n"
+            "                 [--bitrate RATE|auto]\n\n"
             "Default signal groups: rpm, gear, steering, throttle, brake.\n"
-            "--signals accepts group names, canonical ids, or VSP signal names.\n");
+            "--signals accepts group names, canonical ids, or VSP signal names.\n"
+            "--device pcan / pcan1..pcan8: PEAK PCAN-USB, listen-only: needs --mode can;\n"
+            "--bitrate (PCAN only) is auto or one of 1M 800k 500k ... 5k (default 500k).\n");
 }
 
 static bool parse_double_arg(const char *s, double *out) {
@@ -134,6 +144,8 @@ static bool parse_options(int argc, const char *argv[], vsp_probe_options_t *opt
             opts->signals = argv[++i];
         } else if (strcmp(argv[i], "--out") == 0 && i + 1 < argc) {
             opts->out_path = argv[++i];
+        } else if (strcmp(argv[i], "--bitrate") == 0 && i + 1 < argc) {
+            opts->bitrate = argv[++i];
         } else if (strcmp(argv[i], "--mode") == 0 && i + 1 < argc) {
             const char *mode = argv[++i];
             if (strcasecmp(mode, "auto") == 0) opts->mode = VSPProbeModeAuto;
@@ -189,7 +201,8 @@ static void monitor_callback(const can_frame_t *frame, void *context) {
     if (!ctx || !frame) return;
     ctx->frames += 1;
 
-    double ts = frame->timestamp_ms > 0 ? (double)frame->timestamp_ms : (double)now_ms();
+    double ts = frame->hw_timestamp ? (double)can_frame_time_us(frame) / 1000.0
+              : frame->timestamp_ms > 0 ? (double)frame->timestamp_ms : (double)now_ms();
 
     if (!ctx->diagnostic) {
         vsp_decoder_feed_can(ctx->decoder, frame, ts);
@@ -688,6 +701,47 @@ static bool run_obd_phase(OBDAdapter *adapter,
                               opts->timeout_ms, phaseOut);
 }
 
+/* CAN phase from a listen-only PCAN channel: the whole bus, decoded in software. */
+static bool run_can_phase_pcan(frame_source_t *src,
+                               vsp_decoder_t *dec,
+                               vsp_probe_stats_t *stats,
+                               double seconds,
+                               NSMutableDictionary *phaseOut) {
+    const pcan_channel_t *ch = frame_source_pcan_channel(src);
+    phaseOut[@"name"] = @"can";
+    phaseOut[@"strategy"] = @"pcan_listen_only";
+    phaseOut[@"interface"] = @"pcan";
+    phaseOut[@"library_version"] = ns_string(pcan_api_version());
+    phaseOut[@"bitrate"] = @(ch ? ch->bitrate : 0);
+    phaseOut[@"timestamps"] = @"hardware";
+
+    vsp_monitor_context_t ctx = { .decoder = dec, .diagnostic = false, .frames = 0 };
+    int64_t startMs = now_ms();
+    frame_source_start(src, monitor_callback, &ctx);
+    int64_t endUs = pcan_mono_us() + (int64_t)(seconds * 1e6);
+    while (!g_interrupted && frame_source_is_open(src)) {
+        int64_t left = endUs - pcan_mono_us();
+        if (left <= 0) break;
+        frame_source_pump(src, left < 50000 ? (double)left / 1e6 : 0.05);
+    }
+    frame_source_stop(src);
+    bool open = frame_source_is_open(src);
+    double phaseDuration = (double)(now_ms() - startMs) / 1000.0;
+    phaseOut[@"frames_received"] = @(ctx.frames);
+    phaseOut[@"actual_duration_s"] = @(((double)llround(phaseDuration * 1000.0)) / 1000.0);
+    if (!open) phaseOut[@"device_lost"] = @YES;
+    for (int i = 0; i < vsp_decoder_signal_count(dec); i++) {
+        if (vsp_decoder_signal_info(dec, i)->kind == VSP_SIGNAL_CAN_FRAME) {
+            stats[i].test_duration_s = phaseDuration;
+        }
+    }
+    return open;
+}
+
+static bool probe_cancelled(void) {
+    return g_interrupted != 0;
+}
+
 static NSDictionary *plan_for_item(const vsp_decoder_t *dec, int idx) {
     const vsp_signal_info_t *item = vsp_decoder_signal_info(dec, idx);
     NSMutableDictionary *d = [NSMutableDictionary dictionary];
@@ -847,6 +901,19 @@ int cmd_probe_main(int argc, const char *argv[]) {
             usage();
             return 1;
         }
+        bool pcan = opts.device && pcan_is_device(opts.device);
+        if (pcan && !opts.plan_only && opts.mode != VSPProbeModeCAN) {
+            /* auto may fall back to OBD queries; obd always sends them */
+            cli_pcan_refuse(opts.mode == VSPProbeModeOBD ? "probe --mode obd" : "probe --mode auto");
+            fprintf(stderr, "[ERROR] Use --mode can with a PCAN device\n");
+            return 1;
+        }
+        pcan_bitrate_t pcanBitrate;
+        if (opts.bitrate && !pcan) {
+            fprintf(stderr, "[ERROR] --bitrate applies to PCAN devices only (pcan, pcan1..pcan8)\n");
+            return 1;
+        }
+        if (pcan && !cli_pcan_parse_bitrate(opts.bitrate, &pcanBitrate)) return 1;
 
         char err[1024] = "";
         vsp_profile_t *profile = vsp_profile_load(opts.profile_path, err, sizeof(err));
@@ -889,6 +956,32 @@ int cmd_probe_main(int argc, const char *argv[]) {
 
         signal(SIGINT, signal_handler);
         signal(SIGTERM, signal_handler);
+
+        if (pcan) {
+            /* listen-only CAN phase; no Bluetooth object is created */
+            pcan_channel_t ch;
+            if (!cli_pcan_open(opts.device, &pcanBitrate, probe_cancelled, &ch, NULL)) return 1;
+            frame_source_t *src = frame_source_pcan_create(&ch);
+            if (!src) {
+                pcan_close(&ch);
+                fprintf(stderr, "[ERROR] Out of memory\n");
+                return 1;
+            }
+            NSMutableArray<NSDictionary *> *phases = [NSMutableArray array];
+            int64_t startMs = now_ms();
+            NSMutableDictionary *phase = [NSMutableDictionary dictionary];
+            bool ok = run_can_phase_pcan(src, decoder, stats, opts.duration_s, phase);
+            [phases addObject:phase];
+            int64_t endMs = now_ms();
+            frame_source_free(src);   /* CAN_Uninitialize */
+            double actualDuration = (double)(endMs - startMs) / 1000.0;
+            NSMutableDictionary *out = [[build_output(profile, opts.profile_path, &opts, decoder, stats,
+                                                      phases, false, actualDuration) mutableCopy] autorelease];
+            out[@"interface"] = @"pcan";
+            bool written = write_json(out, opts.out_path);
+            if (!written) return 1;
+            return ok && !g_interrupted ? 0 : 1;
+        }
 
         OBDAdapter *adapter = [[OBDAdapter alloc] initWithNameHints:[OBDAdapter defaultNameHints]
                                                               quiet:NO];

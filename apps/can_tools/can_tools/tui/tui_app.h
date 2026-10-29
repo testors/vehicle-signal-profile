@@ -79,6 +79,14 @@ typedef struct {
                      can_frame_t *frames, int max_frames, int64_t *ts_ms);
     /** obd_init_adapter(PASSIVE): ATZ ... ATCSM1, receive only. */
     bool (*passive_init)(void *ctx);
+
+    /* PCAN-USB: the interface cannot transmit at all (tx_* and passive_init
+       are NULL); TX mode is refused up front, the monitor keeps running. */
+    bool        listen_only;
+    const char *mode_text;      /* header text in place of "silent", e.g. "listen-only 500k" */
+    const char *interface_name; /* session.json "interface" ("pcan"); NULL = Bluetooth adapter */
+    const char *library_version;/* session.json "library_version" (PCBUSB PCAN_CHANNEL_VERSION) */
+    int         bitrate;        /* session.json "bitrate" (bit/s) */
 } tui_host_t;
 
 typedef struct tui_app tui_app_t;

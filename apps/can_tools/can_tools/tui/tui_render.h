@@ -56,6 +56,7 @@ typedef struct {
     /* header */
     const char *device;          /* adapter name, or the replay name */
     bool        live;            /* adapter connected (shows "silent" / "TX ON") */
+    const char *live_mode;       /* replaces "silent" (PCAN: "listen-only 500k"), NULL = "silent" */
     bool        tx_on;
     bool        disconnected;
     bool        replay;

@@ -29,8 +29,10 @@ typedef struct {
     int      segment;        /* segments opened so far */
     int64_t  last_flush_ms;
     uint64_t frames;         /* frames in the open segment */
+    bool     us_column;      /* header names the timestamp_us column (hardware-stamped source) */
 } tui_recorder_t;
 
+/** us_column starts false; set it after init for a hardware-stamped source. */
 void tui_recorder_init(tui_recorder_t *r, const char *dir);
 /** Open the next segment and write the header; false with a message in err. */
 bool tui_recorder_open(tui_recorder_t *r, int64_t now_ms, char *err, size_t err_len);

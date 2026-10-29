@@ -27,7 +27,7 @@ bool tui_recorder_open(tui_recorder_t *r, int64_t now_ms, char *err, size_t err_
     r->segment = segment;
     r->frames = 0;
     r->last_flush_ms = now_ms;
-    frame_tsv_write_header(r->f);
+    frame_tsv_write_header_ex(r->f, r->us_column);
     return true;
 }
 

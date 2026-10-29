@@ -213,7 +213,7 @@ static void draw_header(tui_grid_t *g, const tui_model_t *m, const tui_view_t *v
     char bus[64];
     if (m->cls.bus == TUI_BUS_DETECTING) snprintf(bus, sizeof(bus), "detecting%s", tui_glyph(TUI_G_ELLIPSIS, ascii));
     else snprintf(bus, sizeof(bus), "%s", tui_bus_text(m->cls.bus));
-    const char *tx = v->live ? (v->tx_on ? "TX ON" : "silent") : NULL;
+    const char *tx = v->live ? (v->tx_on ? "TX ON" : (v->live_mode ? v->live_mode : "silent")) : NULL;
     char tail1[128];
     if (tx) snprintf(tail1, sizeof(tail1), " %s %s %s %s", dot, bus, dot, tx);
     else snprintf(tail1, sizeof(tail1), " %s %s", dot, bus);

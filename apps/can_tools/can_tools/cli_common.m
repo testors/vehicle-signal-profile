@@ -42,9 +42,11 @@ volatile sig_atomic_t g_interrupt = 0;
 stn2255_info_t g_stn_info = {0};
 bool g_stn_detected = false;
 
+frame_source_t *volatile g_cli_pcan_source = NULL;
+
 void signal_handler(int sig) {
     (void)sig;
-    if (g_ble.canMonitorActive) {
+    if (g_ble.canMonitorActive || frame_source_is_running(g_cli_pcan_source)) {
         g_interrupt = YES;
     } else {
         g_running = NO;

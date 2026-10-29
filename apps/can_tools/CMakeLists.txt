@@ -59,6 +59,18 @@ target_include_directories(can_frames PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/common
 )
 
+# PCAN-USB through UV Software's PCBUSB library, receive only (plain C).
+# The library is loaded with dlopen at run time: no link-time dependency, the
+# build and every other command work without it installed.
+add_library(pcan_receive STATIC
+    common/pcan.c
+    common/frame_source_pcan.c
+)
+target_include_directories(pcan_receive PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/common
+)
+target_link_libraries(pcan_receive PUBLIC can_frames)
+
 # ELM327 / STN2255 command and response handling (plain C)
 add_library(obd_protocol STATIC
     common/elm327.c
@@ -132,6 +144,7 @@ target_link_libraries(tui_core PUBLIC
 add_library(can_tools_objs OBJECT
     can_tools/main.m
     can_tools/cli_common.m
+    can_tools/cli_pcan.c
     can_tools/interactive.m
     can_tools/cmd_scan.m
     can_tools/cmd_detect.m
@@ -156,6 +169,7 @@ target_link_libraries(can_tools_objs PUBLIC
     discover_session   # libm via can_discover_core
     vsp_engine
     obd_transport
+    pcan_receive
     tui_core
     ncurses
 )
@@ -260,9 +274,10 @@ add_test(NAME tui_snapshot_golden
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-# --- can_tools_fake: can_tools with a fake adapter (no Bluetooth object is created) ---
+# --- can_tools_fake: can_tools with a fake adapter (no Bluetooth object is created)
+#     and a fake PCAN library (tests/fake/fake_pcan.c: the real PCBUSB is never loaded) ---
 add_executable(can_tools_fake $<TARGET_OBJECTS:can_tools_objs> can_tools/tui/tui_main.m
-    tests/fake/fake_adapter.m)
+    tests/fake/fake_adapter.m tests/fake/fake_pcan.c)
 target_include_directories(can_tools_fake PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/can_tools
     ${CMAKE_CURRENT_SOURCE_DIR}/can_tools/tui
@@ -282,6 +297,22 @@ add_test(NAME tui_fake_safety
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
+# --- pcan_test (listen-only open sequence, auto bitrate, clock mapping, PCAN source,
+#     6-column TSV; a fake pcan_api_t, no library, no hardware) ---
+add_executable(pcan_test
+    tests/pcan_test.c
+)
+target_link_libraries(pcan_test
+    pcan_receive
+)
+add_test(NAME pcan_test COMMAND pcan_test)
+
+# --- pcan_fake_safety (CLI refusals, no CAN_Write in the binaries, headless TUI over a fake PCAN) ---
+add_test(NAME pcan_fake_safety
+    COMMAND sh ${CMAKE_CURRENT_SOURCE_DIR}/tests/pcan_fake/run.sh $<TARGET_FILE:can_tools_fake> $<TARGET_FILE:can_tools>
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
 # --- discover_session_test (session layer fed by replay sources; no hardware) ---
 add_executable(discover_session_test
     tests/discover_session_test.c
@@ -295,4 +326,4 @@ message(STATUS "CAN Tools Build Configuration")
 message(STATUS "  Build type: ${CMAKE_BUILD_TYPE}")
 message(STATUS "  C Compiler: ${CMAKE_C_COMPILER}")
 message(STATUS "  Targets: can_tools (+ aliases can_reader, can_discover, vsp_probe, discover_replay), can_tools_fake (tests),")
-message(STATUS "           can_discover_core, can_frames, obd_protocol, obd_transport, discover_session, vsp_engine")
+message(STATUS "           can_discover_core, can_frames, pcan_receive, obd_protocol, obd_transport, discover_session, vsp_engine")

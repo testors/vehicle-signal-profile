@@ -4,6 +4,9 @@
  *
  * Moved from can_reader/main.m. The adapter setup is the PASSIVE init profile;
  * ATRV and the --probe commands (ATCSM0, ATSP0, 0100) stay here.
+ *
+ * cli_detect_pcan: the passive listen from a PCAN-USB (listen-only); no
+ * ATRV, and --probe is refused before this is reached (main.m).
  */
 
 #import <Foundation/Foundation.h>
@@ -25,6 +28,8 @@
 #include "stn2255.h"
 #include "cli_util.h"
 #include "frame_source.h"
+#include "frame_source_pcan.h"
+#include "cli_pcan.h"
 #import "obd_adapter.h"
 #import "cli_common.h"
 #include "commands.h"
@@ -175,3 +180,86 @@ int cli_detect(const char *device, bool allow_probe) {
     return 0;
 }
 
+
+/*******************************************************************************
+ * detect pcan: 3 s listen-only (nothing is ever sent)
+ ******************************************************************************/
+
+static bool detect_cancelled(void) {
+    return !g_running || g_interrupt;
+}
+
+int cli_detect_pcan(const char *device, const pcan_bitrate_t *bitrate) {
+    pcan_channel_t ch;
+    bool autodetected = false;
+    if (!cli_pcan_open(device, bitrate, detect_cancelled, &ch, &autodetected)) return 1;
+    char label[64];
+    snprintf(label, sizeof(label), "%s", ch.label);
+    int rate = ch.bitrate;
+    frame_source_t *src = frame_source_pcan_create(&ch);
+    if (!src) {
+        pcan_close(&ch);
+        fprintf(stderr, "[ERROR] Out of memory\n");
+        return 1;
+    }
+
+    cli_log("Phase 1: Passive listening for 3 seconds (PCAN listen-only %s)...", pcan_bitrate_name(rate));
+    frame_buffer_reset(&g_cli_capture);
+    g_cli_pcan_source = src;
+    frame_source_start(src, monitor_frame_callback, NULL);
+    int64_t end_us = pcan_mono_us() + 3000000;
+    while (frame_source_is_open(src) && !g_interrupt && g_running) {
+        int64_t left = end_us - pcan_mono_us();
+        if (left <= 0) break;
+        frame_source_pump(src, left < 50000 ? (double)left / 1e6 : 0.05);
+    }
+    frame_source_stop(src);
+    g_cli_pcan_source = NULL;
+    bool lost = !frame_source_is_open(src);
+
+    int frames = g_cli_capture.count;
+    if (frames > 0) cli_log("Phase 1 result: CAN frames detected (%d)", frames);
+    else cli_log("Phase 1 result: No CAN frames");
+    if (lost) fprintf(stderr, "[ERROR] PCAN %s stopped answering during the listen\n", label);
+    cli_log("Phase 2 skipped: PCAN is listen-only (no 0100 probe)");
+
+    const char *mode = frames > 0 ? "broadcast" : "unknown";
+    cli_log(frames > 0 ? "Result: broadcast traffic (direct tap or OBD port with broadcast)"
+                       : "Result: no traffic (IGN OFF, wrong bitrate, or an OBD port behind a gateway)");
+
+    int unique_ids = 0;
+    uint32_t seen_ids[512];
+    for (int i = 0; i < frames && unique_ids < 512; i++) {
+        bool found = false;
+        for (int j = 0; j < unique_ids && !found; j++) found = seen_ids[j] == g_cli_capture.frames[i].can_id;
+        if (!found) seen_ids[unique_ids++] = g_cli_capture.frames[i].can_id;
+    }
+
+    printf("{\"device\":");
+    json_print_string(stdout, label);
+    printf(",\"interface\":\"pcan\",\"library_version\":");
+    json_print_string(stdout, pcan_api_version());
+    printf(",\"bitrate\":%d,\"bitrate_auto\":%s", rate, autodetected ? "true" : "false");
+    printf(",\"mode\":");
+    json_print_string(stdout, mode);
+    printf(",\"voltage\":null");
+    printf(",\"broadcast\":%s", (frames > 0) ? "true" : "false");
+    printf(",\"frames_received\":%d", frames);
+    printf(",\"probe_sent\":false");
+    printf(",\"probe_responded\":false");
+    if (lost) printf(",\"device_lost\":true");
+    printf(",\"unique_can_ids\":%d", unique_ids);
+    if (unique_ids > 0) {
+        printf(",\"can_ids\":[");
+        for (int i = 0; i < unique_ids; i++) {
+            if (i > 0) printf(",");
+            printf("\"%03X\"", seen_ids[i]);
+        }
+        printf("]");
+    }
+    printf("}\n");
+
+    frame_source_free(src);   /* CAN_Uninitialize */
+    g_interrupt = NO;
+    return lost ? 1 : 0;
+}

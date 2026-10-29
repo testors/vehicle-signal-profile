@@ -7,6 +7,11 @@
  * explicit non-empty --device; initializes with OBD_INIT_PASSIVE only (no
  * ATSP0, no OBD_INIT_ACTIVE); the only transmitting calls are the TX host
  * callbacks, which tui_app reaches only through its TX guard.
+ *
+ * PCAN-USB channels (PCBUSB library) are listed too, re-polled about once a
+ * second. One is opened only through pcan_open() (listen-only, verified;
+ * auto bitrate tries each rate the same way), and its host has no TX
+ * callbacks at all: TX mode is refused up front.
  */
 
 #pragma once
@@ -15,11 +20,13 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "pcan.h"
 #include "tui_app.h"
 #include "tui_capture.h"
 
 typedef struct {
-    const char *device;          /* non-empty --device, or NULL (connect screen) */
+    const char *device;          /* non-empty --device, or NULL (connect screen); pcan* = PCAN-USB */
+    pcan_bitrate_t bitrate;      /* PCAN bitrate (--bitrate, default 500k) */
     const char *profile;         /* --profile path, "none", or NULL (picker) */
     const char *profiles_dir;
     const char *captures_root;
