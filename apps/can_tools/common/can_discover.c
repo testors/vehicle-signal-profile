@@ -560,6 +560,7 @@ typedef struct {
     const uint64_t    *le;
     const uint64_t    *be;
     uint64_t           toggle;                    /* DBC bits that ever changed */
+    uint64_t           alive;                     /* alive counter bits (view_alive_bits) */
     uint16_t           byte_unique[DISC_MAX_DLC];
 } id_view_t;
 
@@ -590,6 +591,59 @@ static void raw_split_free(raw_split_t *s) {
     free(s->be);
     free(s->views);
     memset(s, 0, sizeof(*s));
+}
+
+/*
+ * Alive counters in one ID's frames. A bit that flips in nearly every frame is
+ * a counter's lowest bit; the bits above it belong to the counter while the
+ * group keeps stepping as one value from frame to frame (forward by less than
+ * half its range, or by one steady step). Checksum bits flip about half the
+ * time, and a signal's own jitter at rest neither flips every frame nor steps
+ * steadily, so neither is taken.
+ */
+#define DISC_ALIVE_FLIP_RATE   0.95
+#define DISC_ALIVE_STEADY_RATE 0.80
+#define DISC_ALIVE_MAX_BITS    8
+
+static bool view_group_steps_steadily(const id_view_t *v, int lo, int n) {
+    uint32_t mod = 1u << n, mask = mod - 1u;
+    int hist[1 << DISC_ALIVE_MAX_BITS] = {0};
+    int forward = 0, total = v->count - 1;
+    for (int i = 1; i < v->count; i++) {
+        uint32_t a = (uint32_t)(v->le[i - 1] >> lo) & mask;
+        uint32_t b = (uint32_t)(v->le[i] >> lo) & mask;
+        uint32_t step = (b - a) & mask;
+        hist[step]++;
+        if (step >= 1 && step < (mod >> 1)) forward++;
+    }
+    int steady = 0;
+    for (uint32_t st = 1; st < mod; st++) {
+        if (hist[st] > steady) steady = hist[st];
+    }
+    return forward >= 0.9 * total || steady >= DISC_ALIVE_STEADY_RATE * total;
+}
+
+static uint64_t view_alive_bits(const id_view_t *v) {
+    if (v->count < 8) return 0;
+    uint64_t alive = 0;
+    int total = v->count - 1;
+    for (int bit = 0; bit < 64; bit++) {
+        if (!((v->toggle >> bit) & 1ULL)) continue;
+        int flips = 0;
+        for (int i = 1; i < v->count; i++) {
+            flips += (int)(((v->le[i] ^ v->le[i - 1]) >> bit) & 1ULL);
+        }
+        if (flips < DISC_ALIVE_FLIP_RATE * total) continue;
+        int top = bit;
+        while (top + 1 < 64 && top + 2 - bit <= DISC_ALIVE_MAX_BITS &&
+               ((v->toggle >> (top + 1)) & 1ULL) &&
+               view_group_steps_steadily(v, bit, top + 2 - bit)) {
+            top++;
+        }
+        for (int b = bit; b <= top; b++) alive |= 1ULL << b;
+        bit = top;
+    }
+    return alive;
 }
 
 static bool raw_split_build(const disc_raw_phase_t *raw, raw_split_t *s) {
@@ -655,6 +709,7 @@ static bool raw_split_build(const disc_raw_phase_t *raw, raw_split_t *s) {
             }
             if (i > 0) view->toggle |= view->le[i] ^ view->le[i - 1];
         }
+        view->alive = view_alive_bits(view);
     }
     return true;
 }
@@ -1854,12 +1909,27 @@ static bool bit_toggles(const id_view_t *v, int bit) {
     return bit >= 0 && bit < 64 && ((v->toggle >> bit) & 1ULL) != 0;
 }
 
+/** Signals that read one value at rest: released pedal, car standing still. */
+static bool signal_rests_in_baseline(disc_signal_t sig) {
+    return sig == DISC_SIG_THROTTLE || sig == DISC_SIG_WHEEL_SPEED;
+}
+
+/** Baseline alive-counter bits for a signal that rests there, else 0. */
+static uint64_t rest_alive_bits(disc_signal_t sig, const id_view_t *base) {
+    return (signal_rests_in_baseline(sig) && base) ? base->alive : 0;
+}
+
+static bool mask_has_bit(uint64_t mask, int bit) {
+    return bit >= 0 && bit < 64 && ((mask >> bit) & 1ULL) != 0;
+}
+
 /**
  * Toggle pattern of a field, LSB first: whether toggling bits have a gap of
  * constant bits between them (two signals glued together), and whether the
  * toggling run continues past either end of the field (field truncated).
+ * Bits in `alive` (a counter next to the field) do not continue the run.
  */
-static void field_toggle_shape(const id_view_t *v, const field_t *f,
+static void field_toggle_shape(const id_view_t *v, const field_t *f, uint64_t alive,
                                bool *has_gap, bool *truncated) {
     *has_gap = false;
     *truncated = false;
@@ -1890,10 +1960,11 @@ static void field_toggle_shape(const id_view_t *v, const field_t *f,
     }
     int above = more_significant_bit(msb_bit, f->order);
     if (f->sm_bit >= 0 && above == f->sm_bit) above = more_significant_bit(above, f->order);
-    if (last == f->len - 1 && bit_toggles(v, above)) {
+    if (last == f->len - 1 && bit_toggles(v, above) && !mask_has_bit(alive, above)) {
         *truncated = true;   /* run continues above the MSB (or the sign bit) */
     }
-    if (first == 0 && bit_toggles(v, less_significant_bit(lsb, f->order))) {
+    int below = less_significant_bit(lsb, f->order);
+    if (first == 0 && bit_toggles(v, below) && !mask_has_bit(alive, below)) {
         *truncated = true;   /* run continues below the LSB */
     }
 }
@@ -2018,7 +2089,12 @@ static bool eval_guess(disc_ctx_t *ctx, disc_signal_t sig,
 
     if (sig != DISC_SIG_GEAR) {
         bool has_gap, truncated;
-        field_toggle_shape(act, f, &has_gap, &truncated);
+        /* A released pedal and a car standing still read one value, so an
+         * alive counter ticking in baseline is not part of the signal. Glued
+         * onto a pedal, counter ticks also hide its jumps between frames. */
+        uint64_t alive = rest_alive_bits(sig, base);
+        field_toggle_shape(act, f, alive, &has_gap, &truncated);
+        if (f->bits & alive) shape -= 20.0;
         if (has_gap) shape -= 40.0;             /* unrelated bits glued on top */
         if (truncated) shape -= 15.0;           /* cuts through a toggling run */
         shape -= 30.0 * view_field_jump_ratio(act, f, a.max - a.min);
@@ -2088,6 +2164,7 @@ static int region_guesses(disc_ctx_t *ctx, disc_signal_t sig,
     signal_search_lengths(sig, &lengths, &length_count);
     int sign_variants = signal_allows_signed_guess(sig) ? 2 : 1;
     if (signal_allows_sign_magnitude_guess(sig)) sign_variants = 3;
+    uint64_t rest_alive = rest_alive_bits(sig, base);
     int count = 0;
     int seq = 0;
 
@@ -2098,7 +2175,9 @@ static int region_guesses(disc_ctx_t *ctx, disc_signal_t sig,
                 if (!full_scan) {
                     if (!bit_toggles(act, lsb)) continue;
                     int below = less_significant_bit(lsb, order);
-                    bool run_start = !bit_toggles(act, below);
+                    /* A run also starts right above an alive counter. */
+                    bool run_start = !bit_toggles(act, below) ||
+                                     mask_has_bit(rest_alive, below);
                     if (!run_start && lsb % 4 != 0) continue;
                 }
 
@@ -2221,6 +2300,7 @@ static int wheel_split(disc_ctx_t *ctx, const id_view_t *act, const id_view_t *b
 typedef enum {
     PRIOR_NONE = 0,
     PRIOR_TOUCH,      /* same signal + ID, overlapping bits, not adoptable */
+    PRIOR_NARROWER,   /* ours contains the prior, same LSB; our extra top bits are constant */
     PRIOR_SUPERSET,   /* prior field contains ours; extra bits are constant */
     PRIOR_EXACT       /* same signal + ID + layout */
 } prior_kind_t;
@@ -2281,7 +2361,10 @@ static bool prior_rest_plausible(disc_signal_t sig, const disc_discover_prior_t 
     double lo = a < b ? a : b, hi = a < b ? b : a;
     if (!(hi > lo)) return true;
     double rest = (double)rest_raw * factor + offset;
-    return rest <= lo + 0.25 * (hi - lo);
+    /* Idle sits above zero: small blips, and the undershoot after them, can
+     * leave it a third of the way up the throttle phase's range. */
+    double frac = (sig == DISC_SIG_RPM) ? 0.5 : 0.25;
+    return rest <= lo + frac * (hi - lo);
 }
 
 /** Observed values a prior is checked against. */
@@ -2351,13 +2434,25 @@ static bool sign_bit_seen(disc_ctx_t *ctx, const id_view_t *act, const id_view_t
  *   - the same bits read with the other sign scheme (two's complement or
  *     unsigned vs sign-magnitude), when the prior's reading is at least as
  *     continuous across sign flips (with raw frames);
- *   - or a superset layout whose extra bits never change (with raw frames).
+ *   - a superset layout whose extra bits never change (with raw frames);
+ *   - or, last, a narrower layout with the same LSB, when our extra top bits
+ *     never change: the capture cannot tell the widths apart, and the corpus
+ *     knows more than our search widths and byte-boundary tie-break. Among
+ *     several, the best supported, then the widest.
  * On adoption *f becomes the prior's layout/sign.
  */
+static int field_lsb(const field_t *f) {
+    int lsb = f->start;
+    if (f->order == 0) {
+        for (int i = 1; i < f->len; i++) lsb = less_significant_bit(lsb, 0);
+    }
+    return lsb;
+}
+
 static prior_kind_t resolve_prior(disc_ctx_t *ctx, disc_signal_t sig, uint32_t can_id,
                                   int dlc, const id_view_t *act, const id_view_t *base,
                                   field_t *f, int *support_out) {
-    int best_exact = -1, best_super = -1;
+    int best_exact = -1, best_super = -1, best_narrow = -1;
     bool touch = false;
     bool have_raw = act != NULL;
 
@@ -2404,14 +2499,25 @@ static prior_kind_t resolve_prior(disc_ctx_t *ctx, disc_signal_t sig, uint32_t c
                 p->support_count > s_can_discover_priors[best_super].support_count) {
                 best_super = i;
             }
+        } else if (have_raw && pf.order == f->order && pf.sm_bit == f->sm_bit &&
+                   (pf.bits & f->bits) == pf.bits && field_lsb(&pf) == field_lsb(f)) {
+            if (!sign_ok) continue;
+            if (!views_bits_constant(act, base, f->bits & ~pf.bits)) continue;
+            const disc_discover_prior_t *b =
+                best_narrow >= 0 ? &s_can_discover_priors[best_narrow] : NULL;
+            if (!b || p->support_count > b->support_count ||
+                (p->support_count == b->support_count && p->bit_length > b->bit_length)) {
+                best_narrow = i;
+            }
         }
     }
 
-    int chosen = (best_exact >= 0) ? best_exact : best_super;
+    int chosen = (best_exact >= 0) ? best_exact : (best_super >= 0) ? best_super : best_narrow;
     if (chosen >= 0) {
         prior_field(&s_can_discover_priors[chosen], f);
         *support_out = s_can_discover_priors[chosen].support_count;
-        return (best_exact >= 0) ? PRIOR_EXACT : PRIOR_SUPERSET;
+        return (best_exact >= 0) ? PRIOR_EXACT
+             : (best_super >= 0) ? PRIOR_SUPERSET : PRIOR_NARROWER;
     }
     *support_out = 0;
     return touch ? PRIOR_TOUCH : PRIOR_NONE;
@@ -2420,7 +2526,8 @@ static prior_kind_t resolve_prior(disc_ctx_t *ctx, disc_signal_t sig, uint32_t c
 static double prior_points(prior_kind_t kind, int support) {
     switch (kind) {
     case PRIOR_EXACT:    return 10.0 + (support > 6 ? 6 : support);
-    case PRIOR_SUPERSET: return 6.0 + (support > 4 ? 4 : support);
+    case PRIOR_SUPERSET:
+    case PRIOR_NARROWER: return 6.0 + (support > 4 ? 4 : support);
     case PRIOR_TOUCH:    return 2.0;
     default:             return 0.0;
     }

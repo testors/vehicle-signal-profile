@@ -339,7 +339,13 @@ Phase 6: Wheel Speed (15초)  — 저속 주행 30+ km/h [스킵 가능]
      (예: 정차 phase의 wheel speed). 원래 같이 움직이는 phase(주행 중 RPM, 기어 변경 중 브레이크)는 감점하지 않는다.
    - **shape**: 비트 폭·주기·부호·바이트 순서가 신호 종류에 맞는지. 부호를 허용하는 신호(steering, brake)는
      부호(최상위) 비트가 바뀌는 순간 값이 이어지는지도 본다. 부호 방식을 잘못 읽으면 0 부근에서 범위
-     절반만큼 튄다(2의 보수를 sign-magnitude로 읽거나 그 반대).
+     절반만큼 튄다(2의 보수를 sign-magnitude로 읽거나 그 반대). 페달을 뗀 상태와 정차 상태는 값이
+     하나이므로, throttle과 wheel speed는 baseline의 alive counter를 신호로 보지 않는다: counter 비트를
+     포함한 필드는 감점하고, 필드 바로 옆이 counter면 필드가 잘렸다고 보지 않으며, counter 바로 위 비트도
+     필드 LSB 후보로 시도한다. counter는 ID마다 baseline 프레임에서 찾는다: 거의 매 프레임(95%) 뒤집히는
+     비트에서 시작해, 그 위 비트를 붙여도 묶음 값이 매 프레임 앞으로(범위 절반 미만) 또는 일정한 폭으로
+     움직이는 동안(최대 8비트)이다. checksum 비트와 신호 자체의 떨림(예: idle의 스로틀 밸브 각도)은
+     해당하지 않는다. 예: 992 GT3 `0x121`은 byte0 checksum, bit 8–11 counter, bit 12부터 페달.
    - **prior**: VSP corpus에 **같은 ID와 같은 layout**의 신호가 있는지 (ID만 같은 경우는 거의 점수 없음)
 4. 필드 단위 최소 변화량을 넘지 못한 후보(예: 50→51 한 번 바뀐 바이트)는 버린다.
 5. 모든 신호를 함께 배정해 두 신호가 같은 비트를 쓰지 않게 한다. 어떤 신호의 1순위 필드가 다른 신호에
@@ -353,9 +359,13 @@ Phase 6: Wheel Speed (15초)  — 저속 주행 30+ km/h [스킵 가능]
 DBC는 raw 값 기준의 호환 초안이고, VSP는 정보가 없는 차량의 profile 시작점이다.
 두 파일은 같은 최종 필드 목록에서 만들어지므로 내용이 서로 같고, JSON에 보고된 layout도 그대로 들어간다.
 prior는 관측한 bitfield와 layout·부호가 맞을 때만 이름/scale/unit/canonical id를 채운다.
-(prior가 관측 필드를 포함하고 남는 비트가 캡처 내내 변하지 않으면 prior layout을 채택한다.)
+(prior가 관측 필드를 포함하고 남는 비트가 캡처 내내 변하지 않으면 prior layout을 채택한다. 맞는 것이
+없으면 마지막으로, LSB가 같고 관측 필드가 위쪽으로만 더 넓은 prior도 그 위쪽 비트가 캡처 내내 변하지 않으면
+채택한다: 캡처로는 두 폭을 구분할 수 없으므로 탐색 폭·바이트 경계 가점보다 corpus를 따른다. 여럿이면
+support가 큰 것, 같으면 더 넓은 것.)
 scale도 관측값으로 검사한다: 관측 raw 범위가 prior의 min/max 안에 들어야 하고, 브레이크·페달을 뗀 상태,
-idle, 정차 상태(baseline)가 물리값 범위의 아래쪽에 와야 한다. 맞지 않는 prior는 쓰지 않는다.
+정차 상태(baseline)가 물리값 범위의 아래쪽 1/4에 와야 한다. idle은 0보다 위에 있고 작은 블립 뒤 언더슈트도
+있으므로 RPM은 아래쪽 절반이면 된다. 맞지 않는 prior는 쓰지 않는다.
 DLC는 항상 관측값을 쓴다. wheel speed는 가능한 경우 바퀴별 4개 신호로 분해해 출력한다.
 discover 실행 시에는 기본적으로 `captures/YYYYMMDD_HHMMSS/` 세션 폴더를 만들고,
 각 phase raw dump(`*.frames.tsv`), `manifest.json`, `result.json`,
@@ -390,7 +400,9 @@ prior table(`can_discover_priors.h`)은 빌드할 때 `tools/gen_can_discover_pr
 ### 회귀 테스트
 
 합성 캡처로 탐색 엔진을 검증한다 (RPM/throttle 분리, 같은 메시지의 두 신호, 저속 gateway,
-잡음만 있는 캡처, skip된 phase, 묶음 timestamp, DBC/VSP 일치, cycle time, 512 KB 스레드 스택 등):
+잡음만 있는 캡처, skip된 phase, 묶음 timestamp, counter 바로 옆 페달과 작은 RPM 블립(992 GT3 실차 캡처 패턴),
+같은 바이트에서 counter 위에 놓인 Motorola 페달, idle에서 하위 비트가 떨리는 스로틀,
+DBC/VSP 일치, cycle time, 512 KB 스레드 스택 등):
 
 ```bash
 cd build && ctest --output-on-failure      # 또는 ./build/discover_regression

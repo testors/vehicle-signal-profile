@@ -245,6 +245,15 @@ static uint32_t g_sm_steer_id = 0;
 static int g_sm_steer_div = 1;
 static bool g_bmw_gear = false;   /* gear on 0x3F9 48|4 with BMW codes instead of 0x3FD */
 
+/* 0x0D9 pedal variants: the throttle field next to bits that also move at rest. */
+typedef enum {
+    PEDAL_PLAIN = 0,      /* 12-bit LE @16, 0 at rest */
+    PEDAL_REST_JITTER,    /* same field, throttle-plate style: 2 % at rest, +0..3 LSB noise */
+    PEDAL_BE_OVER_COUNTER /* 10-bit Motorola @23, +1 alive counter in the 4 bits below
+                             its LSB (same byte), checksum in byte 0 */
+} pedal_mode_t;
+static pedal_mode_t g_pedal_mode = PEDAL_PLAIN;
+
 static void gen_coupled(int p, int k, double t, sink_t *sink) {
     phys_t ph;
     physics(p, t, &ph);
@@ -287,9 +296,18 @@ static void gen_coupled(int p, int k, double t, sink_t *sink) {
     }
 
     /* 0x0D9 pedal, 20 Hz: 12-bit LE @16 factor 0.025 %, kickdown bit @31 */
-    if (k % 5 == 0) {
+    if (k % 5 == 0 && g_pedal_mode == PEDAL_BE_OVER_COUNTER) {
         memset(d, 0, 8);
-        put_field(d, 16, 12, 1, (uint32_t)lround(ph.thr_pct / 0.025));
+        put_field(d, 23, 10, 0, (uint32_t)lround(ph.thr_pct / 0.1));
+        put_field(d, 29, 4, 0, (uint32_t)((k / 5) & 0xF));
+        d[0] = crc8(d + 1, 5);
+        sink_push(sink, 0x0D9, d, 6, ts);
+    } else if (k % 5 == 0) {
+        memset(d, 0, 8);
+        uint32_t raw = (g_pedal_mode == PEDAL_REST_JITTER)
+                           ? (uint32_t)lround((ph.thr_pct + 2.0) / 0.025) + (rng_next() & 3)
+                           : (uint32_t)lround(ph.thr_pct / 0.025);
+        put_field(d, 16, 12, 1, raw);
         if (ph.thr_pct > 95) d[3] |= 0x80;
         sink_push(sink, 0x0D9, d, 6, ts);
     }
@@ -366,11 +384,104 @@ static void gen_bmw_gear(int p, int k, double t, sink_t *sink) {
     g_bmw_gear = false;
 }
 
+static void gen_tps_jitter(int p, int k, double t, sink_t *sink) {
+    g_pedal_mode = PEDAL_REST_JITTER;
+    gen_coupled(p, k, t, sink);
+    g_pedal_mode = PEDAL_PLAIN;
+}
+
+static void gen_be_pedal_counter(int p, int k, double t, sink_t *sink) {
+    g_pedal_mode = PEDAL_BE_OVER_COUNTER;
+    gen_coupled(p, k, t, sink);
+    g_pedal_mode = PEDAL_PLAIN;
+}
+
 static void gen_sm_no_prior(int p, int k, double t, sink_t *sink) {
     g_sm_steer_id = 0x0B5;
     g_sm_steer_div = 2;
     gen_coupled(p, k, t, sink);
     g_sm_steer_id = 0;
+}
+
+/* --- Porsche 992 GT3 layout, as recorded standing still --------------------
+ * Patterns from real PT-CAN captures (apps/can_tools/captures/20261028_*):
+ *   0x121 pedal: crc b0, alive counter in bits 8-11 that advances ~4 per
+ *         received frame (bits 10-11 cycle every frame), pedal 8 bits @12
+ *         (0.4 %). Stabs to ~28 %: the pedal jumps between 25 Hz frames,
+ *         while the counter ticks make a field glued onto it look smooth.
+ *   0x0A8 engine: RPM 16 bits @48 (0.25 rpm, only the 0.5 rpm bit moves).
+ *         Small blips over a jittery idle, with an undershoot after each one,
+ *         put idle in the lower third of the throttle phase's range.
+ *   0x0A0 sign-magnitude steering, 0x106 brake pressure 10 bits @16. */
+
+static double gt3_blip(double t, double at) {
+    double x = (t - at) / 0.6;
+    return (x >= 0 && x < 1) ? sin(M_PI * x) : 0.0;
+}
+
+/** Pedal stab: in over 0.12 s, a slight sag, out over 0.1 s. */
+static double gt3_stab(double t, double at) {
+    double x = t - at;
+    if (x < 0 || x >= 0.65) return 0.0;
+    if (x < 0.12) return x / 0.12;
+    if (x < 0.55) return 1.0 - 0.15 * (x - 0.12) / 0.43;
+    return 0.85 * (0.65 - x) / 0.10;
+}
+
+static void gen_gt3_standing(int p, int k, double t, sink_t *sink) {
+    int64_t ts = 3000000 + (int64_t)p * 100000 + (int64_t)k * 10;
+    uint8_t d[8];
+
+    double steer = (p == 1) ? 450 * sin(2 * M_PI * t / 4.13) : -4.0;
+    double thr = 0.0, rpm = 775 + jitter(25), brake = 0.0;
+    if (p == 2) {
+        thr = 28.0 * (gt3_stab(t, 1.0) + gt3_stab(t, 4.5));
+        double lag = 28.0 * (gt3_blip(t - 0.15, 1.0) + gt3_blip(t - 0.15, 4.5));
+        double dip = gt3_blip(t, 1.75) + gt3_blip(t, 5.25);
+        rpm += 13.0 * lag - 160.0 * dip;
+    }
+    if (p == 3) brake = 40 * fmax(0.0, sin(2 * M_PI * t / 2.3));
+
+    if (k % 10 == 0) {          /* 0x0A0 steering, 10 Hz */
+        memset(d, 0, 8);
+        d[1] = (uint8_t)((k / 10) & 0xF);
+        d[3] = 0x28;
+        put_field(d, 32, 12, 1, (uint32_t)lround(fabs(steer) / 0.12));
+        if (steer < 0) d[5] |= 0x10;
+        d[0] = crc8(d + 1, 7);
+        sink_push(sink, 0x0A0, d, 8, ts);
+    }
+    if (k % 10 == 5) {          /* 0x0A8 engine, 10 Hz */
+        memset(d, 0, 8);
+        d[1] = (uint8_t)((k / 10) & 0xF);
+        d[2] = 0x81;
+        put_field(d, 48, 16, 1, (uint32_t)lround(rpm * 2) * 2);
+        d[0] = crc8(d + 1, 7);
+        sink_push(sink, 0x0A8, d, 8, ts);
+    }
+    if (k % 4 == 0) {           /* 0x121 pedal, 25 Hz */
+        memset(d, 0, 8);
+        d[1] = (uint8_t)((((k / 4) & 3) << 2) | (1 + (rng_next() & 1)));
+        put_field(d, 12, 8, 1, (uint32_t)lround(thr / 0.4));
+        d[4] = 0x20; d[5] = 0x4E; d[6] = 0x7E; d[7] = 0xFE;
+        d[0] = crc8(d + 1, 7);
+        sink_push(sink, 0x121, d, 8, ts);
+    }
+    if (k % 2 == 0) {           /* 0x106 brake, 50 Hz */
+        memset(d, 0, 8);
+        d[1] = (uint8_t)((k / 2) & 0xF);
+        put_field(d, 16, 10, 1, (uint32_t)lround((brake + 30.6) / 0.3));
+        d[5] = 0x66; d[7] = 0xFE;
+        d[0] = crc8(d + 1, 7);
+        sink_push(sink, 0x106, d, 8, ts);
+    }
+    if (k % 2 == 1) {           /* 0x0FD counter + crc only, 50 Hz */
+        memset(d, 0, 8);
+        d[1] = (uint8_t)((k / 2) & 0xF);
+        d[2] = 0x3F; d[3] = 0x80;
+        d[0] = crc8(d + 1, 7);
+        sink_push(sink, 0x0FD, d, 8, ts);
+    }
 }
 
 /* --- RPM and throttle in one message ------------------------------------- */
@@ -661,6 +772,32 @@ static scenario_t g_scenarios[] = {
         EXPECT1(FIELD(0x3FD, 8, 4, 1)),
         EXPECT4(FIELD(0x254, 0, 16, 1), FIELD(0x254, 16, 16, 1),
                 FIELD(0x254, 32, 16, 1), FIELD(0x254, 48, 16, 1)) } },
+    /* Rest noise in the pedal's own LSBs is signal, not a counter. */
+    { "coupled_tps_jitter_at_rest", gen_tps_jitter, 100, DUR_DEFAULT, {
+        EXPECT1(FIELD(0x0A5, 16, 16, 1)),
+        EXPECT1(FIELD(0x0F3, 39, 16, 0)),
+        EXPECT1(FIELD(0x0D9, 16, 12, 1)),
+        EXPECT1(FIELD(0x173, 0, 12, 1)),
+        EXPECT1(FIELD(0x3FD, 8, 4, 1)),
+        EXPECT4(FIELD(0x254, 0, 16, 1), FIELD(0x254, 16, 16, 1),
+                FIELD(0x254, 32, 16, 1), FIELD(0x254, 48, 16, 1)) } },
+    /* Not the VW layout: Motorola pedal with a +1 counter below it in one byte. */
+    { "coupled_motorola_pedal_over_counter", gen_be_pedal_counter, 100, DUR_DEFAULT, {
+        EXPECT1(FIELD(0x0A5, 16, 16, 1)),
+        EXPECT1(FIELD(0x0F3, 39, 16, 0)),
+        EXPECT1(FIELD(0x0D9, 23, 10, 0)),
+        EXPECT1(FIELD(0x173, 0, 12, 1)),
+        EXPECT1(FIELD(0x3FD, 8, 4, 1)),
+        EXPECT4(FIELD(0x254, 0, 16, 1), FIELD(0x254, 16, 16, 1),
+                FIELD(0x254, 32, 16, 1), FIELD(0x254, 48, 16, 1)) } },
+    /* Pedal next to an alive counter; RPM prior with idle mid-range. */
+    { "gt3_counter_pedal_small_blips", gen_gt3_standing, 100, { 5, 8, 8, 8, 0, 0 }, {
+        EXPECT1(FIELD(0x0A0, 32, 13, 1)),
+        EXPECT1(FIELD(0x0A8, 48, 16, 1)),
+        EXPECT1(FIELD(0x121, 12, 8, 1)),
+        EXPECT1(FIELD(0x106, 16, 10, 1)),
+        EXPECT_NONE,
+        EXPECT_NONE } },
 };
 
 #define SCENARIO_COUNT ((int)(sizeof(g_scenarios) / sizeof(g_scenarios[0])))
@@ -896,7 +1033,8 @@ static double now_ms(void) {
 
 /** Sign bit of sign-magnitude steering scenarios; 0 = two's complement steering. */
 static int expected_steering_sign_bit(const scenario_t *sc) {
-    return (sc->gen == gen_sm_prior || sc->gen == gen_sm_no_prior) ? 44 : 0;
+    return (sc->gen == gen_sm_prior || sc->gen == gen_sm_no_prior ||
+            sc->gen == gen_gt3_standing) ? 44 : 0;
 }
 
 /** Only gen_gateway relays every ID slowly; the rest are direct taps, including
@@ -1042,6 +1180,21 @@ static bool run_scenario(int index, double *elapsed_ms) {
                   "draft VSP lacks raw 3 = P (null)");
             CHECK(strstr(dbc, "VAL_ 1017 ") != NULL && strstr(dbc, " 5 \"1\"") != NULL,
                   "draft DBC lacks the 0x3F9 VAL_ table");
+        }
+        if (strcmp(sc->name, "gt3_counter_pedal_small_blips") == 0) {
+            /* 49|12 also decodes these frames monotonically, but reads twice the
+             * rpm and wraps above 2048: the 0.25 rpm prior has to be adopted. */
+            const disc_candidate_t *c = &r.signals[DISC_SIG_RPM];
+            CHECK(r.found[DISC_SIG_RPM] && c->start_bit == 48 && c->bit_length == 16 &&
+                  c->prior_score > 0,
+                  "RPM should adopt the 0x0A8 48|16 prior (got %d|%d, prior %.1f)",
+                  c->start_bit, c->bit_length, c->prior_score);
+            CHECK(strstr(dbc, " : 48|16@1+ (0.25,0) ") != NULL,
+                  "draft DBC lacks 0x0A8 RPM 48|16 with factor 0.25");
+            /* Top pedal bits never move at 28 %: the 8-bit prior wins over a
+             * 12-bit field that ends on a byte boundary. */
+            CHECK(strstr(dbc, " : 12|8@1+ (0.4,0) ") != NULL,
+                  "draft DBC lacks 0x121 pedal 12|8 with factor 0.4");
         }
         if (getenv("SHOW_DBC")) puts(dbc);
         if (getenv("SHOW_VSP")) puts(vsp);
