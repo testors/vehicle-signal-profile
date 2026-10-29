@@ -322,6 +322,14 @@ target_link_libraries(discover_session_test
 )
 add_test(NAME discover_session_test COMMAND discover_session_test)
 
+# --- discover_drafts (every scenario's draft VSP through tools/validate_vsp.py, no warnings) ---
+get_filename_component(VALIDATE_VSP_PY ${CMAKE_CURRENT_SOURCE_DIR}/../../tools/validate_vsp.py ABSOLUTE)
+add_test(NAME discover_drafts
+    COMMAND sh ${CMAKE_CURRENT_SOURCE_DIR}/tests/discover_drafts.sh
+            $<TARGET_FILE:discover_regression> $<TARGET_FILE:can_tools>
+            ${PYTHON3_EXECUTABLE} ${VALIDATE_VSP_PY}
+)
+
 message(STATUS "CAN Tools Build Configuration")
 message(STATUS "  Build type: ${CMAKE_BUILD_TYPE}")
 message(STATUS "  C Compiler: ${CMAKE_C_COMPILER}")

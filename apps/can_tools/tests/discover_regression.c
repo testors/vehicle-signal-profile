@@ -6,7 +6,8 @@
  * runs disc_analyze_with_raw(), and checks:
  *   - each expected signal is found on an acceptable CAN ID / bitfield
  *   - absent signals are not reported
- *   - draft DBC and draft VSP describe the same fields, with DLC <= 8
+ *   - draft DBC and draft VSP describe the same fields, with DLC <= 8, 29-bit
+ *     ids with bit 31 in the DBC, and no canonical id on two signals
  *   - analysis is safe on a 512 KB thread stack
  *
  * Synthetic captures prove regressions, not real-vehicle accuracy. Use
@@ -36,7 +37,10 @@ typedef struct {
     int cap;
 } sink_t;
 
+static uint32_t g_id_or = 0;   /* or-ed into every id: a scenario on 29-bit ids */
+
 static void sink_push(sink_t *s, uint32_t id, const uint8_t *d, uint8_t dlc, int64_t ts) {
+    id |= g_id_or;
     if (s->count == s->cap) {
         s->cap = s->cap ? s->cap * 2 : 4096;
         s->frames = (can_frame_t *)realloc(s->frames, (size_t)s->cap * sizeof(*s->frames));
@@ -714,6 +718,13 @@ static void gen_edge_noisy(int p, int k, double t, sink_t *sink) { g_edge = EDGE
 static void gen_edge_twins(int p, int k, double t, sink_t *sink) { g_edge = EDGE_TWINS; gen_edge(p, k, t, sink); }
 static void gen_edge_rpm_flat(int p, int k, double t, sink_t *sink) { g_edge = EDGE_RPM_FLAT_HIGH; gen_edge(p, k, t, sink); }
 
+/* shared_msg with every id as 29-bit 0x18FF0xxx */
+static void gen_shared_msg_ext(int p, int k, double t, sink_t *sink) {
+    g_id_or = 0x18FF0000;
+    gen_shared_msg(p, k, t, sink);
+    g_id_or = 0;
+}
+
 /*******************************************************************************
  * Scenario table
  ******************************************************************************/
@@ -880,6 +891,15 @@ static scenario_t g_scenarios[] = {
         EXPECT2_NOT_HIGH(FIELD(0x6FA, 0, 12, 1), FIELD(0x6FA, 24, 12, 1)),
         EXPECT2_NOT_HIGH(FIELD(0x6FA, 0, 12, 1), FIELD(0x6FA, 24, 12, 1)),
         EXPECT_NONE, EXPECT_NONE, EXPECT_NONE } },
+    /* Discover review: 29-bit ids, which the draft DBC writes with bit 31 set. */
+    { "extended_29bit_ids", gen_shared_msg_ext, 100, DUR_DEFAULT, {
+        EXPECT1(FIELD(0x18FF00C4, 0, 16, 1)),
+        EXPECT1(FIELD(0x18FF01A0, 7, 16, 0)),
+        EXPECT1(FIELD(0x18FF01A0, 32, 8, 1)),
+        EXPECT1(FIELD(0x18FF00A8, 7, 16, 0)),
+        EXPECT1(FIELD(0x18FF01D2, 0, 8, 1)),
+        EXPECT4(FIELD(0x18FF00CE, 0, 16, 1), FIELD(0x18FF00CE, 16, 16, 1),
+                FIELD(0x18FF00CE, 32, 16, 1), FIELD(0x18FF00CE, 48, 16, 1)) } },
 };
 
 #define SCENARIO_COUNT ((int)(sizeof(g_scenarios) / sizeof(g_scenarios[0])))
@@ -957,10 +977,16 @@ typedef struct {
 
 #define MAX_OUT 64
 
-static int parse_dbc(const char *dbc, out_field_t *out, int max, int *bad_dlc) {
+/** DBC message id of a frame id: 29-bit ids carry bit 31. */
+static uint32_t dbc_id(uint32_t id) { return id > 0x7FF ? id | 0x80000000u : id; }
+
+/** Fields of a draft DBC, ids as frame ids (bit 31 dropped). bad_ext counts
+ *  messages whose id needs 29 bits but lacks bit 31. */
+static int parse_dbc(const char *dbc, out_field_t *out, int max, int *bad_dlc, int *bad_ext) {
     int n = 0;
     uint32_t cur = 0;
     *bad_dlc = 0;
+    *bad_ext = 0;
     for (const char *line = dbc; line && *line; ) {
         const char *eol = strchr(line, '\n');
         unsigned id, dlc;
@@ -968,6 +994,8 @@ static int parse_dbc(const char *dbc, out_field_t *out, int max, int *bad_dlc) {
         char sign;
         char name[64];
         if (sscanf(line, "BO_ %u %*s %u", &id, &dlc) == 2) {
+            if (id & 0x80000000u) id &= 0x1FFFFFFFu;
+            else if (id > 0x7FF) (*bad_ext)++;
             cur = id;
             if (dlc > 8) (*bad_dlc)++;
         } else if (sscanf(line, " SG_ %63s : %d|%d@%d%c", name, &s, &l, &o, &sign) == 5) {
@@ -1218,10 +1246,27 @@ static bool run_scenario(int index, double *elapsed_ms) {
     CHECK(vsp != NULL, "VSP render failed");
     if (dbc && vsp) {
         out_field_t df[MAX_OUT], vf[MAX_OUT];
-        int bad_dbc_dlc = 0, bad_vsp_dlc = 0;
-        int dn = parse_dbc(dbc, df, MAX_OUT, &bad_dbc_dlc);
+        int bad_dbc_dlc = 0, bad_vsp_dlc = 0, bad_ext = 0;
+        int dn = parse_dbc(dbc, df, MAX_OUT, &bad_dbc_dlc, &bad_ext);
         int vn = parse_vsp(vsp, vf, MAX_OUT, &bad_vsp_dlc);
         CHECK(bad_dbc_dlc == 0, "DBC has %d messages with DLC > 8", bad_dbc_dlc);
+        CHECK(bad_ext == 0, "DBC has %d 29-bit messages without bit 31", bad_ext);
+        /* a canonical id names one CAN signal (tools/validate_vsp.py warns otherwise) */
+        char canon[MAX_OUT][64];
+        int nc = 0;
+        for (const char *c = strstr(vsp, "\"canonical\": {"); c && nc < MAX_OUT;
+             c = strstr(c + 1, "\"canonical\": {")) {
+            const char *id = strstr(c, "\"id\": \"");
+            if (!id) break;
+            id += 7;
+            const char *q = strchr(id, '"');
+            if (!q) break;
+            snprintf(canon[nc], sizeof(canon[nc]), "%.*s", (int)(q - id), id);
+            for (int j = 0; j < nc; j++) {
+                CHECK(strcmp(canon[j], canon[nc]) != 0, "VSP canonical id %s on two signals", canon[nc]);
+            }
+            nc++;
+        }
         CHECK(bad_vsp_dlc == 0, "VSP has %d frames with DLC > 8", bad_vsp_dlc);
         CHECK(dn == vn, "DBC has %d fields but VSP has %d", dn, vn);
         for (int i = 0; i < dn; i++) {
@@ -1250,7 +1295,7 @@ static bool run_scenario(int index, double *elapsed_ms) {
         for (int s = 0; s < DISC_SIG_COUNT; s++) {
             if (!r.found[s] || r.signals[s].hz <= 0) continue;
             char key[64];
-            snprintf(key, sizeof(key), "BO_ %u ", r.signals[s].can_id);
+            snprintf(key, sizeof(key), "BO_ %u ", dbc_id(r.signals[s].can_id));
             const char *line = strstr(dbc, "BA_ \"GenMsgCycleTime\" ");
             int cycle = -1;
             while (line) {
@@ -1437,6 +1482,10 @@ static int dump_session(const char *name, const char *dir) {
 
 int main(int argc, char **argv) {
     if (argc == 4 && strcmp(argv[1], "--dump") == 0) return dump_session(argv[2], argv[3]);
+    if (argc == 2 && strcmp(argv[1], "--list") == 0) {   /* scenario names, for tests/discover_drafts.sh */
+        for (int i = 0; i < SCENARIO_COUNT; i++) printf("%s\n", g_scenarios[i].name);
+        return 0;
+    }
     const char *only = argc > 1 ? argv[1] : NULL;
     int passed = 0, ran = 0;
     double total_ms = 0.0;

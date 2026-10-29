@@ -29,6 +29,7 @@
 #include <sys/types.h>
 
 #include "can_discover.h"
+#include "discover_session.h"
 #include "frame_tsv.h"
 #include "commands.h"
 
@@ -80,27 +81,6 @@ static int compare_int64(const void *a, const void *b) {
     int64_t x = *(const int64_t *)a;
     int64_t y = *(const int64_t *)b;
     return (x > y) - (x < y);
-}
-
-static void json_print_string(FILE *f, const char *s) {
-    fputc('"', f);
-    for (; *s; s++) {
-        switch (*s) {
-            case '"':  fputs("\\\"", f); break;
-            case '\\': fputs("\\\\", f); break;
-            case '\n': fputs("\\n", f); break;
-            case '\r': fputs("\\r", f); break;
-            case '\t': fputs("\\t", f); break;
-            default:
-                if ((unsigned char)*s < 0x20) {
-                    fprintf(f, "\\u%04x", (unsigned char)*s);
-                } else {
-                    fputc(*s, f);
-                }
-                break;
-        }
-    }
-    fputc('"', f);
 }
 
 /*******************************************************************************
@@ -272,79 +252,6 @@ static bool load_manifest(const char *path, manifest_phase_t out[DISC_NUM_PHASES
 /*******************************************************************************
  * Output
  ******************************************************************************/
-
-/** Same object shape as disc_write_result_json_object() in common/discover_session.m */
-static void write_result_json_object(FILE *f,
-                                     bool have_bus_mode,
-                                     disc_bus_mode_t bus_mode,
-                                     const char *dump_dir,
-                                     const char *dbc_path,
-                                     const char *vsp_path,
-                                     const disc_result_t *result) {
-    bool first = true;
-
-    fprintf(f, "{\n");
-
-    if (have_bus_mode) {
-        fprintf(f, "  \"bus_mode\":");
-        json_print_string(f, disc_bus_mode_name(bus_mode));
-        first = false;
-    }
-
-    if (dump_dir && dump_dir[0]) {
-        fprintf(f, "%s  \"dump_dir\":", first ? "" : ",\n");
-        json_print_string(f, dump_dir);
-        first = false;
-    }
-
-    if (dbc_path && dbc_path[0]) {
-        fprintf(f, "%s  \"dbc_path\":", first ? "" : ",\n");
-        json_print_string(f, dbc_path);
-        first = false;
-    }
-
-    if (vsp_path && vsp_path[0]) {
-        fprintf(f, "%s  \"vsp_path\":", first ? "" : ",\n");
-        json_print_string(f, vsp_path);
-        first = false;
-    }
-
-    for (int s = 0; result && s < DISC_SIG_COUNT; s++) {
-        if (!result->found[s]) continue;
-
-        const disc_candidate_t *c = &result->signals[s];
-        fprintf(f, "%s  ", first ? "" : ",\n");
-        json_print_string(f, disc_signal_name((disc_signal_t)s));
-        fprintf(f, ":{\"can_id\":\"0x%03X\",\"dlc\":%d,\"hz\":%.1f",
-                c->can_id, c->dlc, c->hz);
-        if (c->byte_idx >= 0) fprintf(f, ",\"byte\":%d", c->byte_idx);
-        if (c->byte2_idx >= 0) fprintf(f, ",\"byte2\":%d", c->byte2_idx);
-        if (c->start_bit >= 0 && c->bit_length > 0) {
-            fprintf(f, ",\"start_bit\":%d,\"bit_length\":%d,\"byte_order\":%d",
-                    c->start_bit, c->bit_length, c->byte_order);
-        }
-        fprintf(f, ",\"score\":%.1f,\"confidence\":\"%s\"",
-                c->score, disc_confidence_name(c->confidence));
-        fprintf(f, ",\"evidence\":{\"phase\":%.1f,\"specificity\":%.1f,"
-                   "\"shape\":%.1f,\"prior\":%.1f,\"prior_support\":%d,"
-                   "\"ambiguity_margin\":%.1f}",
-                c->evidence_score, c->specificity_score, c->shape_score,
-                c->prior_score, c->prior_support, c->ambiguity_margin);
-        if (c->byte2_idx >= 0 && c->endianness != DISC_ENDIAN_UNKNOWN) {
-            fprintf(f, ",\"endian\":\"%s\"", disc_endian_name(c->endianness));
-        }
-        if (c->signedness != DISC_SIGN_UNKNOWN) {
-            fprintf(f, ",\"signed\":%s",
-                    c->signedness == DISC_SIGN_SIGNED ? "true" : "false");
-            if (c->sign_char == 'S') fprintf(f, ",\"sign_bit\":%d", c->sign_bit);
-            fprintf(f, ",\"raw_min\":%d,\"raw_max\":%d", c->raw_min, c->raw_max);
-        }
-        fprintf(f, "}");
-        first = false;
-    }
-
-    fprintf(f, "\n}\n");
-}
 
 static void print_signal_summary(const disc_result_t *result) {
     fprintf(stderr, "\n=== Replay Results (bus mode: %s) ===\n",
@@ -622,7 +529,7 @@ int cmd_replay_main(int argc, char *argv[]) {
 
     FILE *rf = fopen(result_path, "w");
     if (rf) {
-        write_result_json_object(rf, baseline_loaded, result.bus_mode, session_dir,
+        disc_write_result_json_object(rf, baseline_loaded, result.bus_mode, session_dir,
                                  dbc_written ? dbc_path : NULL,
                                  vsp_written ? vsp_path : NULL, &result);
         if (fclose(rf) != 0) {
@@ -636,7 +543,7 @@ int cmd_replay_main(int argc, char *argv[]) {
         exit_code = 1;
     }
 
-    write_result_json_object(stdout, baseline_loaded, result.bus_mode, session_dir,
+    disc_write_result_json_object(stdout, baseline_loaded, result.bus_mode, session_dir,
                              dbc_written ? dbc_path : NULL,
                              vsp_written ? vsp_path : NULL, &result);
     print_signal_summary(&result);

@@ -180,6 +180,13 @@ bool disc_session_finish(disc_session_t *s, disc_session_output_t *out);
 /** Print the result JSON object (the stdout output of discover) after finish. */
 void disc_session_print_result_json(const disc_session_t *s, FILE *f);
 
+/** The result JSON object (result.json, the discover / replay stdout): bus
+ *  mode when known, the paths that are set, and every found signal. The one
+ *  writer of that shape, so a live session and its replay print the same. */
+void disc_write_result_json_object(FILE *f, bool have_bus_mode, disc_bus_mode_t bus_mode,
+                                   const char *dump_dir, const char *dbc_path,
+                                   const char *vsp_path, const disc_result_t *result);
+
 /** End without analysis: write manifest.json with the given status
  *  ("interrupted", "disconnected") and no output paths. */
 void disc_session_abort(disc_session_t *s, const char *status);

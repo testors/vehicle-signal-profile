@@ -2904,13 +2904,13 @@ static int build_options(disc_ctx_t *ctx, disc_signal_t sig,
             int picked = 0;
             for (int g = 0; g < n && picked < DISC_GUESSES_PER_REGION; g++) {
                 if (guesses[g].bitmask & taken) continue;
+                /* a guess the option checks reject leaves its bits to the next one */
+                disc_option_t opt;
+                if (!make_raw_option(ctx, sig, row, act, base, &guesses[g], &opt)) continue;
                 taken |= guesses[g].bitmask;
                 picked++;
-                disc_option_t opt;
-                if (make_raw_option(ctx, sig, row, act, base, &guesses[g], &opt)) {
-                    opt.layout_alt = layout_runner_up(ctx, sig, row, act, base, guesses, n, g, &opt);
-                    option_add(pool, &pool_count, pool_max, &opt);
-                }
+                opt.layout_alt = layout_runner_up(ctx, sig, row, act, base, guesses, n, g, &opt);
+                option_add(pool, &pool_count, pool_max, &opt);
             }
             if (sig == DISC_SIG_WHEEL_SPEED) break;
         }
@@ -3333,6 +3333,12 @@ static void plan_unique_name(export_plan_t *plan, disc_export_signal_t *f) {
     }
 }
 
+/** DBC message id: a 29-bit id carries bit 31 (the VSP writer's id_format
+ *  rule, id > 0x7FF, decides which ids are 29-bit). */
+static uint32_t dbc_message_id(uint32_t can_id) {
+    return can_id > 0x7FFu ? (can_id | 0x80000000u) : can_id;
+}
+
 static bool plan_add(export_plan_t *plan, const disc_export_signal_t *f) {
     if (plan->field_count >= DISC_PLAN_MAX_FIELDS) return false;
     for (int i = 0; i < plan->field_count; i++) {
@@ -3449,6 +3455,14 @@ static bool build_export_plan(disc_ctx_t *ctx, const disc_result_t *result,
                     disc_export_signal_t e;
                     export_from_field(ctx, &e, sig, cand->can_id, &pf, name,
                                       parts[k].raw_min, parts[k].raw_max);
+                    /* Which wheel a part is stays unknown without a prior (the
+                       profile corpus orders FL FR RL RR in 72 % of messages):
+                       the reported part is "wheel.speed", the rest go without
+                       a canonical id rather than share it. */
+                    bool reported = parts[k].start_bit == main_field.start &&
+                                    parts[k].bit_length == main_field.len &&
+                                    parts[k].byte_order == main_field.order;
+                    if (!e.canonical_mapped && !reported) e.canonical[0] = '\0';
                     plan_add(plan, &e);
                 }
                 continue;
@@ -3551,7 +3565,7 @@ char *disc_render_draft_dbc(const disc_phase_t phases[DISC_NUM_PHASES],
 
     for (int m = 0; m < plan->msg_count; m++) {
         const plan_msg_t *msg = &plan->msgs[m];
-        OUT("BO_ %u MSG_%03X: %u DISCOVER\n", msg->can_id, msg->can_id, msg->dlc);
+        OUT("BO_ %u MSG_%03X: %u DISCOVER\n", dbc_message_id(msg->can_id), msg->can_id, msg->dlc);
         for (int i = msg->first; i < msg->first + msg->count; i++) {
             const disc_export_signal_t *sig = &plan->fields[i];
             bool sm = sig->sign_char == 'S';
@@ -3572,7 +3586,7 @@ char *disc_render_draft_dbc(const disc_phase_t phases[DISC_NUM_PHASES],
         const disc_export_signal_t *sig = &plan->fields[i];
         if (sig->values_dbc && sig->values_dbc[0]) {
             /* The matched prior's value table (raw code -> label). */
-            OUT("\nVAL_ %u %s %s ;\n", sig->can_id, sig->name, sig->values_dbc);
+            OUT("\nVAL_ %u %s %s ;\n", dbc_message_id(sig->can_id), sig->name, sig->values_dbc);
             continue;
         }
         if (sig->signal != DISC_SIG_GEAR) continue;
@@ -3580,7 +3594,7 @@ char *disc_render_draft_dbc(const disc_phase_t phases[DISC_NUM_PHASES],
         int value_count = collect_gear_values(ctx_view(&ctx, DISC_PHASE_GEAR, sig->can_id),
                                               sig, values);
         if (value_count > 0) {
-            OUT("\nVAL_ %u %s", sig->can_id, sig->name);
+            OUT("\nVAL_ %u %s", dbc_message_id(sig->can_id), sig->name);
             for (int v = 0; v < value_count; v++) {
                 OUT(" %d \"raw_0x%02X\"", values[v], (unsigned)values[v]);
             }
@@ -3588,11 +3602,12 @@ char *disc_render_draft_dbc(const disc_phase_t phases[DISC_NUM_PHASES],
         }
     }
 
-    OUT("\nBA_DEF_ BO_ \"GenMsgCycleTime\" INT 0 10000;\n\n");
+    OUT("\nBA_DEF_ BO_ \"GenMsgCycleTime\" INT 0 10000;\n");
+    OUT("BA_DEF_DEF_ \"GenMsgCycleTime\" 0;\n\n");
     for (int m = 0; m < plan->msg_count; m++) {
         if (plan->msgs[m].cycle_ms > 0) {
             OUT("BA_ \"GenMsgCycleTime\" BO_ %u %d;\n",
-                plan->msgs[m].can_id, plan->msgs[m].cycle_ms);
+                dbc_message_id(plan->msgs[m].can_id), plan->msgs[m].cycle_ms);
         }
     }
 
@@ -3716,19 +3731,21 @@ char *disc_render_draft_vsp(const disc_phase_t phases[DISC_NUM_PHASES],
         OUT("      \"decode\": {\n");
         if (!disc_sb_append_decode(&out, "        ", sig)) goto fail;
         OUT("      },\n");
-        OUT("      \"canonical\": {\n");
-        OUT("        \"id\": ");
-        OUTS(sig->canonical);
-        OUT(",\n        \"label\": ");
-        OUTS(canonical_label(sig->canonical, sig->signal));
-        OUT(",\n        \"quantity\": \"unknown\",\n");
-        OUT("        \"preferred_unit\": ");
-        OUTS(sig->unit);
-        OUT(",\n        \"confidence\": \"%s\",\n", sig->canonical_mapped ? "mapped" : "heuristic");
-        OUT("        \"aliases\": [");
-        OUTS(sig->name);
-        OUT("]\n");
-        OUT("      },\n");
+        if (sig->canonical[0]) {   /* a wheel part of unknown position has none */
+            OUT("      \"canonical\": {\n");
+            OUT("        \"id\": ");
+            OUTS(sig->canonical);
+            OUT(",\n        \"label\": ");
+            OUTS(canonical_label(sig->canonical, sig->signal));
+            OUT(",\n        \"quantity\": \"unknown\",\n");
+            OUT("        \"preferred_unit\": ");
+            OUTS(sig->unit);
+            OUT(",\n        \"confidence\": \"%s\",\n", sig->canonical_mapped ? "mapped" : "heuristic");
+            OUT("        \"aliases\": [");
+            OUTS(sig->name);
+            OUT("]\n");
+            OUT("      },\n");
+        }
         OUT("      \"discovery\": {\n");
         OUT("        \"tool\": \"can_discover\",\n");
         OUT("        \"signal\": ");

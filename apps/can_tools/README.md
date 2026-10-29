@@ -415,7 +415,10 @@ support가 큰 것, 같으면 더 넓은 것.)
 scale도 관측값으로 검사한다: 관측 raw 범위가 prior의 min/max 안에 들어야 하고, 브레이크·페달을 뗀 상태,
 정차 상태(baseline)가 물리값 범위의 아래쪽 1/4에 와야 한다. idle은 0보다 위에 있고 작은 블립 뒤 언더슈트도
 있으므로 RPM은 아래쪽 절반이면 된다. 맞지 않는 prior는 쓰지 않는다.
-DLC는 항상 관측값을 쓴다. wheel speed는 가능한 경우 바퀴별 4개 신호로 분해해 출력한다.
+DLC는 항상 관측값을 쓴다. wheel speed는 가능한 경우 바퀴별 4개 신호로 분해해 출력한다(JSON 결과에는 대표 필드
+하나만 나온다). prior가 없는 바퀴 필드는 어느 바퀴인지 모르므로(프로필 corpus에서 FL·FR·RL·RR 순서는 72%뿐)
+JSON에 보고된 필드만 canonical id `wheel.speed`를 갖고 나머지는 canonical id 없이 나간다. 29-bit ID(0x7FF 초과)는
+DBC에서 bit 31을 세운 값(`0x80000000 | id`)으로, VSP에서는 `id_format: "extended29"`로 쓴다.
 discover 실행 시에는 기본적으로 `captures/YYYYMMDD_HHMMSS/` 세션 폴더를 만들고,
 각 phase raw dump(`*.frames.tsv`), `manifest.json`, `result.json`,
 `ptcan_discover_draft.dbc`, `ptcan_discover_draft.vsp`를 함께 저장한다.
@@ -453,7 +456,9 @@ prior table(`can_discover_priors.h`)은 빌드할 때 `tools/gen_can_discover_pr
 같은 바이트에서 counter 위에 놓인 Motorola 페달, idle에서 하위 비트가 떨리는 스로틀,
 DBC/VSP 일치, cycle time, 512 KB 스레드 스택 등). 엔진 리뷰의 경계 사례도 들어 있다: 무작위 프레임 유실
 3–10%(이름의 `_loss<P>_s<S>`), 바이트 경계를 넘는 8비트 Motorola 필드, 정지 중 값이 16종인 센서 바이트,
-상위 바이트가 안 움직이는 RPM, RPM/throttle을 구분할 수 없는 쌍둥이 필드(HIGH 금지):
+상위 바이트가 안 움직이는 RPM, RPM/throttle을 구분할 수 없는 쌍둥이 필드(HIGH 금지). 29-bit ID 시나리오와,
+draft DBC의 29-bit ID에 bit 31이 있고 한 canonical id를 두 신호가 쓰지 않는지도 본다. ctest의 `discover_drafts`는
+시나리오마다 세션을 dump해 `can_tools replay`로 만든 draft VSP를 `tools/validate_vsp.py`로 검사한다(오류·경고 0):
 
 ```bash
 cd build && ctest --output-on-failure      # 또는 ./build/discover_regression

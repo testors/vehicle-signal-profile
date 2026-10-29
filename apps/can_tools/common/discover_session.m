@@ -271,13 +271,13 @@ static bool disc_write_phase_dump(const char *path, const disc_raw_phase_t *raw_
     return true;
 }
 
-static void disc_write_result_json_object(FILE *f,
-                                          bool have_bus_mode,
-                                          disc_bus_mode_t bus_mode,
-                                          const char *dump_dir,
-                                          const char *dbc_path,
-                                          const char *vsp_path,
-                                          const disc_result_t *result) {
+void disc_write_result_json_object(FILE *f,
+                                   bool have_bus_mode,
+                                   disc_bus_mode_t bus_mode,
+                                   const char *dump_dir,
+                                   const char *dbc_path,
+                                   const char *vsp_path,
+                                   const disc_result_t *result) {
     bool first = true;
 
     fprintf(f, "{\n");
