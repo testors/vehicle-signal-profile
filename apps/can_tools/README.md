@@ -1,507 +1,579 @@
 # CAN Tools
 
-BLE/Classic BT OBD 어댑터를 통한 CAN 버스 도구 모음. macOS에서 동작하며, ELM327/STN2255 호환 어댑터(OBDLink MX+, vLinker MC+ 등)를 지원한다.
-PEAK PCAN-USB로 버스 전체를 수신 전용(listen-only)으로 받을 수도 있다(아래 "PCAN-USB" 절).
+CAN bus tools that work through BLE / Classic Bluetooth OBD adapters. They run on macOS and support ELM327 / STN2255
+compatible adapters (OBDLink MX+, vLinker MC+ and others).
+A PEAK PCAN-USB can also receive the whole bus, listen-only (see "PCAN-USB" below).
 
-## 도구
+## Tools
 
-실행파일은 `build/can_tools` 하나이고, 명령은 `can_tools <명령> [인자...]`로 고른다.
+There is one executable, `build/can_tools`; `can_tools <command> [args...]` picks the command.
 
-| 명령 | 설명 | CAN 송신 |
+| Command | Description | CAN transmit |
 |------|------|----------|
-| **scan** | BLE/Classic OBD 어댑터 스캔 (JSON), PCBUSB가 있으면 PCAN-USB 채널도 | 없음 |
-| **monitor** | CAN 패시브 모니터 (silent mode, ACK 없음) | 없음 |
-| **detect** | 버스 종류 감지 (3초 수신) | 없음 (`--probe`면 `0100` 송신) |
-| **discover** | PT-CAN 시그널 자동 탐색 (대화형) | 없음 |
-| **probe** | VSP 프로파일의 CAN/OBD 시그널을 목표 Hz로 읽을 수 있는지 검증 | `--plan`·`--mode can`은 없음, `--mode obd`는 진단 질의 송신, auto는 상시 송신 프레임이 안 들릴 때만 질의 |
-| **replay** | 저장된 캡처를 차량 없이 다시 분석 | 없음 (어댑터 불필요) |
-| **query** / **supported** / **raw** | OBD-II PID 조회, 지원 PID 목록, 원시 AT 명령 | 송신 (OBD 포트 전용) |
-| **p992** | Porsche 992 legacy/debug command set | 송신 |
-| **tui** | btop형 라이브 대시보드: 연결 화면, 시그널·Raw CAN·로그, discover, 녹화, replay | 없음 (TX 모드를 켤 때만 진단 질의 송신) |
-| (인자 없음) | 터미널이면 `tui`(연결 화면), 아니면 사용법 출력 후 종료 코드 2 | 없음 |
-| **menu** | 예전 대화형 메뉴 | 메뉴에 따라 |
+| **scan** | Scan for BLE / Classic OBD adapters (JSON), plus PCAN-USB channels when PCBUSB is installed | none |
+| **monitor** | Passive CAN monitor (silent mode, no ACK) | none |
+| **detect** | Detect the bus type (3 s of receiving) | none (`--probe` sends `0100`) |
+| **discover** | Guided PT-CAN signal discovery (interactive) | none |
+| **probe** | Check that a VSP profile's CAN / OBD signals can be read at a target Hz | none for `--plan` and `--mode can`; `--mode obd` sends diagnostic queries; auto queries only when no periodic broadcast frames are heard |
+| **replay** | Re-run discovery on a saved capture, without a vehicle | none (no adapter needed) |
+| **query** / **supported** / **raw** | OBD-II PID query, supported PID list, raw AT command | transmits (OBD port only) |
+| **p992** | Porsche 992 legacy/debug command set | transmits |
+| **tui** | btop-style live dashboard: connect screen, signals, Raw CAN, log, discover, recording, replay | none (diagnostic queries only while TX mode is on) |
+| (no arguments) | In a terminal, `tui` (connect screen); otherwise prints usage and exits with code 2 | none |
+| **menu** | The old interactive menu | depends on the menu item |
 
-`can_tools help`가 전체 명령과 송신 여부를 보여준다. 빌드하면 `build/` 안에 예전 도구 이름의 심볼릭 링크
-`can_reader`, `can_discover`, `vsp_probe`, `discover_replay`가 함께 생기고, 이 이름으로 실행하면 예전 도구의
-인자와 도움말을 그대로 쓴다(예: `./build/can_reader monitor vLinker 10`, `./build/vsp_probe <profile> --plan`).
-`can_tools discover`는 `can_discover`처럼 장치를 생략할 수 있고, `can_reader discover`는 예전처럼 장치가 필요하다.
+`can_tools help` lists every command and whether it transmits. The build also creates symbolic links with the old tool
+names in `build/`: `can_reader`, `can_discover`, `vsp_probe` and `discover_replay`. Run under one of those names, the
+executable takes the old tool's arguments and help (for example `./build/can_reader monitor vLinker 10`,
+`./build/vsp_probe <profile> --plan`). `can_tools discover` may omit the device, as `can_discover` does;
+`can_reader discover` still needs one, as before.
 
-`discover`(`can_reader discover`, `can_discover`)는 모두 동일한 탐색 로직(`discover_session.m`, `can_discover.c`)을 공유한다.
-어댑터에 연결하는 명령은 모두 같은 연결 경로(`common/obd_connect`)로 스캔·연결·초기화한다. BLE 준비를 최대 10초
-기다리고, 8초 스캔해서 못 찾으면 한 번 더 스캔하며, BLE가 꺼져 있어도 페어링된 Classic 어댑터는 목록에 남는다.
-장치 이름은 대소문자 없이 포함 여부로 고르고, `discover`에서 생략하면 첫 번째 어댑터를 쓴다. 수신 전용 명령(monitor, detect, discover, probe의 CAN phase)은
-PASSIVE 초기화(`ATZ`, `ATE0`, `ATL0`, `STI`, `ATSP6`, `ATCSM1`, `ATS1`, `ATCAF0`, `ATH1`)를, 질의 명령(query, supported, raw)은
-ACTIVE 초기화(ELM327 초기화 명령 + STN 옵션)를 쓴다. PASSIVE 초기화는 `ATCSM1` 응답에 `OK`가 있어야 성공한다: 응답이 없거나
-`?`(미지원)면 ACK를 보내지 않는다고 확인할 수 없으므로 `[ERROR] silent mode not confirmed: ATCSM1 …`을 남기고 모니터를
-시작하지 않는다(TUI 연결 화면에는 `adapter init failed: …`로 이유가 나온다).
+`discover` (`can_reader discover`, `can_discover`) always runs the same discovery logic (`discover_session.m`,
+`can_discover.c`). Every command that connects to an adapter scans, connects and initializes through the same path
+(`common/obd_connect`). It waits up to 10 s for BLE, scans for 8 s and scans once more if nothing was found; paired
+Classic adapters stay in the list even with BLE off. The device name matches case-insensitively as a substring; when
+`discover` gets none it uses the first adapter. Receive-only commands (monitor, detect, discover, the CAN phase of
+probe) use the PASSIVE init (`ATZ`, `ATE0`, `ATL0`, `STI`, `ATSP6`, `ATCSM1`, `ATS1`, `ATCAF0`, `ATH1`); query commands
+(query, supported, raw) use the ACTIVE init (the ELM327 init commands plus STN options). The PASSIVE init succeeds only
+when the `ATCSM1` reply contains `OK`: no reply, or `?` (unsupported), leaves it unconfirmed that the adapter sends no
+ACK, so it logs `[ERROR] silent mode not confirmed: ATCSM1 …` and does not start the monitor (the TUI connect screen
+shows the reason as `adapter init failed: …`).
 
-## 빌드
+## Build
 
-vehicle-signal-profile 저장소의 `apps/can_tools` 폴더에서 빌드한다(이 문서의 경로는 모두 이 폴더 기준).
-python3가 필요하다: 빌드가 저장소의 `profiles/`(`../../profiles`)에서 prior table을 생성한다(아래 "Prior table 생성").
+Build in the `apps/can_tools` folder of the vehicle-signal-profile repository (every path in this document is
+relative to that folder). python3 is required: the build generates the prior table from the repository's `profiles/`
+(`../../profiles`; see "Generating the prior table").
 
 ```bash
 ./build.sh
 ```
 
-또는:
+or:
 
 ```bash
 mkdir -p build && cd build && cmake .. && make
 ```
 
-빌드 결과는 `build/can_tools`와 별칭 심볼릭 링크 4개(`can_reader`, `can_discover`, `vsp_probe`, `discover_replay`)다.
-`build/can_tools_fake`는 테스트 전용 빌드다(Bluetooth 대신 가짜 어댑터, 실제 장치에 닿지 않음). TUI는 ncurses를 쓴다(macOS SDK 기본 포함).
+The build produces `build/can_tools` and four alias symlinks (`can_reader`, `can_discover`, `vsp_probe`,
+`discover_replay`). `build/can_tools_fake` is a test-only build (a fake adapter instead of Bluetooth; it never touches
+a real device). The TUI uses ncurses (part of the macOS SDK).
 
-빌드 후 `build/libcan_discover_core.a`가 함께 생성된다. 다른 앱에서 탐색 엔진만 쓰고 싶으면
-`common/can_discover.h`를 포함해 `disc_analyze_with_raw()`,
-`disc_render_draft_dbc()`, `disc_render_draft_vsp()`를 직접 호출하면 된다.
+The build also produces `build/libcan_discover_core.a`. Another app that only wants the discovery engine can include
+`common/can_discover.h` and call `disc_analyze_with_raw()`, `disc_render_draft_dbc()` and `disc_render_draft_vsp()`
+directly.
 
-## PCAN-USB (PEAK, 수신 전용)
+## PCAN-USB (PEAK, receive-only)
 
-Bluetooth 어댑터는 프레임이 텍스트로 와서 호스트가 도착 시각을 찍는다(측정: 평소 ~20 ms 지연, 50–130 ms 묶음,
-ms 해상도). PEAK PCAN-USB는 USB로 버스 전체를 받고, CAN 컨트롤러가 찍은 µs 타임스탬프를 준다. 이 도구에서
-PCAN은 **수신 전용**이다: ACK도 에러 프레임도 어떤 프레임도 보내지 않는다.
+Bluetooth adapters deliver frames as text and the host stamps their arrival time (measured: ~20 ms latency as a rule,
+50–130 ms batches, ms resolution). A PEAK PCAN-USB receives the whole bus over USB with µs timestamps from the CAN
+controller. In this tool PCAN is **receive-only**: it sends no ACK, no error frame, no frame of any kind.
 
-**설치.** macOS용 PEAK 드라이버는 없고, UV Software의 PCBUSB 라이브러리(PCAN-Basic 호환, 무료 바이너리)를 쓴다:
-<https://github.com/mac-can/PCBUSB-Library>. 배포본의 `install.sh`가 `/usr/local/lib/libPCBUSB.dylib`(+버전 파일)과
-`/usr/local/include/PCBUSB.h`를 설치한다(`/usr/local`에 쓰기 권한이 없으면 `sudo`가 필요할 수 있다). 빌드에는 필요 없다:
-`can_tools`는 실행 중에 `dlopen`으로 `/usr/local/lib/libPCBUSB.dylib`, `/opt/homebrew/lib/libPCBUSB.dylib` 두 절대 경로만
-찾고(현재 폴더나 `DYLD_*` 경로는 보지 않는다), 없으면 PCAN 명령만 설치 링크와 함께 실패하고 나머지는 그대로 동작한다.
-**최소 버전 0.13.** 라이브러리를 읽으면 채널을 건드리기 전에 `PCAN_CHANNEL_VERSION`을 읽어 0.13 이상의 0.x만 쓴다
-(검증한 버전이 0.13이다). 더 오래되었거나 major가 다르거나 버전을 읽을 수 없으면 찾은 문자열과 함께 거부하고 아무 채널도
-초기화하지 않는다. 쓰는 버전은 연결 로그, monitor/detect JSON(`library_version`), TUI의 `session.json`에 남는다.
-PCBUSB 0.13 기준 지원 장치: PCAN-USB(IPEH-002021/002022), PCAN-USB FD(IPEH-004022), PCAN-USB Pro FD(CAN1만).
-Universal 바이너리라 Apple silicon에서도 동작한다.
+**Install.** PEAK has no macOS driver; use UV Software's PCBUSB library (PCAN-Basic compatible, free binary):
+<https://github.com/mac-can/PCBUSB-Library>. The package's `install.sh` installs `/usr/local/lib/libPCBUSB.dylib`
+(plus versioned files) and `/usr/local/include/PCBUSB.h` (`sudo` may be needed without write access to `/usr/local`).
+The build does not need it: at run time `can_tools` `dlopen`s only the two absolute paths
+`/usr/local/lib/libPCBUSB.dylib` and `/opt/homebrew/lib/libPCBUSB.dylib` (never the current folder or `DYLD_*`
+paths); without the library only the PCAN commands fail, with the install link, and everything else works.
+**Minimum version 0.13.** After loading the library, and before touching a channel, it reads `PCAN_CHANNEL_VERSION`
+and accepts only 0.x from 0.13 up (0.13 is the version tested). An older version, another major version or an
+unreadable version is refused with the string found, and no channel is initialized. The version in use goes to the
+connect log, the monitor/detect JSON (`library_version`) and the TUI's `session.json`.
+Devices PCBUSB 0.13 supports: PCAN-USB (IPEH-002021/002022), PCAN-USB FD (IPEH-004022), PCAN-USB Pro FD (CAN1 only).
+It is a universal binary, so it runs on Apple silicon too.
 
-**장치 이름.** `<device>` 자리에 `pcan`(첫 번째 사용 가능한 채널) 또는 `pcan1`..`pcan8`(대소문자 무시)을 쓴다.
-`--bitrate RATE|auto`: `1M 800k 500k 250k 125k 100k 95k 83k 50k 47k 33k 20k 10k 5k`, 기본 500k. `auto`는
-500k, 250k, 1M, 125k, 100k, 83k, 50k, 33k를 차례로 listen-only로 열어 각각 최대 0.5초 듣고, 2개 이상 ID에서 데이터
-프레임 20개가 처음 들린 속도를 고른다(시도한 속도와 결과를 로그에 남긴다).
+**Device names.** In place of `<device>` use `pcan` (the first available channel) or `pcan1`..`pcan8` (any case).
+`--bitrate RATE|auto`: `1M 800k 500k 250k 125k 100k 95k 83k 50k 47k 33k 20k 10k 5k`, default 500k. `auto` opens
+500k, 250k, 1M, 125k, 100k, 83k, 50k and 33k listen-only in turn, listens up to 0.5 s on each, and picks the first
+rate on which 20 data frames from at least 2 ids are heard (the rates tried and the outcome go to the log).
 
 ```bash
-./build/can_tools scan                                   # BT 어댑터 + PCAN 채널 (transport "usb")
-./build/can_tools monitor pcan 10 --out mon.json         # 버스 전체, 10초; ID를 주면 소프트웨어 필터
+./build/can_tools scan                                   # BT adapters + PCAN channels (transport "usb")
+./build/can_tools monitor pcan 10 --out mon.json         # whole bus, 10 s; ids given = software filter
 ./build/can_tools monitor pcan1 10 --bitrate auto 0A5 1A0
-./build/can_tools detect pcan                            # 3초 수신, 버스 분류 (ATRV 없음, --probe 불가)
-./build/can_tools discover pcan                          # 가이드 탐색, phase 덤프는 6열 TSV
+./build/can_tools detect pcan                            # 3 s of receiving, bus classification (no ATRV, no --probe)
+./build/can_tools discover pcan                          # guided discovery, phase dumps are 6-column TSV
 ./build/can_tools probe <profile.vsp> --device pcan --mode can --seconds 10
-./build/can_tools tui --device pcan --bitrate 500k       # 연결 화면에도 PCAN 채널이 "USB"로 보인다
+./build/can_tools tui --device pcan --bitrate 500k       # the connect screen lists PCAN channels as "USB" too
 ```
 
-monitor JSON에는 `"interface":"pcan"`, `"bitrate"`, `"mode":"listen-only"`, 프레임마다 `"timestamp_us"`(epoch µs)가
-붙는다. TUI 헤더는 `pcan1 PCAN-USB · … · listen-only 500k`, 로그는 하드웨어 µs 타임스탬프임을 알린다. 연결 화면은
-약 1초마다 채널 상태를 다시 읽어 꽂고 뽑는 것을 반영하고, `last:` 줄도 PCAN 채널을 기억한다. 사용 중 USB를 뽑으면
-대시보드가 DISCONNECTED가 된다.
+The monitor JSON carries `"interface":"pcan"`, `"bitrate"`, `"mode":"listen-only"` and a `"timestamp_us"` (epoch µs)
+per frame. The TUI header shows `pcan1 PCAN-USB · … · listen-only 500k`, and the log notes that timestamps are
+hardware µs. The connect screen re-reads the channel states about once a second, so plugging and unplugging shows,
+and the `last:` line remembers PCAN channels too. Unplugging the USB while in use turns the dashboard DISCONNECTED.
 
-**listen-only 보장과 구현.**
-- 라이브러리 함수 표(`common/pcan.h`의 `pcan_api_t`)에는 수신용 함수만 있다: `CAN_Initialize`, `CAN_Uninitialize`,
-  `CAN_GetStatus`, `CAN_Read`, `CAN_GetValue`, `CAN_SetValue`, `CAN_GetErrorText`. `CAN_Write`/`CAN_WriteFD`는 선언도
-  `dlsym`도 하지 않고, `CAN_Reset`도 쓰지 않는다(테스트가 바이너리 문자열까지 확인).
-- 채널을 여는 곳은 `pcan_open()` 하나다: 초기화 전 채널에 `PCAN_LISTEN_ONLY = ON` → 아직 초기화 전에 다시 읽어 ON인지
-  확인(읽기 실패나 ON이 아니면 초기화하지 않고 실패) → `CAN_Initialize` → `PCAN_LISTEN_ONLY`를 또 읽어 ON이 아니면 즉시
-  `CAN_Uninitialize`하고 실패. 설정이 실패해도 초기화하지 않는다.
-  `CAN_SetValue`는 이 한 곳에서 `PCAN_LISTEN_ONLY = ON`으로만 불린다. bitrate auto도 시도마다 이 순서를 그대로 밟고,
-  listen-only를 확인하지 못하면 다른 속도로 재시도하지 않고 멈춘다.
-- 송신하는 명령은 PCAN을 거부한다(어댑터 객체를 만들거나 라이브러리를 읽기 전에, 종료 코드 1):
-  `query`, `supported`, `raw`, `p992`, `detect --probe`, `probe --mode obd`, `probe --mode auto`(질의로 넘어갈 수 있으므로)
-  → `PCAN is listen-only: <명령> would transmit`. PCAN에는 `probe --mode can`을 쓴다. TUI의 TX 모드(`x`)는 모니터를 멈추지
-  않고 바로 `TX unavailable: PCAN is listen-only`로 거부되며, PCAN 연결에는 송신 콜백 자체가 없다.
-- PCAN 명령(monitor, detect, discover, probe)은 Bluetooth 객체를 만들지 않는다.
+**Listen-only guarantee and implementation.**
+- The library function table (`pcan_api_t` in `common/pcan.h`) holds receive functions only: `CAN_Initialize`,
+  `CAN_Uninitialize`, `CAN_GetStatus`, `CAN_Read`, `CAN_GetValue`, `CAN_SetValue`, `CAN_GetErrorText`.
+  `CAN_Write`/`CAN_WriteFD` are neither declared nor `dlsym`ed, and `CAN_Reset` is not used either (a test checks the
+  strings in the binaries).
+- `pcan_open()` is the one place that opens a channel: `PCAN_LISTEN_ONLY = ON` on the uninitialized channel → read it
+  back, still before init, and check it is ON (a failed read or anything but ON fails without initializing) →
+  `CAN_Initialize` → read `PCAN_LISTEN_ONLY` again and, if it is not ON, `CAN_Uninitialize` at once and fail. A failed
+  set never initializes. `CAN_SetValue` is called only here, and only with `PCAN_LISTEN_ONLY = ON`. Bitrate auto goes
+  through the same steps for every rate it tries, and stops instead of trying another rate when listen-only cannot be
+  confirmed.
+- Commands that transmit refuse PCAN (before creating the adapter object or loading the library, exit code 1):
+  `query`, `supported`, `raw`, `p992`, `detect --probe`, `probe --mode obd`, `probe --mode auto` (it may move on to
+  queries) → `PCAN is listen-only: <command> would transmit`. Use `probe --mode can` with PCAN. The TUI's TX mode (`x`)
+  is refused at once with `TX unavailable: PCAN is listen-only`, without stopping the monitor, and a PCAN connection
+  has no transmit callback at all.
+- PCAN commands (monitor, detect, discover, probe) create no Bluetooth object.
 
-**처음 쓸 때: 차에 꽂기 전에 벤치에서 확인.** PCAN-USB(can_tools로 listen-only)와 다른 CAN 노드 하나만 벤치 버스에
-연결하고, 양 끝에 120 Ω 종단을 제대로 단 다음 그 노드가 프레임을 보내게 한다. 아무도 ACK하지 않으므로 송신 노드는 ACK
-오류를 낸다(STN/ELM 어댑터라면 `CAN ERROR`). 만약 PCAN이 ACK한다면 송신이 성공해서, ELM/STN은 OBD 요청에 `CAN ERROR`
-대신 `NO DATA`로 답한다. 이때 can_tools는 재전송되는 같은 프레임을 계속 받아야 한다. 송신 쪽이 ACK 오류를 내고
-can_tools가 프레임을 받으면 listen-only가 실제로 동작하는 것이다.
+**First use: check on a bench before plugging into a car.** Put the PCAN-USB (listen-only under can_tools) and one
+other CAN node alone on a bench bus, properly terminated with 120 Ω at both ends, and let that node send frames. With
+nobody to ACK, the sender reports ACK errors (`CAN ERROR` on an STN/ELM adapter). Were the PCAN to ACK, the send would
+succeed, and an ELM/STN would answer an OBD request with `NO DATA` instead of `CAN ERROR`. Meanwhile can_tools should
+keep receiving the same retransmitted frame. The sender reporting ACK errors while can_tools receives the frames means
+listen-only works.
 
-**타임스탬프와 6열 TSV.** 컨트롤러 시각(µs)은 첫 수신 묶음의 `min(호스트 수신 시각 − 컨트롤러 시각)`을 기준점으로
-벽시계에 옮기고, 기준점은 그 뒤로 고정한다(단조 변환이라 ID별 주기가 정확히 유지된다). 호스트 시계와의 차이(drift)는
-채널을 닫을 때 로그에 남는다. 하드웨어 타임스탬프 프레임은 `*.frames.tsv`(TUI 녹화, discover phase 덤프)에 6번째 열
-`timestamp_us`(epoch µs)가 붙고 헤더에도 그 이름이 붙는다. 1열 `timestamp_ms`는 `floor(timestamp_us / 1000)`이라 5열만 읽는
-도구도 같은 캡처로 본다. 리더는 5열·6열을 모두 받고, 6열이 1열과 같은 ms에 있지 않으면 그 행을 거부한다. 기존 5열 캡처는
-그대로 읽힌다. RTR·상태·에러 프레임은 전달하지 않고 개수만 세며, 수신 큐 overrun과 읽기 오류도 세어 로그에 남긴다.
+**Timestamps and the 6-column TSV.** Controller time (µs) is moved onto the wall clock with
+`min(host receive time − controller time)` over the first received batch as the reference, which then stays fixed (a
+monotonic mapping, so each id's period stays exact). The drift from the host clock is logged when the channel closes.
+Frames with hardware timestamps get a 6th column `timestamp_us` (epoch µs) in `*.frames.tsv` (TUI recordings,
+discover phase dumps), named in the header too. Column 1, `timestamp_ms`, is `floor(timestamp_us / 1000)`, so tools
+that read 5 columns see the same capture. The reader accepts 5 and 6 columns and rejects a row whose column 6 is not in
+the same ms as column 1. Existing 5-column captures read as before. RTR, status and error frames are counted, not
+passed on; receive queue overruns and read errors are counted and logged too.
 
-**제한.** classic CAN만 받는다(`CAN_Initialize`/`CAN_Read`): CAN FD 프레임은 받지 않는다. PCAN-USB Pro FD는 CAN1만 된다.
-macOS 전용. PCBUSB 문서상 사용 중 뽑은 장치는 다시 꽂아도 같은 프로세스에서는 응답하지 않을 수 있다: 그때는 can_tools를
-다시 시작한다. 실제 장치로는 아직 검증하지 않았다(테스트는 가짜 라이브러리 `tests/fake/fake_pcan.c`로 돈다).
+**Limits.** Classic CAN only (`CAN_Initialize`/`CAN_Read`): CAN FD frames are not received. PCAN-USB Pro FD works on
+CAN1 only. macOS only. Per the PCBUSB documentation, a device unplugged while in use may not answer again in the same
+process after replugging: restart can_tools then. Not yet tested with a real device (the tests run against a fake
+library, `tests/fake/fake_pcan.c`).
 
-## probe (구 vsp_probe)
+## probe (formerly vsp_probe)
 
-VSP의 `signals[].canonical.id`와 `signals[].acquisition`을 기준으로 CAN frame 또는 diagnostic query를 선택하고, 지정한 목표 Hz를 만족하는지 JSON으로 출력한다.
+Selects a CAN frame or a diagnostic query for each signal from the VSP's `signals[].canonical.id` and
+`signals[].acquisition`, and reports as JSON whether the given target Hz is met.
 
-기본 검증 대상은 rpm/gear/steering/throttle/brake 의미군이다:
+By default it checks the rpm/gear/steering/throttle/brake groups:
 
 ```bash
-# 하드웨어 없이 선택 계획만 확인
+# selection plan only, no hardware
 ./build/can_tools probe ../../profiles/porsche__911_gt3__992__can_obd.vsp --plan
 
-# CAN acquisition만 5Hz 목표로 10초 검증
+# CAN acquisition only, 5 Hz target, 10 s
 ./build/can_tools probe ../../profiles/porsche__911_gt3__992__can_obd.vsp \
   --device vLinker --mode can --hz 5 --seconds 10
 
-# OBD/UDS acquisition만 5Hz 목표로 검증
+# OBD/UDS acquisition only, 5 Hz target
 ./build/can_tools probe ../../profiles/porsche__911_gt3__992__can_obd.vsp \
   --device vLinker --mode obd --hz 5 --seconds 10
 ```
 
-인자는 예전 `vsp_probe`와 같다(`./build/vsp_probe ...` 별칭도 동작).
+The arguments are those of the old `vsp_probe` (the `./build/vsp_probe ...` alias works too).
 
-프로필 프레임에 주기(`can_frames[].cycle_ms`)가 있으면 계획과 결과에 `frame_cycle_ms`·`frame_hz`가 붙고, 결과에는 관측/프레임 비율 `frame_rate_ratio`가 붙는다. 목표 Hz가 프레임보다 빠르고 프레임은 빠짐없이 들어왔으면 상태는 `under_target` 대신 `frame_limited`이고, 관측이 프레임 주기의 절반에도 못 미치면 `frame_rate_low`(프레임 유실, 게이트웨이 필터, 또는 이 차에서 주기가 다름)를 표시한다. mux 신호는 비교하지 않는다.
+When the profile frame has a period (`can_frames[].cycle_ms`), the plan and the results carry `frame_cycle_ms` and
+`frame_hz`, and the results the observed / frame rate ratio `frame_rate_ratio`. When the target Hz is faster than the
+frame and the frame arrived without gaps, the status is `frame_limited` instead of `under_target`; an observed rate
+below half the frame rate is flagged `frame_rate_low` (lost frames, a gateway filter, or another period on this car).
+Mux signals are not compared.
 
-진단 응답은 VSP 규칙대로 CAN 프레임 하나씩(ISO-TP PCI 포함, 재조립 없음) 해석한다. `decode.mux`가 있으면 mux로 프레임을 고르고(멀티프레임 응답의 CF 순번, 첫 프레임의 `62 DID` 등), 없으면 단일/첫 프레임 앞의 긍정응답 표식(`41 PID`, `62 DID`, `61 LID`)으로 고른다. 수동 CAN도 mux와 `can_frames[].frame_id_mask`를 적용한다. DBC에서 변환한 `{"value": n}`만 있는 mux는 같은 bus·frame_id 프레임의 배치(`can_frames[].signals[]`, 없으면 최상위 `signals[]`의 같은 프레임 시그널)에서 `{"role": "multiplexor"}`인 시그널의 필드로 비교하고, 그런 시그널이 없으면 그 시그널은 디코드하지 않는다. 받은 프레임이 시그널이 읽는 바이트(필드, `sign_bit`, mux 필드)보다 짧으면 값을 갱신하지 않고 샘플로도 세지 않는다(없는 비트를 0으로 읽지 않음; CAN은 `short_frames`로 센다). 29-bit CAN ID는 아직 지원하지 않는다.
+Diagnostic responses are decoded one CAN frame at a time as the VSP rules say (ISO-TP PCI included, no reassembly).
+With `decode.mux` the mux picks the frame (the CF sequence number of a multi-frame response, `62 DID` in the first
+frame, and so on); without it, the positive-response marker before a single or first frame (`41 PID`, `62 DID`,
+`61 LID`) does. Passive CAN applies the mux and `can_frames[].frame_id_mask` as well. A mux with only `{"value": n}`
+(converted from a DBC) is compared against the field of the `{"role": "multiplexor"}` signal in the layout of the
+frame with the same bus and frame_id (`can_frames[].signals[]`, else the top-level `signals[]` of that frame); without
+such a signal the signal is not decoded. A received frame shorter than the bytes the signal reads (field, `sign_bit`,
+mux field) neither updates the value nor counts as a sample (missing bits are not read as 0; CAN counts them as
+`short_frames`). 29-bit CAN ids are not supported yet.
 
-`--mode auto`는 CAN phase와 OBD phase를 순차 실행한다. 단, auto는 버스에 상시 송신 프레임이 들리면(PT-CAN 직결 가능성) OBD phase를 건너뛰고 아무것도 송신하지 않는다. OBD 포트에서 질의하려면 `--mode obd`를 명시한다. 차량 버스에 직결한 상태에서는 `--mode can`만 쓴다. `--signals`에는 `rpm,gear,steering,throttle,brake` 같은 의미군, canonical id, 또는 VSP signal name을 지정할 수 있다. STN/OBDLink 계열은 raw periodic scheduler를 사용한다. vLinker 계열은 제조사 확인상 `ATMA`/`STM`/`STMA` monitor mode에서 버스를 silent로 유지하며 periodic message(PM)도 송신하지 않으므로, auto에서는 poll 방식으로 fallback한다.
+`--mode auto` runs a CAN phase, then an OBD phase. When periodic broadcast frames are heard on the bus (a possible
+direct PT-CAN tap), however, auto skips the OBD phase and transmits nothing. To query at the OBD port, say `--mode obd`.
+Tapped directly into a vehicle bus, use `--mode can` only. `--signals` takes groups such as
+`rpm,gear,steering,throttle,brake`, canonical ids, or VSP signal names. STN/OBDLink adapters use the raw periodic
+scheduler. vLinker adapters, as the maker confirmed, keep the bus silent in `ATMA`/`STM`/`STMA` monitor mode and send
+no periodic messages (PM) either, so auto falls back to polling.
 
-## scan / detect / monitor / query / supported / raw / p992 (구 can_reader)
+## scan / detect / monitor / query / supported / raw / p992 (formerly can_reader)
 
-D-CAN(OBD 포트) 액티브 쿼리와 PT-CAN 패시브 모니터링을 모두 지원한다. 인자는 예전 `can_reader`와 같고,
-`./build/can_reader <명령> ...` 별칭도 그대로 동작한다.
+Supports both active queries on D-CAN (OBD port) and passive monitoring of PT-CAN. The arguments are those of the old
+`can_reader`, and the `./build/can_reader <command> ...` alias still works.
 
-### CLI 모드
+### CLI mode
 
 ```bash
-# BLE 스캔
+# BLE scan
 ./build/can_tools scan
 
-# 버스 종류 감지 (수신만 함; 상시 송신 프레임 유무)
+# bus type detection (receive only; are there periodic broadcast frames)
 ./build/can_tools detect OBDLink
-# OBD 포트에서만: 01 00 질의까지 보내 D-CAN 여부 확인 (직결 버스에서는 쓰지 말 것)
+# OBD port only: also sends an 01 00 query to check for D-CAN (never on a direct bus tap)
 ./build/can_tools detect OBDLink --probe
 
-# 지원 PID 목록 (D-CAN)
+# supported PID list (D-CAN)
 ./build/can_tools supported OBDLink
 
-# PID 값 조회 (D-CAN)
+# PID values (D-CAN)
 ./build/can_tools query OBDLink 0C 0D 11
 
 # Porsche 992 legacy/debug profile commands
 ./build/can_tools p992 list
 
-# Porsche 992 채널 1회 조회
+# Porsche 992 channels, read once
 ./build/can_tools p992 read OBDLink RPM THROTTLE_POS STEER_ANGLE BRAKE_PRESS
 
-# Porsche 992 채널 스트리밍 (NDJSON, 500ms 간격)
+# Porsche 992 channel streaming (NDJSON, every 500 ms)
 ./build/can_tools p992 watch OBDLink --interval-ms 500 RPM STEER_ANGLE BRAKE_PRESS
 
-# Porsche 992 라우트/원문 응답 진단
+# Porsche 992 route / raw response diagnostics
 ./build/can_tools p992 debug OBDLink
 ./build/can_tools p992 bin-probe OBDLink
 
-# Porsche 992 DID 대상 ECU 스캔
+# Porsche 992 ECU scan for a DID
 ./build/can_tools p992 scan-did OBDLink 5101
 ./build/can_tools p992 scan-did OBDLink 5101 --session 03
 
-# Porsche 992 저수준 UDS DID 직접 읽기
+# Porsche 992 low-level UDS DID read
 ./build/can_tools p992 uds-read OBDLink F190 --tx-id 7E4 --rx-id 7EC
 ./build/can_tools p992 uds-raw OBDLink 3E00 --tx-id 7E4 --rx-id 7EC
 
-# CAN 패시브 모니터 (PT-CAN, 10초)
+# passive CAN monitor (PT-CAN, 10 s)
 ./build/can_tools monitor vLinker 10
 
-# CAN 모니터 + ID 필터
+# CAN monitor with an id filter
 ./build/can_tools monitor vLinker 10 0A5 1A0 316
 
-# PT-CAN 시그널 자동 탐색
+# guided PT-CAN signal discovery
 ./build/can_tools discover vLinker
 
-# 원시 AT 명령
+# raw AT command
 ./build/can_tools raw OBDLink "ATRV"
 ```
 
-- JSON 출력은 stdout, 로그는 stderr. `2>/dev/null`로 JSON만 파싱 가능.
-- `<device>`: BLE 이름 prefix 매칭 (대소문자 무시)
-- `p992 watch`는 stdout에 snapshot별 JSON object를 한 줄씩 출력한다(NDJSON).
-- `p992`는 992 GT3 실차 검증 과정에서 만든 legacy/debug command set이다.
+- JSON goes to stdout, logs to stderr: `2>/dev/null` leaves JSON alone to parse.
+- `<device>`: BLE name prefix match (case-insensitive)
+- `p992 watch` prints one JSON object per snapshot per line on stdout (NDJSON).
+- `p992` is a legacy/debug command set made while validating on a real 992 GT3.
 
-### 대화형 모드
+### Interactive mode
 
-예전 대화형 메뉴는 `menu`로 연다 (`./build/can_reader`를 인자 없이 실행해도 같다).
-`can_tools`를 인자 없이 실행하면 이제 TUI가 열린다(아래 `tui` 절).
+`menu` opens the old interactive menu (as does `./build/can_reader` without arguments).
+`can_tools` without arguments now opens the TUI (see `tui` below).
 
 ```bash
 ./build/can_tools menu
 ```
 
-## tui (라이브 대시보드)
+## tui (live dashboard)
 
-btop처럼 터미널 하나에서 어댑터 연결, 프로필 선택, 실시간 시그널, Raw CAN, 로그, discover를 다룬다.
+Like btop, one terminal handles connecting to the adapter, choosing a profile, live signals, Raw CAN, the log and
+discover.
 
 ```bash
-./build/can_tools                         # 연결 화면 (= can_tools tui)
-./build/can_tools tui --device OBDLink    # 이름에 OBDLink가 들어간 첫 어댑터에 바로 연결
+./build/can_tools                         # connect screen (= can_tools tui)
+./build/can_tools tui --device OBDLink    # connect right away to the first adapter whose name contains OBDLink
 ./build/can_tools tui --device vLinker --profile ../../profiles/porsche__911_gt3__992__can_obd.vsp
-./build/can_tools tui --replay captures/20261028_101500          # 저장된 세션을 차 없이 다시 보기
-./build/can_tools tui --replay x.frames.tsv --snapshot-at 5 --size 120x40   # 화면을 텍스트로 출력 (터미널 불필요)
+./build/can_tools tui --replay captures/20261028_101500          # replay a saved session, no car needed
+./build/can_tools tui --replay x.frames.tsv --snapshot-at 5 --size 120x40   # print the screen as text (no terminal needed)
 ```
 
-옵션: `--profile VSP|none`(없으면 연결 뒤 프로필 선택 창; replay는 아래 "세션 폴더"처럼 session.json의 프로필부터), `--profiles DIR`(프로필 폴더; 기본은 `VSP_PROFILES_DIR`,
-`./profiles`, 저장소의 `profiles/`(빌드 때 절대 경로로 기록), 실행파일 폴더와 상위 폴더의 `profiles/` 순), `--no-tx`, `--no-rec`, `--captures DIR`(세션 폴더
-위치, 기본 `captures/`), `--mono`(색 없음, `NO_COLOR`도 같음), `--ascii`(UTF-8이 아닌 터미널), replay 전용 `--speed X`(0.25~16).
-`--device ""`는 거부한다.
+Options: `--profile VSP|none` (without it, the profile picker after connecting; replay starts from session.json's
+profile, as in "Session folder" below), `--profiles DIR` (the profile folder; by default `VSP_PROFILES_DIR`,
+`./profiles`, the repository's `profiles/` (recorded as an absolute path at build time), then `profiles/` in the
+executable's folder and its parents), `--no-tx`, `--no-rec`, `--captures DIR` (where session folders go, default
+`captures/`), `--mono` (no color; `NO_COLOR` does the same), `--ascii` (terminals without UTF-8), and for replay only
+`--speed X` (0.25–16). `--device ""` is refused.
 
-**연결 화면**: 스캔으로 찾은 어댑터(BLE는 RSSI, Classic은 paired)가 계속 갱신되고 8초마다 다시 스캔한다. ↑↓로 고르고
-⏎로 연결한다. 어댑터에는 ⏎를 누르거나 `--device`를 줄 때만 연결한다. `R` 저장된 캡처 목록에서 골라 replay로 열기
-(목록이 열려 있는 동안은 연결하지 않고, 기다리던 어댑터는 `esc`로 목록을 닫은 뒤 연결),
-`s` 목록 비우고 다시 스캔, `o` 캡처 경로를 직접 입력해 replay로 열기, `q` 종료(녹화 `r`은 연결한 뒤 대시보드에서). 마지막으로 쓴 어댑터와 프로필이 `last:` 줄에 나오고(처음부터 선택돼 있음) ⏎ 두 번이면
-대시보드까지 간다: 그 이름의 어댑터가 스캔에 보이면 연결하고, 프로필 선택 창이 마지막 프로필에 맞춰 열린다.
-연결하면 PASSIVE 초기화(`ATZ` … `ATCSM1` … `ATH1`, 필터 없음) 뒤 `STMA`(STN) 또는 `ATMA`로 모니터를 시작한다.
+**Connect screen**: the adapters a scan finds (RSSI for BLE, paired for Classic) keep updating, with a new scan every
+8 s. ↑↓ selects and ⏎ connects. It connects to an adapter only on ⏎ or `--device`. `R` picks a saved capture from a
+list and opens it as a replay (while the list is open nothing connects; an adapter that was waiting connects after
+`esc` closes the list), `s` clears the list and scans again, `o` opens a typed capture path as a replay, `q` quits
+(recording, `r`, is on the dashboard after connecting). The adapter and profile used last show on a `last:` line
+(selected from the start), and ⏎ twice reaches the dashboard: the adapter of that name connects once a scan sees it,
+and the profile picker opens on the last profile.
+Connecting runs the PASSIVE init (`ATZ` … `ATCSM1` … `ATH1`, no filters), then starts the monitor with `STMA` (STN) or
+`ATMA`.
 
-**대시보드**: 위는 Signals(값, 단위, Hz, age, 최근 10초 스파크라인 또는 좁으면 min/max, CAN ID), 아래는 Raw CAN(ID, Hz, dlc,
-data; 1초 안에 바뀐 바이트는 밝게)과 Log. 80x24보다 작으면 탭으로 한 패널씩 보인다. 프로필이 없으면(또는 보여줄 시그널이
-없으면) Gauges·Signals 자리에 `p`로 차량 프로필을 고르라는 4줄 안내 상자가 나오고, 탭 화면에서는 탭 줄 오른쪽에 같은 안내가 붙는다.
-프로필이 없는 동안에는 버스에 보이는 프레임으로 차종을 추정한다(아래 "차종 추정"). 헤더는 어댑터, 버스 판정
-(`detecting…` → `PT-CAN DIRECT` / `GATEWAY` / `SILENT (no frames)`), `silent` 또는 빨간 `TX ON`, 프로필, fr/s와 경과 시간,
-`● REC`를 보여준다. 신호가 주기의 3배(최소 300 ms) 넘게 안 오면 회색에 Hz `0`, 10초가 넘으면 값이 `—`가 된다.
-최근 10초 그래프도 같은 기준이다: 샘플 간격이 그보다 짧으면 이어 그리고(왼쪽 끝은 창 이전의 마지막 샘플로), 길면 넘는 구간을 비운다.
-그래프는 창 안의 값 차이가 raw 2스텝(LSB) 이하면 평평한 선으로 그린다(6비트 이상 선형 정수 필드만; float·polynomial·5비트 이하는 그대로). 게이지의 스로틀·브레이크·RPM·속도는 0 미만을 0으로 보인다.
-버스 판정은 모니터 시작 후 3초, 이후 5초마다 최근 3초로 discover와 같은 기준(20 Hz 이상 ID 2개 이상이면 DIRECT)을 쓴다.
+**Dashboard**: on top Signals (value, unit, Hz, age, a 10 s sparkline or, when narrow, min/max, CAN id), below Raw
+CAN (id, Hz, dlc, data; bytes that changed within 1 s are bright) and Log. Below 80x24 the panels show one at a time as
+tabs. Without a profile (or with no signal to show), a 4-line box in place of Gauges and Signals says to press `p` to
+choose a vehicle profile; on the tabs screen the same note sits at the right of the tab line.
+While no profile is loaded, the frames on the bus suggest the vehicle (see "Vehicle guess" below). The header shows
+the adapter, the bus verdict (`detecting…` → `PT-CAN DIRECT` / `GATEWAY` / `SILENT (no frames)`), `silent` or a red
+`TX ON`, the profile, fr/s and elapsed time, and `● REC`. A signal that has not arrived for 3 times its period (at
+least 300 ms) turns grey with Hz `0`, and after 10 s its value becomes `—`.
+The 10 s graph follows the same rule: samples closer than that are joined (the left edge from the last sample before
+the window), longer gaps are left blank.
+A graph whose values in the window differ by at most 2 raw steps (LSB) draws as a flat line (linear integer fields of
+6 bits or more only; float, polynomial and 5 bits or less draw as they are). The throttle, brake, RPM and speed gauges
+show values below 0 as 0.
+The bus verdict comes 3 s after the monitor starts and then every 5 s, over the last 3 s, with the discover rule (2 or
+more ids at 20 Hz or more = DIRECT).
 
-| 키 | 동작 |
+| Key | Action |
 |----|------|
-| `tab` | 다음 패널 (좁은 화면: 탭 전환) |
-| `↑` `↓` `PgUp` `PgDn` | 포커스 패널 스크롤 (잘린 패널 아래 테두리에 `▼ n more`, `▲ n`) |
-| `/` | 필터: 시그널 이름, Raw CAN ID 앞자리 (`esc` 해제) |
-| `s` | Raw CAN 정렬: hz → id → 최근 변경 |
-| `d` | discover 오버레이 |
-| `p` | 프로필 선택 (입력으로 필터, ⏎ 불러오기, `Ctrl+N` 프로필 없이, `esc` 그대로) |
-| `1`–`5` | 프로필이 없을 때 추천 프로필 불러오기 |
-| `r` | 녹화 켜기/끄기 (라이브; replay에서는 로그 한 줄만) |
-| `R` | replay 목록 (라이브, replay, 연결 화면) |
-| `x` | TX 모드 켜기/끄기 (아래 안전 규칙) |
-| `space` `[` `]` | replay 일시정지, 느리게, 빠르게 |
-| `v` | 마지막 discover 결과 |
-| `?` | 도움말 |
-| `q` | 종료 (discover 진행 중이거나 TX 모드면 확인), `Ctrl+C`는 바로 종료 |
-| `c` | 연결이 끊긴 뒤 연결 화면으로 |
+| `tab` | next panel (narrow screen: switch tabs) |
+| `↑` `↓` `PgUp` `PgDn` | scroll the focused panel (a clipped panel shows `▼ n more`, `▲ n` on its bottom border) |
+| `/` | filter: signal name, leading digits of a Raw CAN id (`esc` clears) |
+| `s` | Raw CAN sort: hz → id → recent change |
+| `d` | discover overlay |
+| `p` | choose a profile (type to filter, ⏎ load, `Ctrl+N` no profile, `esc` keep) |
+| `1`–`5` | load a suggested profile (no profile loaded) |
+| `r` | recording on/off (live; in replay just a log line) |
+| `R` | replay list (live, replay, connect screen) |
+| `x` | TX mode on/off (see the safety rules below) |
+| `space` `[` `]` | replay pause, slower, faster |
+| `v` | last discover result |
+| `?` | help |
+| `q` | quit (asks while discover runs or TX mode is on); `Ctrl+C` quits at once |
+| `c` | back to the connect screen after a disconnect |
 
-**discover**: `d`가 대시보드 위에 탐색 창을 연다(뒤의 대시보드는 계속 갱신). ⏎로 다음 단계(Baseline, Steering, Throttle,
-Brake, Gear, Wheel Speed)를 시작하고, `s` 건너뛰기(Baseline 제외), `a` 중단(캡처한 단계는 남고 manifest는 `interrupted`).
-모니터는 단계 사이에도 멈추지 않는다. `live` 줄은 그 단계에 해당하는 프로필 시그널 값과, Baseline 동안 고정이었는데 지금 가장
-많이 변하는 (ID, 바이트)와 스파크라인을 보여준다. 마지막 단계 뒤 결과 화면에서 ⏎를 누르면 초안 VSP를 바로 대시보드에
-불러온다(프로필 없는 차 → discover → 값 확인). `v`는 result.json을 보여준다. Baseline이 DIRECT면 TX가 잠긴다.
+**discover**: `d` opens the discovery window over the dashboard (the dashboard behind keeps updating). ⏎ starts the
+next step (Baseline, Steering, Throttle, Brake, Gear, Wheel Speed), `s` skips one (not Baseline), `a` aborts (the steps
+captured stay and the manifest says `interrupted`). The monitor never stops between steps. The `live` line shows the
+values of the profile signals for that step, and the (id, byte) that was fixed during Baseline and now moves most, with
+a sparkline. After the last step, ⏎ on the result screen loads the draft VSP straight into the dashboard (a car
+without a profile → discover → check the values). `v` shows result.json. A DIRECT Baseline locks TX.
 
-**세션 폴더** (연결할 때 만든다; replay의 discover는 `captures/YYYYMMDD_HHMMSS_replay/`):
+**Session folder** (made on connecting; a replay's discover uses `captures/YYYYMMDD_HHMMSS_replay/`):
 
 ```
 captures/YYYYMMDD_HHMMSS/
-├── live.frames.tsv          # 녹화 (r로 다시 켜면 live_02.frames.tsv, ...); 형식은 discover dump와 같음
-├── tui.log                  # TUI가 화면을 쓰는 동안의 stderr (Log 패널에도 표시)
-├── session.json             # 어댑터, 전송 방식, STN, 모니터 명령, 프로필, 녹화 파일, 버스 판정 이력
-├── 00_baseline.frames.tsv … # discover를 돌렸다면 단계별 dump
+├── live.frames.tsv          # recording (r again starts live_02.frames.tsv, ...); same format as the discover dumps
+├── tui.log                  # stderr while the TUI owns the screen (also in the Log panel)
+├── session.json             # adapter, transport, STN, monitor command, profile, recordings, bus verdict history
+├── 00_baseline.frames.tsv … # per-step dumps when discover ran
 ├── manifest.json, result.json, ptcan_discover_draft.dbc, ptcan_discover_draft.vsp
 ```
 
-세션 폴더는 그대로 `can_tools tui --replay <폴더>`(프레임이 있는 live*.frames.tsv, 없으면 프레임이 있는 NN_*.frames.tsv를
-이어 붙이고 1초 넘는 틈은 1초로 줄임)나 `can_tools replay <폴더>`로 다시 볼 수 있다. TUI의 replay 목록(연결 화면,
-라이브 대시보드, replay 어디서나 `R`; `r`은 녹화)은 `--captures` 폴더 아래에서 프레임이 하나 이상 있는 세션 폴더와
-`*.frames.tsv` 파일을 최신순으로 최대 512개 보여주고(헤더만 있는 녹화는 빠짐), ⏎로 고른 캡처를 바로 replay로 연다. 고른
-캡처가 그사이 지워졌거나 비었으면 목록을 그대로 두고 이유를 보여주며, TX 모드 중에는 TX를 끄고 넘어갈지 먼저 묻는다. 마지막 어댑터·프로필은
-`~/.can_tools/tui_last`에 저장한다. session.json과 tui_last의 프로필 경로는 절대 경로로 쓴다.
+A session folder replays as it is with `can_tools tui --replay <folder>` (the live*.frames.tsv files with frames,
+else the NN_*.frames.tsv files with frames, joined, with gaps over 1 s shortened to 1 s) or `can_tools replay
+<folder>`. The TUI's replay list (`R` on the connect screen, the live dashboard and in replay; `r` is recording) shows
+the session folders with at least one frame and the `*.frames.tsv` files under the `--captures` folder, newest first,
+up to 512 (recordings with only a header are left out), and ⏎ opens the chosen capture as a replay right away. A
+capture deleted or emptied in the meantime leaves the list open with the reason, and while TX mode is on it first asks
+whether to turn TX off and go on. The last adapter and profile are saved in `~/.can_tools/tui_last`. session.json and
+tui_last write profile paths as absolute paths.
 
-**replay의 프로필**: `--profile`을 주면 그 프로필(`none`이면 프로필 없이)을 쓴다. 주지 않았거나 목록(`R`)에서 고른 캡처는
-캡처 폴더(파일이면 그 파일이 있는 폴더)의 session.json에 적힌 프로필을 불러온다. 그 경로에 파일이 없으면(저장소를 옮겼거나
-다른 폴더에서 실행) 프로필 폴더에서 같은 파일 이름을 찾고, Log에 `session profile moved: <옛 경로> -> <새 경로>`를 남긴다.
-session.json이 없거나 프로필이 null이거나 파일을 찾지 못하면 프로필 선택 창을 연다(tui_last의 마지막 프로필에 맞춰).
-`esc`로 닫으면 프로필 없이 Raw CAN과 Log만 보이고, 언제든 `p`로 고를 수 있다.
+**The profile in replay**: `--profile` uses that profile (`none` = no profile). Without it, and for a capture chosen
+from the list (`R`), the profile written in session.json of the capture folder (for a file, its folder) loads. When no
+file is at that path (the repository moved, or it runs from another folder), the file of the same name in the profile
+folder is used, and the Log notes `session profile moved: <old path> -> <new path>`. Without session.json, with a null
+profile, or when the file is not found, the profile picker opens (on tui_last's last profile). `esc` closes it to
+Raw CAN and Log alone, without a profile; `p` chooses one at any time.
 
-**차종 추정**: 프로필이 없으면(라이브든 replay든, `--profile none`이어도) 프로필 폴더를 색인해 두고, 트래픽이 3초 쌓인
-뒤부터 2초마다 Raw CAN 표의 프레임(ID, 29-bit 여부, DLC)을 각 프로필의 수동 CAN 프레임(`can_frames[]` 중 CAN 버스,
-reassembled 아님, 진단 요청·응답 ID 아님)과 맞춰 본다. 프레임마다 가중치 log((N + 1) / 그 ID를 가진 프로필 수)를 주어
-(여러 프로필이 공유하는 흔한 ID일수록 정보가 적다; +1은 프로필이 하나뿐이거나 모두 같은 프레임을 가진 폴더에서도 가중치가
-0이 되지 않게 한다) 보이면 더하고(프로필에 DLC가 있으면 같아야 함) 안 보이면 0.3배를 뺀다(다른 버스의 프레임이거나 OBD 포트
-gateway가 가렸을 수 있으므로). 최고점의 60% 이상이고 자기 프레임의 절반 이상(최소 min(3, 프레임 수))이 보인 프로필이
-5개 이하일 때만 후보로 보여준다: 더 많으면 트래픽으로 좁혀지지 않은 것이다. 최고점은 조건을 못 채운 프로필까지 포함해 정한다.
-프레임이 절반도 안 보인 프로필이 선두면(여러 버스를 담은 프로필을 한 버스에서 보는 경우 등) 그 차일 수 있으니 목록을 띄우지
-않는다. 조건을 채운 프로필 중에서 최고점을 고르면 프레임이 절반만 보일 때 틀린 목록이 두 배가 된다(아래 시뮬레이션).
-안내 상자가 후보 목록이 되고, 행마다 차종, 보인 프레임 수, 그 프로필로 지금 프레임을 읽은 RPM·조향·스로틀·브레이크
-값이 실시간으로 나온다(같은 종류 신호가 여럿이면 2초 안에 값이 들어온 첫 신호, 값이 없으면 `—`, 그런 신호가 없으면
-`n/a`). 핸들을 돌리거나 페달을 밟아 값이 맞게 움직이는 후보를 고르면 된다. `1`–`5`로 불러오고, `p` 선택 창은 필터가
-비어 있을 때 후보를 순위 숫자와 함께 맨 위에 두고 1순위를 미리 선택한다. 선택 창이 열려 있는 동안 후보가 생기거나 바뀌면
-다시 정렬한다: 움직이지 않은 선택은 1순위를 따라가고, 사용자가 옮긴 선택(이동, 필터 입력)은 그 프로필에 남는다. 후보가
-바뀌면 Log에 한 줄 남는다.
-992 GT3 실차 캡처(PT-CAN 직결)는 `911 GT3 992`(12/12), `911 992`(10/11), `Audi A8 D5`(7/7) 순이다. 프로필 corpus로 한
-시뮬레이션(프로필 400개 각각의 프레임 + 무관한 ID 30개)에서 프레임이 다 보이면 76%의 경우에 목록이 뜨고 그때 정답이 항상
-들어 있었으며, 절반만 보이면 58%에서 뜨고 85%가 정답을 포함했다. 차의 프로필이 폴더에 없으면(같은 차종 프로필을 빼고 실험)
-66%의 경우에 다른 프로필 목록이 떴다. 대개 같은 브랜드이고, 1순위의 약 1/4은 프레임 구성이 사실상 같아(90% 이상) 그대로
-읽히지만 나머지는 아니다. 그래서 목록은 확인용 후보이고, 실시간 값이 맞는지 보고 고른다.
+**Vehicle guess**: without a profile (live or replay, even with `--profile none`) the profile folder is indexed, and
+once 3 s of traffic are in, every 2 s the frames in the Raw CAN table (id, 29-bit or not, DLC) are matched against
+each profile's passive CAN frames (`can_frames[]` on a CAN bus, not reassembled, not a diagnostic request or response
+id). Every frame weighs log((N + 1) / profiles that list its id) (a common id many profiles share says less; the +1
+keeps the weight above 0 in a folder of one profile, or of profiles with the same frames): a frame seen adds it (the
+DLC must match when the profile gives one), one not seen costs 0.3 of it (it may be a frame of another bus, or an
+OBD-port gateway may hide it). Candidates show only when at most 5 profiles score at least 60 % of the best with at
+least half of their frames (and at least min(3, frames)) seen: more mean the traffic does not narrow it down. The best
+counts the profiles that fall short too. When a profile with less than half of its frames seen leads (a profile of
+several buses watched from one bus, for instance), it may be the car, so no list shows. Taking the best over the
+qualifying profiles doubles the wrong lists when half of the frames are visible (simulation below).
+The hint box becomes the candidate list: each row shows the vehicle, the frames seen, and the RPM, steering, throttle
+and brake that profile reads from the live frames (of several signals of a kind, the first with a value in the last
+2 s; `—` without a value, `n/a` when the profile has no such signal). Turn the wheel or press a pedal and pick the
+candidate whose values move right. `1`–`5` load one; with an empty filter, the `p` picker puts the candidates on top
+with their rank digits and preselects the first. When candidates appear or change while the picker is open it
+re-sorts: an untouched selection follows the first candidate, one the user moved (moving, typing a filter) stays on
+its profile. A change of candidates leaves a Log line.
+A real 992 GT3 capture (direct PT-CAN tap) ranks `911 GT3 992` (12/12), `911 992` (10/11), `Audi A8 D5` (7/7). In a
+simulation over the profile corpus (each of 400 profiles' frames plus 30 unrelated ids), with every frame visible a
+list shows 76 % of the time and always holds the right car; with half of the frames visible it shows 58 % of the time
+and holds the right car 85 % of the time. Without the car's profile in the folder (same-vehicle profiles removed for
+the test), a list of other profiles showed 66 % of the time. Mostly the same make; about a quarter of the first
+candidates have practically the same frames (90 % or more) and read correctly, the rest do not. So the list is a set
+of candidates to check: pick by whether the live values are right.
 
-**안전 규칙 (TX 모드)**: TUI는 기본적으로 아무것도 버스에 보내지 않는다(ATCSM1 silent mode, ACK도 없음). `x`로 TX 모드를
-켜야만 프로필의 진단 시그널(OBD/UDS)을 질의하고, 다음을 모두 만족할 때만 켜진다: 라이브 연결(replay 아님), 버스 판정이
-GATEWAY 또는 SILENT, 이 연결에서 한 번도 DIRECT로 판정된 적 없음(DIRECT는 연결이 끊길 때까지 잠김, discover Baseline 포함),
-`--no-tx` 없음, 프로필에 진단 시그널이 1개 이상, 확인 창에서 `y`. DIRECT에서는 `x`가 로그 한 줄(`TX locked: DIRECT bus`)만 남긴다.
-켜지면 모니터를 멈추고 poll 설정(`ATCSM0` 등, `vsp_probe` poll 모드와 같은 코드) 뒤 고유 질의를 돌아가며 초당 10개 이하로
-보낸다. 끌 때(`x`, 종료, 끊김 정리)는 PASSIVE 초기화를 다시 실행해(ATZ로 헤더·주기 메시지 해제, ATCSM1 복구) 모니터를 다시
-시작하거나 연결을 끊는다. 이 재초기화가 실패하면(ATCSM1이 `OK`가 아님) 어댑터가 아직 ACK를 보낼 수 있으므로 모니터를 다시
-켜지 않고, 헤더가 빨간 `NOT SILENT`가 되며 Log에 `[ERROR] TX off: silent mode (ATCSM1) not confirmed …`가 남는다. `c`로 연결
-화면에 돌아가 다시 연결하면 PASSIVE 초기화를 처음부터 다시 한다. **PT-CAN 직결 탭에서는 TX 모드를 켜지 말 것** — OBD 포트에서만 쓴다.
+**Safety rules (TX mode)**: by default the TUI sends nothing on the bus (ATCSM1 silent mode, not even ACKs). Only TX
+mode, turned on with `x`, queries the profile's diagnostic signals (OBD/UDS), and it turns on only when all of these
+hold: a live connection (not replay), a GATEWAY or SILENT bus verdict, no DIRECT verdict ever on this connection
+(DIRECT locks until the connection drops, discover's Baseline included), no `--no-tx`, at least one diagnostic signal
+in the profile, and `y` in the confirmation. On DIRECT, `x` only logs a line (`TX locked: DIRECT bus`).
+Once on, it stops the monitor, sets up polling (`ATCSM0` and so on, the same code as `vsp_probe`'s poll mode) and
+cycles through the distinct queries at no more than 10 per second. Turning it off (`x`, quitting, cleanup after a
+disconnect) runs the PASSIVE init again (ATZ clears headers and periodic messages, ATCSM1 comes back) and restarts the
+monitor or disconnects. When that re-init fails (ATCSM1 not `OK`), the adapter may still send ACKs, so the monitor
+stays off, the header turns a red `NOT SILENT`, and the Log notes `[ERROR] TX off: silent mode (ATCSM1) not confirmed
+…`. `c` back to the connect screen and connecting again redoes the PASSIVE init from the start. **Never turn TX mode
+on while tapped directly into PT-CAN** — use it at the OBD port only.
 
-## discover (구 can_discover)
+## discover (formerly can_discover)
 
-PT-CAN 시그널 자동 탐색. 인자는 예전 `can_discover`와 같다(`./build/can_discover ...` 별칭도 동작).
+Guided PT-CAN signal discovery. The arguments are those of the old `can_discover` (the `./build/can_discover ...` alias
+works too).
 
 ```bash
-# 특정 어댑터 지정
+# a given adapter
 ./build/can_tools discover vLinker
 
-# 첫 번째 어댑터에 자동 연결
+# connect to the first adapter found
 ./build/can_tools discover
 ```
 
-### 동작 흐름
+### Flow
 
-대화형 6단계 캡처로 모터스포츠 핵심 시그널을 자동 식별한다:
+Six guided capture phases identify the key motorsport signals:
 
 ```
-Phase 1: Baseline     (5초)  — 기본 트래픽 캡처
-Phase 2: Steering     (8초)  — 스티어링 풀 좌/우 반복
-Phase 3: Throttle     (8초)  — 액셀 끝까지 밟기/떼기 반복
-Phase 4: Brake        (8초)  — 브레이크 끝까지 밟기/떼기 반복
-Phase 5: Gear        (10초)  — P → R → N → D 시프트 [스킵 가능]
-Phase 6: Wheel Speed (15초)  — 저속 주행 30+ km/h [스킵 가능]
+Phase 1: Baseline     (5 s)  — normal traffic
+Phase 2: Steering     (8 s)  — full left / right, repeatedly
+Phase 3: Throttle     (8 s)  — accelerator to the floor and released, repeatedly
+Phase 4: Brake        (8 s)  — brake fully pressed and released, repeatedly
+Phase 5: Gear        (10 s)  — shift P → R → N → D [skippable]
+Phase 6: Wheel Speed (15 s)  — drive slowly, 30+ km/h [skippable]
 ```
 
-각 Phase 후 사람이 CAN 후보를 고르지 않는다. 캡처가 끝나면 툴이 자동으로 추정한다:
+Nobody picks CAN candidates after each phase. Once the capture is done the tool infers them:
 
-1. phase마다 CAN ID별 raw frame을 baseline과 비교하고, counter/checksum/상수 바이트를 걸러낸다. 두 phase 모두
-   값이 16종 이상인 바이트는 프레임 사이 평균 변화량(0–128, 짧은 쪽으로 잼)도 32 이상일 때만 checksum으로
-   본다: checksum은 평균 ~64로 튀고, 정지 중 잡음이 16종 넘는 센서 바이트는 작게 움직이므로 남는다.
-2. 신호별로 해당 phase에서 많이 변한 ID를 고르고, 변하는 바이트 묶음(region) 안에서 실제 bitfield
-   (시작 비트, 길이, byte order, 부호)를 탐색한다. steering은 unsigned·2의 보수 외에 sign-magnitude
-   (크기 + 별도 부호 비트, 예: Porsche/Audi 0x0A0 `32|12` + 부호 bit 44)도 시도한다. 8비트 이하
-   Motorola 필드는 한 바이트 안에 있으면 Intel과 같은 비트라 건너뛰고, 바이트 경계를 넘으면(`19|8@0`)
-   따로 탐색한다.
-3. 후보 필드마다 점수를 매긴다.
-   - **evidence**: 해당 phase에서 그 필드가 baseline 대비 얼마나 변했는지
-   - **specificity**: 그 신호가 움직이면 안 되는 phase에서 조용한지
-     (예: 정차 phase의 wheel speed). 원래 같이 움직이는 phase(주행 중 RPM, 기어 변경 중 브레이크)는 감점하지 않는다.
-   - **shape**: 비트 폭·주기·부호·바이트 순서가 신호 종류에 맞는지. 부호를 허용하는 신호(steering, brake)는
-     부호(최상위) 비트가 바뀌는 순간 값이 이어지는지도 본다. 부호 방식을 잘못 읽으면 0 부근에서 범위
-     절반만큼 튄다(2의 보수를 sign-magnitude로 읽거나 그 반대). 페달을 뗀 상태와 정차 상태는 값이
-     하나이므로, throttle과 wheel speed는 baseline의 alive counter를 신호로 보지 않는다: counter 비트를
-     포함한 필드는 감점하고, 필드 바로 옆이 counter면 필드가 잘렸다고 보지 않으며, counter 바로 위 비트도
-     필드 LSB 후보로 시도한다. counter는 ID마다 baseline 프레임에서 찾는다: 거의 매 프레임(95%) 뒤집히는
-     비트, 또는 바로 위 비트와의 2비트 묶음이 매 프레임 같은 홀수 폭으로 바뀌고(60% 이상) 값이 거의
-     반복되지 않는(5% 이하) 비트에서 시작한다. 뒤의 조건은 프레임 유실 때문이다: 한 프레임을 놓치면
-     최하위 비트가 안 뒤집히고 2칸 뛰므로 5% 유실이면 반전이 ~95%로 떨어진다. 그 위 비트를 붙여도 묶음
-     값이 매 프레임 앞으로(범위 절반 미만) 또는 일정한 폭으로 움직이는 동안(최대 8비트)이다. checksum 비트와 신호 자체의 떨림(예: idle의 스로틀 밸브 각도)은
-     해당하지 않는다. 예: 992 GT3 `0x121`은 byte0 checksum, bit 8–11 counter, bit 12부터 페달.
-   - **prior**: VSP corpus에 **같은 ID와 같은 layout**의 신호가 있는지 (ID만 같은 경우는 거의 점수 없음)
-4. 필드 단위 최소 변화량을 넘지 못한 후보(예: 50→51 한 번 바뀐 바이트)는 버린다.
-5. 모든 신호를 함께 배정해 두 신호가 같은 비트를 쓰지 않게 한다. 어떤 신호의 1순위 필드가 다른 신호에
-   더 잘 맞으면 그 신호는 다음 후보로 넘어간다 (예: RPM과 throttle이 같은 phase에서 움직이는 경우).
+1. For every phase, each CAN id's raw frames are compared with the baseline, and counter / checksum / constant bytes
+   are filtered out. A byte with 16 or more values in both phases counts as a checksum only when its mean change
+   between frames (0–128, the shorter way round) is also 32 or more: a checksum jumps by ~64 on average, while a
+   sensor byte whose noise at rest exceeds 16 values moves a little, and stays.
+2. For each signal, the ids that changed most in its phase are chosen, and within each run of changing bytes (region)
+   the actual bitfield (start bit, length, byte order, sign) is searched. Besides unsigned and two's complement,
+   steering also tries sign-magnitude (a magnitude plus a separate sign bit, e.g. Porsche/Audi 0x0A0 `32|12` + sign
+   bit 44). A Motorola field of 8 bits or less inside one byte has the same bits as the Intel field and is skipped;
+   one that crosses a byte (`19|8@0`) is searched on its own.
+3. Every candidate field is scored.
+   - **evidence**: how much the field changed in its phase, against the baseline
+   - **specificity**: whether it is quiet in phases where the signal should not move (e.g. wheel speed in a
+     standstill phase). Phases where it moves along naturally (RPM while driving, brake while shifting) cost nothing.
+   - **shape**: whether bit width, period, sign and byte order suit the kind of signal. For signals that may be signed
+     (steering, brake) it also checks that the value stays continuous where the sign (top) bit flips. Reading the sign
+     the wrong way (two's complement as sign-magnitude or the reverse) jumps by half the range around 0. Released
+     pedals and a standstill have a single value, so for throttle and wheel speed the baseline's alive counter is not
+     the signal: a field that includes counter bits loses points, a counter right next to a field does not mean the
+     field is cut off, and the bit right above a counter is also tried as a field LSB. Counters are found per id in
+     the baseline frames: they start at a bit that flips in nearly every frame (95 %), or at a bit whose 2-bit pair
+     with the bit above changes by the same odd step in most frames (60 % or more) with values that hardly repeat
+     (5 % or less). The second condition is for lost frames: a missed frame leaves the lowest bit unflipped and the
+     counter two steps ahead, so 5 % loss drops the flip rate to ~95 %. Bits above join while the combined value keeps
+     moving forward every frame (by less than half its range) or by a constant step (up to 8 bits). Checksum bits and
+     jitter of the signal itself (e.g. the throttle plate angle at idle) do not qualify. Example: 992 GT3 `0x121` has a
+     checksum in byte 0, a counter in bits 8–11, and the pedal from bit 12.
+   - **prior**: whether the VSP corpus has a signal with **the same id and the same layout** (the same id alone
+     earns almost nothing)
+4. Candidates below the minimum change for their field (e.g. a byte that went 50→51 once) are dropped.
+5. All signals are assigned together so that no two use the same bits. When one signal's best field suits another
+   signal better, the first moves on to its next candidate (e.g. RPM and throttle moving in the same phase).
 
-`confidence`는 증거의 강도와 두 가지 차이로 정한다.
-- **배정 차이**: 그 신호가 지금 위치(겹치는 비트 전부)를 못 쓴다고 하고 전체 배정을 다시 풀었을 때의 총점
-  차이. 다른 신호도 옮겨갈 수 있으므로, 두 신호를 서로 바꿔도 총점이 같으면(예: 똑같이 움직이는 두 필드에
-  RPM/throttle) 차이가 0이다. HIGH는 15점 또는 점수의 15% 이상.
-- **배치 차이**: 같은 비트 위를 다르게 읽는 차선 배치와의 점수 차이(예: counter를 포함한 `8|12`와 `12|8`).
-  폭·배율·상수 오프셋만 다른 배치(같은 값을 2^k배나 상수만큼 다르게 읽는 것, 예: 항상 0인 상위 비트를
-  더 붙인 필드)는 캡처로 구분할 수 없으므로 경쟁 후보로 치지 않는다. 같은 필드 데이터로 매긴 점수끼리라
-  HIGH는 10점 또는 10% 이상(discover_regression 시나리오로 맞춘 값).
+`confidence` comes from the strength of the evidence and two margins.
+- **Assignment margin**: the drop in total score when the whole assignment is solved again with the signal barred
+  from its location (every overlapping bit). The other signals may move too, so when two signals can swap at the same
+  total (e.g. RPM/throttle on two fields that move alike) the margin is 0. HIGH needs 15 points or 15 % of the score.
+- **Layout margin**: the score gap to the runner-up layout that reads the same bits differently (e.g. `8|12`, which
+  includes a counter, against `12|8`). Layouts that differ only in width, scale or a constant offset (reading the same
+  values 2^k times larger or shifted by a constant, e.g. a field with extra always-0 top bits) cannot be told apart by
+  a capture and do not count as rivals. These are scores from the same field data, so HIGH needs 10 points or 10 %
+  (values set with the discover_regression scenarios).
 
-`ambiguity_margin`은 둘 중 작은 값이다. HIGH는 "이 위치와 비트 배치를 다른 해석과 구분할 근거가 있다"는
-뜻이지 scale·offset까지 맞다는 뜻은 아니다. 단독 후보라도 증거가 강하면 HIGH가 될 수 있고, 비슷한 후보가
-남아 있으면 MEDIUM/LOW로 낮아진다. JSON의 `evidence` 객체와 VSP의 `discovery` 블록에서 점수 구성을 확인할 수 있다.
+`ambiguity_margin` is the smaller of the two. HIGH means "there is evidence that tells this location and bit layout
+apart from other readings", not that scale and offset are right as well. A lone candidate with strong evidence can be
+HIGH, and similar candidates left over lower it to MEDIUM/LOW. The JSON `evidence` object and the VSP `discovery` block
+show how the score is made up.
 
-완료 시 JSON 결과와 함께 작업 디렉터리에 draft DBC와 draft VSP를 생성한다.
-DBC는 raw 값 기준의 호환 초안이고, VSP는 정보가 없는 차량의 profile 시작점이다.
-두 파일은 같은 최종 필드 목록에서 만들어지므로 내용이 서로 같고, JSON에 보고된 layout도 그대로 들어간다.
-prior는 관측한 bitfield와 layout·부호가 맞을 때만 이름/scale/unit/canonical id를 채운다.
-(prior가 관측 필드를 포함하고 남는 비트가 캡처 내내 변하지 않으면 prior layout을 채택한다. 맞는 것이
-없으면 마지막으로, LSB가 같고 관측 필드가 위쪽으로만 더 넓은 prior도 그 위쪽 비트가 캡처 내내 변하지 않으면
-채택한다: 캡처로는 두 폭을 구분할 수 없으므로 탐색 폭·바이트 경계 가점보다 corpus를 따른다. 여럿이면
-support가 큰 것, 같으면 더 넓은 것.)
-scale도 관측값으로 검사한다: 관측 raw 범위가 prior의 min/max 안에 들어야 하고, 브레이크·페달을 뗀 상태,
-정차 상태(baseline)가 물리값 범위의 아래쪽 1/4에 와야 한다. idle은 0보다 위에 있고 작은 블립 뒤 언더슈트도
-있으므로 RPM은 아래쪽 절반이면 된다. 맞지 않는 prior는 쓰지 않는다.
-DLC는 항상 관측값을 쓴다. wheel speed는 가능한 경우 바퀴별 4개 신호로 분해해 출력한다(JSON 결과에는 대표 필드
-하나만 나온다). prior가 없는 바퀴 필드는 어느 바퀴인지 모르므로(프로필 corpus에서 FL·FR·RL·RR 순서는 72%뿐)
-JSON에 보고된 필드만 canonical id `wheel.speed`를 갖고 나머지는 canonical id 없이 나간다. 29-bit ID(0x7FF 초과)는
-DBC에서 bit 31을 세운 값(`0x80000000 | id`)으로, VSP에서는 `id_format: "extended29"`로 쓴다.
-discover 실행 시에는 기본적으로 `captures/YYYYMMDD_HHMMSS/` 세션 폴더를 만들고,
-각 phase raw dump(`*.frames.tsv`), `manifest.json`, `result.json`,
-`ptcan_discover_draft.dbc`, `ptcan_discover_draft.vsp`를 함께 저장한다.
-원하면 `--dump-dir <DIR>`로 저장 위치를 덮어쓸 수 있다.
-캡처 버퍼가 넘쳐 버린 frame이 있으면 콘솔에 경고하고 manifest의 `capture_dropped_frames`에 기록하며,
-Hz는 실제로 저장된 frame이 덮는 시간으로 계산한다.
-그래도 LOW confidence 결과, checksum/counter, 나머지 bit-packed field는 사람이 검토해 보정해야 한다.
+When done it writes a draft DBC and a draft VSP to the working folder, along with the JSON result.
+The DBC is a compatible draft on raw values; the VSP is a starting profile for a vehicle with no information.
+Both files come from the same final field list, so they agree, and the layouts reported in the JSON are in them as is.
+A prior fills in name / scale / unit / canonical id only when the layout and sign match the observed bitfield.
+(When a prior contains the observed field and its remaining bits never change during the capture, the prior layout is
+adopted. When none fits, a last option is a prior with the same LSB that is wider than the observed field upward only,
+again when those upper bits never change during the capture: the capture cannot tell the two widths apart, so the
+corpus wins over the search width and the byte-boundary bonus. Of several, the one with more support; on a tie, the
+wider.)
+The scale is checked against the observations too: the observed raw range must lie within the prior's min/max, and
+released brake / pedal and standstill (baseline) must sit in the lower quarter of the physical range. Idle is above 0
+and small blips undershoot, so for RPM the lower half is enough. A prior that does not fit is not used.
+The DLC is always the observed one. Wheel speed is split into 4 per-wheel signals where possible (the JSON result
+shows one representative field). A wheel field without a prior has an unknown position (the profile corpus orders
+FL FR RL RR in only 72 % of messages), so only the field reported in the JSON gets canonical id `wheel.speed` and the
+others go out without a canonical id. A 29-bit id (above 0x7FF) is written with bit 31 set (`0x80000000 | id`) in the
+DBC and as `id_format: "extended29"` in the VSP.
+A discover run makes a `captures/YYYYMMDD_HHMMSS/` session folder by default and saves each phase's raw dump
+(`*.frames.tsv`), `manifest.json`, `result.json`, `ptcan_discover_draft.dbc` and `ptcan_discover_draft.vsp` there.
+`--dump-dir <DIR>` overrides the location.
+When the capture buffer overflowed and frames were dropped, it warns on the console, records
+`capture_dropped_frames` in the manifest, and computes Hz over the time the stored frames actually cover.
+LOW-confidence results, checksums / counters and the other bit-packed fields still need a person to review and adjust
+them.
 
-### 저장된 캡처 다시 분석 (replay, 구 discover_replay)
+### Re-analyzing saved captures (replay, formerly discover_replay)
 
-차량 없이 저장된 세션 폴더로 탐색을 다시 돌릴 수 있다. 엔진을 고친 뒤 실제 캡처로 검증할 때 쓴다:
+Discovery can run again on a saved session folder without the vehicle. Use it to check engine changes against real
+captures:
 
 ```bash
-./build/can_tools replay captures/20260408_153012            # 결과는 <세션>/replay/ 에 저장
+./build/can_tools replay captures/20260408_153012            # results go to <session>/replay/
 ./build/can_tools replay captures/20260408_153012 --out-dir /tmp/replay
 ```
 
-phase 길이는 manifest의 `analyzed_duration_s` → `actual_duration_s` → frame timestamp 순으로 정한다.
-캡처 버퍼가 고정 크기였던 예전 세션은 frame이 앞부분만 남아 있으므로, frame이 덮는 시간이 manifest 시간의
-80% 미만이면 그 시간으로 Hz를 계산하고 경고한다.
+Phase lengths come from the manifest's `analyzed_duration_s`, then `actual_duration_s`, then the frame timestamps.
+Older sessions with a fixed-size capture buffer kept only the first frames, so when the frames cover less than 80 % of
+the manifest time, Hz is computed over the time they cover, with a warning.
 
-### Prior table 생성
+### Generating the prior table
 
-prior table(`can_discover_priors.h`)은 빌드할 때 `tools/gen_can_discover_priors.py`가 저장소의
-`profiles/*.vsp`(`../../profiles`)에서 `build/generated/`에 생성한다. 헤더는 커밋하지 않으며, 프로필이나 생성기가
-바뀌면 다음 빌드에서 다시 만든다. 런타임에는 프로필 폴더가 없어도 된다.
-헤더 상단에 `profiles/`를 마지막으로 바꾼 commit, 파일 수, 입력 digest가 기록된다. DLC가 8을 넘거나 필드가 frame을
-벗어나는 신호, multiplexed 신호는 제외한다. VSP `decode.sign_bit`(sign-magnitude) 신호는 부호 `'S'`와
-부호 비트 위치로 들어가며, 같은 비트를 다른 부호 방식으로 읽은 후보도 부호 전환이 더 매끄러울 때만 이 prior를 채택한다.
+The prior table (`can_discover_priors.h`) is generated at build time by `tools/gen_can_discover_priors.py` from the
+repository's `profiles/*.vsp` (`../../profiles`) into `build/generated/`. The header is not committed; the next build
+regenerates it when the profiles or the generator change. The profile folder is not needed at run time.
+The top of the header records the commit that last changed `profiles/`, the file count and an input digest. Signals
+with a DLC over 8, fields outside their frame and multiplexed signals are left out. VSP `decode.sign_bit`
+(sign-magnitude) signals go in with sign `'S'` and the sign bit position, and a candidate reading the same bits with
+another sign scheme adopts such a prior only when its sign transitions are smoother.
 
-### 회귀 테스트
+### Regression tests
 
-합성 캡처로 탐색 엔진을 검증한다 (RPM/throttle 분리, 같은 메시지의 두 신호, 저속 gateway,
-잡음만 있는 캡처, skip된 phase, 묶음 timestamp, counter 바로 옆 페달과 작은 RPM 블립(992 GT3 실차 캡처 패턴),
-같은 바이트에서 counter 위에 놓인 Motorola 페달, idle에서 하위 비트가 떨리는 스로틀,
-DBC/VSP 일치, cycle time, 512 KB 스레드 스택 등). 엔진 리뷰의 경계 사례도 들어 있다: 무작위 프레임 유실
-3–10%(이름의 `_loss<P>_s<S>`), 바이트 경계를 넘는 8비트 Motorola 필드, 정지 중 값이 16종인 센서 바이트,
-상위 바이트가 안 움직이는 RPM, RPM/throttle을 구분할 수 없는 쌍둥이 필드(HIGH 금지). 29-bit ID 시나리오와,
-draft DBC의 29-bit ID에 bit 31이 있고 한 canonical id를 두 신호가 쓰지 않는지도 본다. ctest의 `discover_drafts`는
-시나리오마다 세션을 dump해 `can_tools replay`로 만든 draft VSP를 `tools/validate_vsp.py`로 검사한다(오류·경고 0):
+Synthetic captures check the discovery engine (RPM/throttle separation, two signals in one message, a slow gateway,
+a noise-only capture, skipped phases, batched timestamps, a pedal right next to a counter and small RPM blips (the
+pattern of a real 992 GT3 capture), a Motorola pedal above a counter in the same byte, a throttle whose low bits
+jitter at idle, DBC/VSP agreement, cycle times, a 512 KB thread stack, and more). The edge cases of the engine review
+are in too: 3–10 % random frame loss (`_loss<P>_s<S>` in the name), an 8-bit Motorola field across a byte boundary, a
+sensor byte with 16 values at rest, an RPM whose high byte does not move, and twin fields that cannot tell RPM from
+throttle (never HIGH). There is a 29-bit id scenario, and every scenario checks that 29-bit ids carry bit 31 in the
+draft DBC and that no canonical id is used by two signals. The ctest `discover_drafts` dumps each scenario's session,
+builds the draft VSP with `can_tools replay`, and checks it with `tools/validate_vsp.py` (no errors, no warnings):
 
 ```bash
-cd build && ctest --output-on-failure      # 또는 ./build/discover_regression
+cd build && ctest --output-on-failure      # or ./build/discover_regression
 ```
 
-합성 데이터는 회귀를 막기 위한 것이고 실제 차량 정확도를 보장하지 않는다. 실제 캡처는 `discover_replay`로 확인한다.
+Synthetic data guards against regressions and does not prove accuracy on real vehicles. Check real captures with
+`discover_replay`.
 
-### D-CAN / PT-CAN 자동 감지
+### D-CAN / PT-CAN auto-detection
 
-Baseline 캡처의 CAN ID별 Hz로 버스 접속 모드를 자동 판별한다:
+The per-id Hz of the Baseline capture decides how the adapter is attached to the bus:
 
-| 모드 | 판정 조건 | "빠른 메시지" 기준 | 경로 |
+| Mode | Rule | "Fast message" threshold | Path |
 |------|----------|-------------------|------|
-| **DIRECT** | 20 Hz 이상인 ID가 2개 이상 | ID Hz 75번째 백분위 × 0.8 (5~30 Hz) | 어댑터 → CAN 직결 |
-| **GATEWAY** | 그 외 | 1.0 Hz | 어댑터 → OBD 포트 → 게이트웨이(ZGW 등) → PT-CAN |
+| **DIRECT** | 2 or more ids at 20 Hz or more | 75th percentile of id Hz × 0.8 (5–30 Hz) | adapter → CAN, direct |
+| **GATEWAY** | otherwise | 1.0 Hz | adapter → OBD port → gateway (ZGW etc.) → PT-CAN |
 
-게이트웨이 경유 시에는 일부 메시지만 저속으로 중계되므로 가장 빠른 ID도 느리다(0.1~5 Hz).
-직결 버스에는 느린 차체 메시지가 많아도 20~100 Hz 파워트레인/섀시 메시지가 항상 있으므로, median이 아니라
-빠른 ID가 있는지로 판정한다(예: 992 GT3 직결은 median 4 Hz지만 25~50 Hz ID가 6개 있다).
-"빠른 메시지" 기준은 RPM·wheel speed 후보의 주기 가점에 쓰인다. 직결 버스는 그 버스의 빠른 쪽 주기에 맞춰
-정하므로 일반적인 PT-CAN은 30 Hz, 엔진 메시지가 10 Hz인 버스(992 GT3)는 약 8 Hz가 된다.
+Through a gateway only some messages are relayed, slowly, so even the fastest id is slow (0.1–5 Hz).
+A direct bus may carry many slow body messages, but 20–100 Hz powertrain / chassis messages are always there, so the
+rule asks whether fast ids exist rather than looking at the median (e.g. a direct 992 GT3 tap has a median of 4 Hz but
+6 ids at 25–50 Hz).
+The "fast message" threshold feeds the period bonus of RPM and wheel speed candidates. On a direct bus it follows the
+fast end of that bus, so a typical PT-CAN gets 30 Hz and a bus whose engine message runs at 10 Hz (992 GT3) about 8 Hz.
 
 ```
-[INFO] Bus mode: GATEWAY (D-CAN)    ← 가장 빠른 ID도 ~5 Hz
-[INFO] Bus mode: DIRECT (PT-CAN)    ← 20 Hz 이상 ID가 2개 이상
+[INFO] Bus mode: GATEWAY (D-CAN)    ← even the fastest id is ~5 Hz
+[INFO] Bus mode: DIRECT (PT-CAN)    ← 2 or more ids at 20 Hz or more
 ```
 
-JSON 출력에도 `"bus_mode"` 필드가 포함된다.
+The JSON output includes a `"bus_mode"` field as well.
 
-### 시그널 특성화
+### Signal characterization
 
-캡처 중 풀 레인지 입력으로 데이터 타입도 함께 분석:
+Full-range inputs during the capture also reveal the data type:
 
-- **Layout**: `start_bit` / `bit_length` / `byte_order`(0=big, 1=little) — DBC 표기 그대로
-- **byte / byte2**: 필드가 걸친 가장 상위 바이트와 그다음 하위 바이트
-- **Endianness**: Big/Little-endian (여러 바이트에 걸친 시그널)
-- **Signedness**: Signed/Unsigned/Sign-magnitude. sign-magnitude는 `sign_char` `'S'`와 `sign_bit`로 보고하고,
-  JSON에는 `"signed":false,"sign_bit":N`, draft VSP에는 `"sign_bit"`, draft DBC에는 크기 신호와 1비트
-  `<Name>_Sign` 신호로 쓴다(vehicle-signal-profile의 `dbc2vsp`/`vsp2dbc`와 같은 규칙).
-- **Raw Range**: 관측 최솟값/최댓값
+- **Layout**: `start_bit` / `bit_length` / `byte_order` (0=big, 1=little), in DBC notation
+- **byte / byte2**: the most significant byte the field spans and the next less significant one
+- **Endianness**: big / little endian (signals spanning several bytes)
+- **Signedness**: signed / unsigned / sign-magnitude. Sign-magnitude is reported as `sign_char` `'S'` with
+  `sign_bit`, written as `"signed":false,"sign_bit":N` in the JSON, `"sign_bit"` in the draft VSP, and in the draft
+  DBC as the magnitude signal plus a 1-bit `<Name>_Sign` signal (the convention of vehicle-signal-profile's
+  `dbc2vsp`/`vsp2dbc`).
+- **Raw Range**: observed minimum / maximum
 - **Confidence**: HIGH/MEDIUM/LOW
 
-### 출력 예시
+### Example output
 
 ```json
 {
@@ -514,64 +586,66 @@ JSON 출력에도 `"bus_mode"` 필드가 포함된다.
 }
 ```
 
-## 프로젝트 구조
+## Project layout
 
 ```
 apps/can_tools/
-├── can_tools/           # 단일 실행파일 can_tools (명령별 파일)
-│   ├── main.m           # 명령 분기, 도움말, argv[0] 별칭(can_reader 등)
-│   ├── cli_common.m/h   # 명령 공용 상태, 연결 래퍼
-│   ├── cli_pcan.c/h     # PCAN 장치 열기(라이브러리, 채널, bitrate), 송신 명령 거부 메시지
+├── can_tools/           # the single executable can_tools (one file per command)
+│   ├── main.m           # command dispatch, help, argv[0] aliases (can_reader etc.)
+│   ├── cli_common.m/h   # state shared by the commands, connect wrappers
+│   ├── cli_pcan.c/h     # opening a PCAN device (library, channel, bitrate), refusal message for transmitting commands
 │   ├── cmd_scan.m       # scan
 │   ├── cmd_detect.m     # detect
 │   ├── cmd_monitor.m    # monitor
 │   ├── cmd_query.m      # query / supported / raw
 │   ├── cmd_discover.m   # discover
-│   ├── cmd_probe.m      # probe (구 vsp_probe)
-│   ├── cmd_replay.c     # replay (구 discover_replay, 순수 C)
+│   ├── cmd_probe.m      # probe (formerly vsp_probe)
+│   ├── cmd_replay.c     # replay (formerly discover_replay, plain C)
 │   ├── cmd_p992.m       # p992 legacy/debug
-│   ├── interactive.m    # 예전 대화형 메뉴 (can_tools menu)
-│   ├── commands.h       # 명령 진입점
-│   └── tui/             # 라이브 대시보드
-│       ├── tui_main.m   # tui 옵션, replay 루프, snapshot 모드
-│       ├── tui_live.m   # 연결 화면, PASSIVE 연결, 라이브 루프, TX host
-│       ├── tui_app.c    # 앱 상태, 오버레이(discover, 결과, 프로필, 도움말, 확인), 키, 녹화, TX 가드
-│       ├── tui_model.c  # Raw CAN 표, 시그널 통계·이력, 버스 판정, 로그, 숫자 형식 (순수 C)
-│       ├── tui_render.c / tui_screens.c / tui_grid.c  # 셀 그리드에 그리기 (순수 C, ncurses 없음)
-│       ├── tui_term.c   # ncurses 백엔드
+│   ├── interactive.m    # the old interactive menu (can_tools menu)
+│   ├── commands.h       # command entry points
+│   └── tui/             # live dashboard
+│       ├── tui_main.m   # tui options, replay loop, snapshot mode
+│       ├── tui_live.m   # connect screen, PASSIVE connect, live loop, TX host
+│       ├── tui_app.c    # app state, overlays (discover, result, profile, help, confirm), keys, recording, TX guard
+│       ├── tui_model.c  # Raw CAN table, signal stats and history, bus verdict, log, number formats (plain C)
+│       ├── tui_render.c / tui_screens.c / tui_grid.c  # drawing into a cell grid (plain C, no ncurses)
+│       ├── tui_term.c   # ncurses backend
 │       ├── tui_profiles.c, tui_replay.c, tui_recorder.c, tui_capture.c
-├── common/              # 공유 라이브러리
-│   ├── elm327.c/h       # ELM327 프로토콜 핸들러
-│   ├── stn2255.c/h      # STN2255 확장 (배치 쿼리, STMA 등)
-│   ├── obd_adapter.m/h  # BLE/Classic BT OBD 어댑터 연결
-│   ├── obd_connect.m/h  # 공용 스캔·연결·초기화 경로 (PASSIVE/ACTIVE 프로파일)
-│   ├── obd_poll.m/h     # poll 방식 OBD 질의 (probe poll 모드, TUI TX 모드; 송신)
-│   ├── frame_source.c/h # CAN frame 소스 인터페이스, replay 소스, 캡처 버퍼
-│   ├── frame_source_live.m/h # 어댑터 monitor를 frame 소스로 감싼 live 소스
-│   ├── pcan.c/h         # PCAN-USB(PCBUSB, dlopen): 수신 전용 함수 표, listen-only 열기, bitrate auto, 시각 변환
-│   ├── frame_source_pcan.c/h # 열린 PCAN 채널의 frame 소스 (하드웨어 µs 타임스탬프)
-│   ├── frame_tsv.c/h    # 캡처 dump(*.frames.tsv) 읽기·쓰기 (5열, 하드웨어 타임스탬프는 6열)
-│   ├── discover_session.m/h # 탐색 세션(phase 캡처→분석→파일 저장) + 대화형 CLI
-│   ├── vsp_engine.m/h   # VSP 프로파일 로드, 시그널 선택, frame 디코드 (C API)
-│   ├── cli_util.c/h     # CLI 로그, JSON 문자열 출력
-│   └── can_discover.c/h # PT-CAN 시그널 자동 탐색 엔진
-├── tools/               # prior 생성기(빌드 때 실행, build/generated/can_discover_priors.h), ref2dbc
-├── tests/               # 탐색 엔진 회귀, VSP 디코더, replay, 탐색 세션, 어댑터 수명, TUI 테스트 (하드웨어 불필요)
-│   ├── fake/            # 가짜 어댑터, 가짜 PCBUSB (can_tools_fake)
-│   ├── tui_fake/        # 가짜 어댑터로 TUI 라이브 경로의 AT 명령 기록 검증
-│   ├── pcan_fake/       # 가짜 PCBUSB로 송신 명령 거부, listen-only 호출 순서, PCAN TUI 검증
-│   ├── pcan_test.c      # PCAN 열기 순서, bitrate auto, 시각 변환, 6열 TSV (단위 테스트)
-│   ├── golden/tui/      # TUI 화면 스냅샷 골든 (snapshots.sh update로 갱신)
-│   └── fixtures/tui/    # 합성 스트림, 테스트 프로필, discover 세션 (gen_fixtures.py로 생성)
+├── common/              # shared libraries
+│   ├── elm327.c/h       # ELM327 protocol handler
+│   ├── stn2255.c/h      # STN2255 extensions (batch queries, STMA etc.)
+│   ├── obd_adapter.m/h  # BLE / Classic BT OBD adapter connection
+│   ├── obd_connect.m/h  # the shared scan / connect / init path (PASSIVE / ACTIVE profiles)
+│   ├── obd_poll.m/h     # polled OBD queries (probe poll mode, TUI TX mode; transmits)
+│   ├── frame_source.c/h # CAN frame source interface, replay source, capture buffer
+│   ├── frame_source_live.m/h # live source: the adapter monitor as a frame source
+│   ├── pcan.c/h         # PCAN-USB (PCBUSB, dlopen): receive-only function table, listen-only open, bitrate auto, time mapping
+│   ├── frame_source_pcan.c/h # frame source over an open PCAN channel (hardware µs timestamps)
+│   ├── frame_tsv.c/h    # capture dumps (*.frames.tsv), read and write (5 columns, 6 with hardware timestamps)
+│   ├── discover_session.m/h # discovery session (phase capture → analysis → files, result JSON) + interactive CLI
+│   ├── vsp_engine.m/h   # VSP profile loading, signal selection, frame decoding (C API)
+│   ├── cli_util.c/h     # CLI logging, JSON string output
+│   └── can_discover.c/h # PT-CAN signal discovery engine
+├── tools/               # prior generator (runs at build time, build/generated/can_discover_priors.h), ref2dbc
+├── tests/               # discovery engine regression, draft VSP validation, VSP decoder, replay, discovery session,
+│   │                    # adapter lifecycle and TUI tests (no hardware needed)
+│   ├── fake/            # fake adapter, fake PCBUSB (can_tools_fake)
+│   ├── tui_fake/        # AT command logs of the TUI live path through the fake adapter
+│   ├── pcan_fake/       # transmit command refusals, listen-only call order and the PCAN TUI over a fake PCBUSB
+│   ├── pcan_test.c      # PCAN open order, bitrate auto, time mapping, 6-column TSV (unit test)
+│   ├── golden/tui/      # TUI screen snapshot goldens (refresh with snapshots.sh update)
+│   └── fixtures/tui/    # synthetic streams, test profiles, a discover session (made by gen_fixtures.py)
 ├── CMakeLists.txt
 └── build.sh
 ```
 
-## 주의사항
+## Notes
 
-- macOS Bluetooth 권한 필요 (시스템 설정 > 개인정보 보호 및 보안)
-- PT-CAN 시그널 탐색은 PT-CAN 직결 및 D-CAN(OBD 포트) 경유 모두 지원 — 버스 모드 자동 감지
-- 어댑터는 패시브 모드에서 Silent Mode(`ATCSM1`)로 동작 — CAN ACK 미전송. `ATCSM1`에 `OK`로 답하지 않는 어댑터(일부 저가
-  복제품)는 수신 전용 명령에 쓸 수 없다
-- `ctest`(build 폴더)는 하드웨어 없이 돈다: TUI 테스트는 replay와 가짜 어댑터 빌드만 쓴다
-- IGN ON 상태에서 실행해야 함
+- macOS Bluetooth permission required (System Settings > Privacy & Security)
+- PT-CAN signal discovery works both tapped directly into PT-CAN and through D-CAN (OBD port) — the bus mode is
+  detected automatically
+- In passive mode the adapter runs in silent mode (`ATCSM1`) — no CAN ACKs. Adapters that do not answer `ATCSM1` with
+  `OK` (some cheap clones) cannot be used for the receive-only commands
+- `ctest` (in the build folder) runs without hardware: the TUI tests use only replay and the fake adapter build
+- Run with the ignition ON
